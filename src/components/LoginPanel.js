@@ -15,9 +15,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Wallet, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
-
-/** URL base do backend REST (agent-server). */
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000';
+import { API_BASE_URL } from '@/lib/api';
 
 /** Mensagem assinada na autenticacao MetaMask (igual a POC). */
 const METAMASK_MESSAGE = 'Login authentication for Agentic Space';
@@ -33,7 +31,9 @@ export default function LoginPanel() {
     setError('');
     setLoadingProvider('google');
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/google-url`);
+      const redirectUri = `${window.location.origin}/auth/google/callback`;
+      const query = new URLSearchParams({ redirect_uri: redirectUri });
+      const res = await fetch(`${API_BASE_URL}/api/auth/google-url?${query}`);
       const data = await res.json();
       if (!res.ok || !data.authUrl) {
         throw new Error(data.error || 'Falha ao obter URL de autenticacao.');

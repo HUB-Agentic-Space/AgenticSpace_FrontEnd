@@ -13,9 +13,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
-
-/** URL base do backend REST (agent-server). */
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000';
+import { API_BASE_URL } from '@/lib/api';
 
 function GoogleCallbackInner() {
   const router = useRouter();
