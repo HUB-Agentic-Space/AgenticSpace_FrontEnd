@@ -1,0 +1,254 @@
+'use client';
+
+/**
+ * @file page.js (rota '/agents/create')
+ * @description Fluxo de criacao de agente (RF-02, RF-03).
+ *
+ * Espelha o `createAgentFlow()` da POC (`backend/src/poc.js`):
+ *  1. Usuario informa id, nome e descricao.
+ *  2. Verifica no backend se o ID publico esta livre (POST /agents/check).
+ *  3. Usuario confirma o cadastro.
+ *  4. Cria o agente (POST /agents) e exibe o AUID retornado.
+ *
+ * Todas as chamadas ao backend usam a Credencial Verificavel da sessao como
+ * Bearer token (Authorization), conforme a autenticacao por VC do agent-server.
+ */
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Bot, CheckCircle2, AlertCircle, Loader2, ShieldCheck } from 'lucide-react';
+import { useAuth } from '@/lib/auth-context';
+import { checkAgentId, createAgent } from '@/lib/api';
+import { saveAgent } from '@/lib/agents-store';
+import RequireAuth from '@/components/RequireAuth';
+
+/** Regex de validacao do ID publico (alinhada ao backend). */
+const ID_REGEX = /^[a-zA-Z0-9._-]{3,64}$/;
+
+function CreateAgentContent() {
+  const router = useRouter();
+  const { session } = useAuth();
+
+  const [form, setForm] = useState({ id: '', name: '', description: '' });
+  const [step, setStep] = useState('form'); // form | confirm | done
+  const [status, setStatus] = useState({ type: '', message: '' });
+  const [loading, setLoading] = useState(false);
+  const [created, setCreated] = useState(null);
+
+  /** Atualiza um campo do formulario e limpa mensagens. */
+  function update(field, value) {
+    setForm((f) => ({ ...f, [field]: value }));
+    setStatus({ type: '', message: '' });
+  }
+
+  /** Valida os campos no cliente (espelha as regras do backend). */
+  function validate() {
+    if (!ID_REGEX.test(form.id)) {
+      return 'ID invalido. Use 3-64 caracteres alfanumericos, ".", "_" ou "-".';
+    }
+    if (form.name.trim().length < 2) return 'Nome e obrigatorio (minimo 2 caracteres).';
+    if (form.description.trim().length < 2) {
+      return 'Descricao e obrigatoria (minimo 2 caracteres).';
+    }
+    return null;
+  }
+
+  /** Passo 2/3: verifica disponibilidade do ID e avanca para confirmacao. */
+  async function handleCheck(e) {
+    e.preventDefault();
+    const validationError = validate();
+    if (validationError) {
+      setStatus({ type: 'error', message: validationError });
+      return;
+    }
+
+    setLoading(true);
+    setStatus({ type: '', message: '' });
+    try {
+      const { status: code, data } = await checkAgentId(form.id, session.jwt);
+      if (code !== 200) {
+        throw new Error(data.error || 'Falha ao verificar o ID.');
+      }
+      if (!data.available) {
+        setStatus({ type: 'error', message: `O ID "${form.id}" ja esta em uso. Escolha outro.` });
+        return;
+      }
+      setStatus({ type: 'success', message: `ID "${form.id}" disponivel.` });
+      setStep('confirm');
+    } catch (err) {
+      setStatus({ type: 'error', message: err.message });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  /** Passo 4: confirma e cria o agente no backend. */
+  async function handleCreate() {
+    setLoading(true);
+    setStatus({ type: '', message: '' });
+    try {
+      const { status: code, data } = await createAgent(
+        {
+          id: form.id,
+          name: form.name.trim(),
+          description: form.description.trim()
+        },
+        session.jwt
+      );
+      if (code !== 201) {
+        throw new Error(data.error || 'Falha ao criar o agente.');
+      }
+      saveAgent(session.subject?.id || '', data);
+      setCreated(data);
+      setStep('done');
+    } catch (err) {
+      setStatus({ type: 'error', message: err.message });
+      setStep('form');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (step === 'done' && created) {
+    return (
+      <div className="card mx-auto max-w-lg text-center">
+        <CheckCircle2 className="mx-auto mb-3 text-green-400" size={40} />
+        <h1 className="text-2xl font-bold text-white">Agente criado!</h1>
+        <p className="mt-1 text-slate-400">O agente foi cadastrado com sucesso.</p>
+        <dl className="mt-4 space-y-2 text-left text-sm">
+          <Row label="AUID" value={created.auid} mono />
+          <Row label="ID publico" value={`@${created.id}`} mono />
+          <Row label="Nome" value={created.name} />
+          <Row label="Descricao" value={created.description} />
+        </dl>
+        <div className="mt-6 flex justify-center gap-3">
+          <Link href={`/agents/${encodeURIComponent(created.id)}`} className="btn-primary">
+            Ver perfil do agente
+          </Link>
+          <Link href="/agents" className="btn-secondary">
+            Meus agentes
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-lg space-y-6">
+      <header>
+        <h1 className="flex items-center gap-2 text-3xl font-bold text-white">
+          <Bot className="text-brand-400" /> Criar Agente
+        </h1>
+        <p className="mt-1 text-slate-400">
+          Cadastre um novo agente sob sua responsabilidade (RF-02).
+        </p>
+      </header>
+
+      {status.message && (
+        <div
+          className={`flex items-start gap-2 rounded-lg border p-3 text-sm ${
+            status.type === 'error'
+              ? 'border-red-500/40 bg-red-500/10 text-red-300'
+              : 'border-green-500/40 bg-green-500/10 text-green-300'
+          }`}
+        >
+          {status.type === 'error' ? (
+            <AlertCircle size={16} className="mt-0.5 shrink-0" />
+          ) : (
+            <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
+          )}
+          <span>{status.message}</span>
+        </div>
+      )}
+
+      <form onSubmit={handleCheck} className="card space-y-4">
+        <div>
+          <label className="label">ID publico (unico)</label>
+          <input
+            className="input font-mono"
+            value={form.id}
+            onChange={(e) => update('id', e.target.value)}
+            placeholder="ex.: nova-agent-01"
+            disabled={step === 'confirm'}
+          />
+          <p className="mt-1 text-xs text-slate-500">
+            3-64 caracteres: letras, numeros, ".", "_" ou "-".
+          </p>
+        </div>
+        <div>
+          <label className="label">Nome</label>
+          <input
+            className="input"
+            value={form.name}
+            onChange={(e) => update('name', e.target.value)}
+            placeholder="Nome do agente"
+            disabled={step === 'confirm'}
+          />
+        </div>
+        <div>
+          <label className="label">Descricao</label>
+          <textarea
+            className="input min-h-[100px]"
+            value={form.description}
+            onChange={(e) => update('description', e.target.value)}
+            placeholder="Descreva a natureza e o proposito do agente"
+            disabled={step === 'confirm'}
+          />
+        </div>
+
+        {step === 'form' && (
+          <button type="submit" className="btn-primary w-full" disabled={loading}>
+            {loading ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
+            {loading ? 'Verificando ID...' : 'Verificar disponibilidade'}
+          </button>
+        )}
+      </form>
+
+      {step === 'confirm' && (
+        <div className="card space-y-4">
+          <p className="text-sm text-slate-300">
+            Confirma o cadastro do agente <strong>{form.name}</strong> com o ID{' '}
+            <span className="font-mono text-brand-400">@{form.id}</span>?
+          </p>
+          <div className="flex gap-3">
+            <button onClick={handleCreate} className="btn-primary" disabled={loading}>
+              {loading ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+              {loading ? 'Criando...' : 'Confirmar cadastro'}
+            </button>
+            <button
+              onClick={() => {
+                setStep('form');
+                setStatus({ type: '', message: '' });
+              }}
+              className="btn-secondary"
+              disabled={loading}
+            >
+              Editar
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Linha de detalhe (rotulo/valor). */
+function Row({ label, value, mono }) {
+  return (
+    <div className="flex justify-between gap-4 rounded-lg border border-slate-800 px-3 py-2">
+      <span className="text-slate-400">{label}</span>
+      <span className={`text-right text-slate-100 ${mono ? 'break-all font-mono text-xs' : ''}`}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+export default function CreateAgentPage() {
+  return (
+    <RequireAuth>
+      <CreateAgentContent />
+    </RequireAuth>
+  );
+}

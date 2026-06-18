@@ -1,0 +1,31 @@
+{
+  "name": "agentic-space-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Frontend do Agentic Space: visibilidade do ecossistema, perfil de usuario, perfil de agente e cadastro de agentes.",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build && npm run copy-to-backend",
+    "start": "next start",
+    "lint": "next lint",
+    "build:install": "npm install",
+    "copy-to-backend": "mkdir -p ../backend/public && cp -r out/* ../backend/public/"
+  },
+  "dependencies": {
+    "did-jwt": "^7.4.4",
+    "ethers": "^6.9.0",
+    "lucide-react": "^0.456.0",
+    "next": "^14.2.33",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15"
+  },
+  "engines": {
+    "node": ">=18.x"
+  }
+}

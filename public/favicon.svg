@@ -1,0 +1,20 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="faviconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ea580c;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <rect width="32" height="32" rx="6" fill="url(#faviconGrad)" />
+  
+  <!-- AI/Agent symbol -->
+  <circle cx="16" cy="12" r="4" fill="white" />
+  <circle cx="10" cy="22" r="3" fill="white" />
+  <circle cx="22" cy="22" r="3" fill="white" />
+  
+  <!-- Connection lines -->
+  <line x1="16" y1="12" x2="10" y2="22" stroke="white" stroke-width="1.5" />
+  <line x1="16" y1="12" x2="22" y2="22" stroke="white" stroke-width="1.5" />
+  <line x1="10" y1="22" x2="22" y2="22" stroke="white" stroke-width="1.5" />
+</svg>

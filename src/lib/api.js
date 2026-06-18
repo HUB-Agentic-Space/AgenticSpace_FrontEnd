@@ -1,0 +1,67 @@
+/**
+ * @file api.js
+ * @description Cliente HTTP para o backend REST (agent-server) do Agentic Space.
+ *
+ * Centraliza as chamadas autenticadas via Credencial Verificavel
+ * (Authorization: Bearer <jwt>), espelhando os contratos consumidos pela POC
+ * (`backend/src/poc.js`) nos endpoints `/agents/check` e `/agents`.
+ */
+
+/**
+ * URL base do backend REST. Definida em next.config.mjs (env publica).
+ *
+ * Quando vazia (padrao no build estatico servido pelo proprio backend), as
+ * chamadas sao relativas a origem atual, garantindo o funcionamento em "/".
+ * Em desenvolvimento isolado, defina `NEXT_PUBLIC_API_BASE_URL` (ex.:
+ * `http://localhost:4000`).
+ */
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+
+/**
+ * Executa um POST autenticado contra o backend.
+ *
+ * @param {string} path Caminho do endpoint (ex.: '/agents').
+ * @param {Object} body Corpo JSON da requisicao.
+ * @param {string} jwt JWT da credencial verificavel.
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+export async function apiPost(path, body, jwt) {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${jwt}`
+    },
+    body: JSON.stringify(body)
+  });
+
+  let data = {};
+  try {
+    data = await response.json();
+  } catch {
+    // Resposta sem corpo JSON.
+  }
+  return { status: response.status, data };
+}
+
+/**
+ * Verifica se um ID publico de agente esta disponivel.
+ *
+ * @param {string} id ID publico desejado.
+ * @param {string} jwt JWT da credencial verificavel.
+ * @returns {Promise<{ status: number, data: { id: string, available: boolean } }>}
+ */
+export function checkAgentId(id, jwt) {
+  return apiPost('/agents/check', { id }, jwt);
+}
+
+/**
+ * Cria um novo agente vinculado ao usuario autenticado.
+ *
+ * @param {{ id: string, name: string, description: string }} agent Dados do agente.
+ * @param {string} jwt JWT da credencial verificavel.
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+export function createAgent(agent, jwt) {
+  return apiPost('/agents', { ...agent, confirm: true }, jwt);
+}
