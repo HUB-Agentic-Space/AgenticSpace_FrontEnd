@@ -13,7 +13,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
-import { API_BASE_URL } from '@/lib/api';
+import { API_BASE_URL, getGoogleRedirectUri } from '@/lib/api';
 
 function GoogleCallbackInner() {
   const router = useRouter();
@@ -37,10 +37,11 @@ function GoogleCallbackInner() {
     let cancelled = false;
     (async () => {
       try {
+        const redirectUri = getGoogleRedirectUri();
         const res = await fetch(`${API_BASE_URL}/api/auth/google`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code })
+          body: JSON.stringify({ code, redirectUri })
         });
         const data = await res.json();
         if (!res.ok) {
