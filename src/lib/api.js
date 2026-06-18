@@ -18,6 +18,32 @@
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
 
 /**
+ * URL de callback OAuth do Google.
+ *
+ * Se `NEXT_PUBLIC_GOOGLE_REDIRECT_URI` estiver definida, ela vence. Caso
+ * contrario, quando o frontend aponta para um backend explicito, usamos a
+ * origem desse backend porque ele tambem serve o build estatico em producao.
+ * Sem backend explicito, usamos a origem atual do navegador.
+ *
+ * @returns {string}
+ */
+export function getGoogleRedirectUri() {
+  if (process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI) {
+    return process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI;
+  }
+
+  if (typeof window === 'undefined') {
+    return '/auth/google/callback';
+  }
+
+  if (API_BASE_URL) {
+    return `${new URL(API_BASE_URL, window.location.origin).origin}/auth/google/callback`;
+  }
+
+  return `${window.location.origin}/auth/google/callback`;
+}
+
+/**
  * Executa um POST autenticado contra o backend.
  *
  * @param {string} path Caminho do endpoint (ex.: '/agents').

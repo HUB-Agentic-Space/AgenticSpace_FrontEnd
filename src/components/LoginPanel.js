@@ -15,7 +15,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Wallet, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
-import { API_BASE_URL } from '@/lib/api';
+import { API_BASE_URL, getGoogleRedirectUri } from '@/lib/api';
 
 /** Mensagem assinada na autenticacao MetaMask (igual a POC). */
 const METAMASK_MESSAGE = 'Login authentication for Agentic Space';
@@ -31,7 +31,7 @@ export default function LoginPanel() {
     setError('');
     setLoadingProvider('google');
     try {
-      const redirectUri = `${window.location.origin}/auth/google/callback`;
+      const redirectUri = getGoogleRedirectUri();
       const query = new URLSearchParams({ redirect_uri: redirectUri });
       const res = await fetch(`${API_BASE_URL}/api/auth/google-url?${query}`);
       const data = await res.json();

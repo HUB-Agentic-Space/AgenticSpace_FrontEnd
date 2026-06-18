@@ -53,6 +53,7 @@ da POC em `backend/src/poc.js`.
    | --- | --- |
    | `GOOGLE_CLIENT_ID` | Client ID OAuth do Google (lido no servidor). |
    | `NEXT_PUBLIC_API_BASE_URL` | URL do backend REST (ex.: `http://localhost:4000`). |
+   | `NEXT_PUBLIC_GOOGLE_REDIRECT_URI` | Callback OAuth registrado no Google Cloud Console. |
    | `ISSUER_DID` | DID do emissor das credenciais verificáveis. |
    | `ISSUER_PRIVATE_KEY` | Chave privada do emissor (NUNCA versione a real). |
    | `CREDENTIAL_VALIDITY_MONTHS` | Validade da VC/API key em meses (vazio = ilimitada). |
@@ -61,6 +62,12 @@ da POC em `backend/src/poc.js`.
 
    ```text
    http://localhost:3000/auth/google/callback
+   ```
+
+   Em produção, registre exatamente o domínio servido ao usuário, por exemplo:
+
+   ```text
+   https://agenticspace.vercel.app/auth/google/callback
    ```
 
 ## Execução
