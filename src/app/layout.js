@@ -9,6 +9,7 @@
 import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
 import Navbar from '@/components/Navbar';
+import ChunkRecovery from '@/components/ChunkRecovery';
 
 export const metadata = {
   title: 'Agentic Space',
@@ -30,6 +31,7 @@ export default function RootLayout({ children }) {
     <html lang="pt-BR">
       <body>
         <AuthProvider>
+          <ChunkRecovery />
           <Navbar />
           <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
         </AuthProvider>

@@ -90,6 +90,12 @@ export function AuthProvider({ children }) {
     clearLocalSessionState();
   }, []);
 
+  useEffect(() => {
+    const handleUnauthorized = () => logout();
+    window.addEventListener('agentic-space:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('agentic-space:unauthorized', handleUnauthorized);
+  }, [logout]);
+
   const value = {
     session,
     loading,

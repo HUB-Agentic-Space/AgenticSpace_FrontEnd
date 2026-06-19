@@ -16,6 +16,13 @@
  * `http://localhost:4000`).
  */
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+const UNAUTHORIZED_EVENT = 'agentic-space:unauthorized';
+
+function notifyUnauthorized(response) {
+  if (response.status === 401 && typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
+  }
+}
 
 /**
  * URL de callback OAuth do Google.
@@ -60,6 +67,7 @@ export async function apiPost(path, body, jwt) {
     },
     body: JSON.stringify(body)
   });
+  notifyUnauthorized(response);
 
   let data = {};
   try {
@@ -79,6 +87,7 @@ export async function apiRequest(path, { method = 'GET', body, jwt } = {}) {
     },
     ...(body === undefined ? {} : { body: JSON.stringify(body) })
   });
+  notifyUnauthorized(response);
 
   let data = {};
   try {
