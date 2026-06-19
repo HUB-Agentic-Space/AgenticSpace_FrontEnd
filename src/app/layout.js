@@ -7,9 +7,12 @@
  */
 
 import './globals.css';
+import Script from 'next/script';
 import { AuthProvider } from '@/lib/auth-context';
 import Navbar from '@/components/Navbar';
 import ChunkRecovery from '@/components/ChunkRecovery';
+
+const GOOGLE_TAG_ID = 'G-LNHTQ959Q1';
 
 export const metadata = {
   title: 'Agentic Space',
@@ -30,6 +33,18 @@ export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">
       <body>
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_TAG_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GOOGLE_TAG_ID}');
+          `}
+        </Script>
         <AuthProvider>
           <ChunkRecovery />
           <Navbar />
