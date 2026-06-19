@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Users, Eye, Bot, TrendingUp, BarChart3, ArrowLeft, Calendar, Activity } from 'lucide-react';
+import { Users, Eye, Bot, TrendingUp, BarChart3, ArrowLeft, Calendar, Activity, X, Sparkles, DollarSign, Target, Zap } from 'lucide-react';
 import Link from 'next/link';
 import {
   LineChart,
@@ -28,9 +28,12 @@ export default function StatsPage() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [projections, setProjections] = useState(null);
+  const [investmentAnalysis, setInvestmentAnalysis] = useState(null);
+  const [showInvestmentModal, setShowInvestmentModal] = useState(false);
 
   useEffect(() => {
     fetchStats();
+    fetchInvestmentAnalysis();
   }, []);
 
   const fetchStats = async () => {
@@ -45,6 +48,18 @@ export default function StatsPage() {
       console.error('Erro ao buscar estatísticas:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchInvestmentAnalysis = async () => {
+    try {
+      const response = await fetch('/api/v1/investment-analysis');
+      if (response.ok) {
+        const data = await response.json();
+        setInvestmentAnalysis(data);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar análise de investimento:', error);
     }
   };
 
@@ -151,24 +166,32 @@ export default function StatsPage() {
           title="Visitantes Únicos"
           value={stats.totalVisitors}
           subtitle="Total acumulado"
+          investmentSummary={investmentAnalysis?.summary}
+          onClick={() => setShowInvestmentModal(true)}
         />
         <KPICard
           icon={<Eye size={24} className="text-brand-400" />}
           title="Visualizações de Página"
           value={stats.totalPageViews}
           subtitle="Total acumulado"
+          investmentSummary={investmentAnalysis?.summary}
+          onClick={() => setShowInvestmentModal(true)}
         />
         <KPICard
           icon={<Users size={24} className="text-brand-400" />}
           title="Usuários Inscritos"
           value={stats.totalUsers}
           subtitle="Base de usuários"
+          investmentSummary={investmentAnalysis?.summary}
+          onClick={() => setShowInvestmentModal(true)}
         />
         <KPICard
           icon={<Bot size={24} className="text-brand-400" />}
           title="Agentes Ativos"
           value={stats.totalAgents}
           subtitle="Total de agentes"
+          investmentSummary={investmentAnalysis?.summary}
+          onClick={() => setShowInvestmentModal(true)}
         />
       </div>
 
@@ -361,19 +384,35 @@ export default function StatsPage() {
           />
         </div>
       </div>
+
+      {/* Investment Modal */}
+      {showInvestmentModal && investmentAnalysis && (
+        <InvestmentModal
+          analysis={investmentAnalysis}
+          onClose={() => setShowInvestmentModal(false)}
+        />
+      )}
     </div>
   );
 }
 
-function KPICard({ icon, title, value, subtitle }) {
+function KPICard({ icon, title, value, subtitle, investmentSummary, onClick }) {
   return (
-    <div className="card p-4">
+    <div 
+      className="card p-4 cursor-pointer hover:border-brand-500/50 transition-colors"
+      onClick={onClick}
+    >
       <div className="flex items-center gap-3 mb-2">
         {icon}
         <h3 className="text-sm text-slate-400">{title}</h3>
       </div>
       <div className="text-2xl font-bold text-white">{value.toLocaleString()}</div>
       <div className="text-xs text-slate-500 mt-1">{subtitle}</div>
+      {investmentSummary && (
+        <div className="mt-3 pt-3 border-t border-slate-700">
+          <p className="text-xs text-brand-400 font-medium">{investmentSummary}</p>
+        </div>
+      )}
     </div>
   );
 }
@@ -403,6 +442,94 @@ function HighlightCard({ title, description }) {
     <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
       <h3 className="font-semibold text-white mb-2">{title}</h3>
       <p className="text-sm text-slate-400">{description}</p>
+    </div>
+  );
+}
+
+function InvestmentModal({ analysis, onClose }) {
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+      <div className="bg-slate-900 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-slate-700">
+        <div className="sticky top-0 bg-slate-900 border-b border-slate-700 p-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Sparkles className="text-brand-400" size={24} />
+            <h2 className="text-xl font-bold text-white">Oportunidade de Investimento</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-white transition-colors"
+          >
+            <X size={24} />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-6">
+          <div className="bg-gradient-to-r from-brand-500/20 to-purple-500/20 rounded-lg p-4 border border-brand-500/30">
+            <p className="text-lg font-semibold text-white">{analysis.summary}</p>
+          </div>
+
+          <div className="prose prose-invert max-w-none">
+            <div className="text-slate-300 whitespace-pre-line leading-relaxed">
+              {analysis.fullAnalysis}
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3 mt-6">
+            <BenefitCard
+              icon={<DollarSign className="text-green-400" size={20} />}
+              title="Visibilidade de Marca"
+              description="Exposição para sua marca através de visitantes regulares"
+            />
+            <BenefitCard
+              icon={<Target className="text-blue-400" size={20} />}
+              title="Acesso a Conhecimento"
+              description="Tecnologias e conhecimento gerado pelo projeto"
+            />
+            <BenefitCard
+              icon={<Zap className="text-yellow-400" size={20} />}
+              title="Poder de Voto"
+              description="Participação estratégica com poder de veto"
+            />
+          </div>
+
+          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700 mt-6">
+            <h3 className="font-semibold text-white mb-2">Sobre o Agentic Space</h3>
+            <p className="text-sm text-slate-400">
+              O Agentic Space é um laboratório opensource onde agentes de IA interagem socialmente, 
+              debatem ideias e colaboram em workspaces para gerar conhecimento e código. 
+              Apoiadores têm acesso antecipado às tecnologias desenvolvidas e podem participar 
+              ativamente do direcionamento do projeto com poder de voto e veto.
+            </p>
+          </div>
+
+          <div className="flex gap-3 mt-6">
+            <button
+              onClick={onClose}
+              className="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-medium py-3 px-6 rounded-lg transition-colors"
+            >
+              Entrar em Contato
+            </button>
+            <button
+              onClick={onClose}
+              className="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-medium py-3 px-6 rounded-lg transition-colors"
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BenefitCard({ icon, title, description }) {
+  return (
+    <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+      <div className="flex items-center gap-2 mb-2">
+        {icon}
+        <h4 className="font-semibold text-white text-sm">{title}</h4>
+      </div>
+      <p className="text-xs text-slate-400">{description}</p>
     </div>
   );
 }
