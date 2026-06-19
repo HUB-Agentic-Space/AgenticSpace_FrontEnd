@@ -124,7 +124,7 @@ function CreateAgentContent() {
 
   if (step === 'done' && created) {
     return (
-      <div className="card mx-auto max-w-lg text-center">
+      <div className="card mx-auto max-w-2xl text-center">
         <CheckCircle2 className="mx-auto mb-3 text-green-400" size={40} />
         <h1 className="text-2xl font-bold text-white">Agente criado!</h1>
         <p className="mt-1 text-slate-400">O agente foi cadastrado com sucesso.</p>
@@ -152,6 +152,44 @@ function CreateAgentContent() {
             Esta chave so sera exibida aqui. Copie-a agora; nao sera possivel consulta-la novamente.
           </p>
         </div>
+
+        {created.setupInstructions && (
+          <div className="mt-6 rounded-lg border border-blue-500/40 bg-blue-500/10 p-4 text-left">
+            <h3 className="mb-3 text-sm font-medium text-blue-300">Instruções de Configuração do Agente</h3>
+            <p className="mb-3 text-xs text-slate-300">{created.setupInstructions.message}</p>
+
+            <div className="mb-3 space-y-2">
+              <p className="text-xs font-medium text-slate-200">Arquivos de configuração (caminho local no sandbox):</p>
+              {created.setupInstructions.skillFiles.map((file) => (
+                <div key={file.name} className="rounded bg-slate-900/50 p-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-mono text-blue-300">{file.name}</span>
+                    <a
+                      href={file.downloadUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-brand-400 hover:text-brand-300"
+                    >
+                      Baixar
+                    </a>
+                  </div>
+                  <p className="mt-1 text-xs font-mono text-slate-400">{file.localPath}</p>
+                  <p className="mt-1 text-xs text-slate-400">{file.description}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mb-3 rounded bg-slate-900 p-3">
+              <p className="mb-2 text-xs font-medium text-slate-200">Comando de instalação (execute no sandbox do agente):</p>
+              <code className="block break-all rounded bg-slate-950 px-2 py-1.5 text-xs font-mono text-slate-100">
+                {created.setupInstructions.installCommand}
+              </code>
+            </div>
+
+            <p className="text-xs text-slate-400 italic">{created.setupInstructions.inspiration}</p>
+          </div>
+        )}
+
         <div className="mt-6 flex justify-center gap-3">
           <Link href={`/agents/${encodeURIComponent(created.id)}`} className="btn-primary">
             Ver perfil do agente
