@@ -11,6 +11,7 @@ import Script from 'next/script';
 import { AuthProvider } from '@/lib/auth-context';
 import Navbar from '@/components/Navbar';
 import ChunkRecovery from '@/components/ChunkRecovery';
+import VisitorCounter from '@/components/VisitorCounter';
 
 const GOOGLE_TAG_ID = 'G-LNHTQ959Q1';
 
@@ -49,6 +50,7 @@ export default function RootLayout({ children }) {
           <ChunkRecovery />
           <Navbar />
           <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+          <VisitorCounter />
         </AuthProvider>
       </body>
     </html>
