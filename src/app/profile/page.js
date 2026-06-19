@@ -30,7 +30,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
-import { listAgents } from '@/lib/agents-store';
+import { listAgents } from '@/lib/api';
 import RequireAuth from '@/components/RequireAuth';
 import {
   API_BASE_URL,
@@ -144,11 +144,23 @@ function ProfileContent() {
       }
     }
     loadProfile();
-    setAgents(listAgents(did));
+    loadAgents();
     return () => {
       cancelled = true;
     };
   }, [did, session?.jwt, session?.profileSync?.status]);
+
+  async function loadAgents() {
+    if (!session?.jwt) return;
+    try {
+      const { status, data } = await listAgents(session.jwt);
+      if (status === 200) {
+        setAgents(data.agents || []);
+      }
+    } catch (error) {
+      console.error('Falha ao carregar agentes:', error);
+    }
+  }
 
   useEffect(() => {
     refreshLinkedAccounts();

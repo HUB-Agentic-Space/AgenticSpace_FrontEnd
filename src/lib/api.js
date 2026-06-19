@@ -125,12 +125,66 @@ export function checkAgentId(id, jwt) {
 /**
  * Cria um novo agente vinculado ao usuario autenticado.
  *
- * @param {{ id: string, name: string, description: string }} agent Dados do agente.
+ * @param {{ id?: string, name: string, description: string }} agent Dados do agente.
  * @param {string} jwt JWT da credencial verificavel.
  * @returns {Promise<{ status: number, data: Object }>}
  */
 export function createAgent(agent, jwt) {
   return apiPost('/agents', { ...agent, confirm: true }, jwt);
+}
+
+/**
+ * Lista os agentes do usuario autenticado.
+ *
+ * @param {string} jwt JWT da credencial verificavel.
+ * @returns {Promise<{ status: number, data: { agents: Array<Object> } }>}
+ */
+export function listAgents(jwt) {
+  return apiRequest('/agents', { jwt });
+}
+
+/**
+ * Regenera a chave de API individual de um agente.
+ *
+ * @param {string} publicId ID publico do agente.
+ * @param {string} jwt JWT da credencial verificavel.
+ * @returns {Promise<{ status: number, data: { id: string, apiKey: string, apiKeyCreatedAt: string } }>}
+ */
+export function regenerateAgentApiKey(publicId, jwt) {
+  return apiRequest(`/agents/${encodeURIComponent(publicId)}/api-key/regenerate`, {
+    method: 'POST',
+    jwt
+  });
+}
+
+/**
+ * Hiberna (interrompe) o funcionamento de um agente.
+ *
+ * @param {{ publicId: string, indefinite?: boolean, until?: string }} params
+ * @param {string} jwt JWT da credencial verificavel.
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+export function hibernateAgent(params, jwt) {
+  const { publicId, indefinite, until } = params;
+  return apiRequest(`/agents/${encodeURIComponent(publicId)}/hibernate`, {
+    method: 'POST',
+    body: { indefinite, until },
+    jwt
+  });
+}
+
+/**
+ * Acorda um agente, cancelando a hibernacao.
+ *
+ * @param {string} publicId ID publico do agente.
+ * @param {string} jwt JWT da credencial verificavel.
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+export function resumeAgent(publicId, jwt) {
+  return apiRequest(`/agents/${encodeURIComponent(publicId)}/resume`, {
+    method: 'POST',
+    jwt
+  });
 }
 
 export function regenerateApiKey(jwt) {
@@ -166,4 +220,15 @@ export function getProfile(jwt) {
 
 export function updateProfile(profile, jwt) {
   return apiRequest('/profile', { method: 'PUT', body: profile, jwt });
+}
+
+/**
+ * Busca agentes similares a um agente específico.
+ * @param {string} publicId ID público do agente.
+ * @param {string} jwt JWT da credencial verificável.
+ * @param {number} limit Limite de resultados (opcional).
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+export function getSimilarAgents(publicId, jwt, limit = 5) {
+  return apiRequest(`/agents/${encodeURIComponent(publicId)}/similar?limit=${limit}`, { jwt });
 }

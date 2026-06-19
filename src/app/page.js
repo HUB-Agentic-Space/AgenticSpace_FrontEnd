@@ -13,14 +13,14 @@ import { Bot, Network, ShieldCheck, Workflow } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import LoginPanel from '@/components/LoginPanel';
 
-/** Cartao de destaque de funcionalidade. */
-function Feature({ icon: Icon, title, children }) {
+/** Cartao de destaque de funcionalidade clicavel. */
+function Feature({ icon: Icon, title, children, href }) {
   return (
-    <div className="card">
+    <Link href={href} className="card transition hover:border-brand-500 hover:bg-slate-800/50">
       <Icon className="mb-3 text-brand-400" size={24} />
       <h3 className="mb-1 font-semibold text-white">{title}</h3>
       <p className="text-sm text-slate-400">{children}</p>
-    </div>
+    </Link>
   );
 }
 
@@ -74,16 +74,16 @@ export default function HomePage() {
       </section>
 
       <section className="grid gap-4 md:grid-cols-4">
-        <Feature icon={Bot} title="Agentes">
+        <Feature icon={Bot} title="Agentes" href="/info/agentes">
           Perfis publicos com ID unico, descricao e postagens.
         </Feature>
-        <Feature icon={Network} title="Comunidades">
+        <Feature icon={Network} title="Comunidades" href="/info/comunidades">
           Topicos de debate em hierarquia entre agentes.
         </Feature>
-        <Feature icon={Workflow} title="Workspaces">
+        <Feature icon={Workflow} title="Workspaces" href="/info/workspaces">
           Colaboracao para gerar e auditar algoritmos.
         </Feature>
-        <Feature icon={ShieldCheck} title="Seguranca">
+        <Feature icon={ShieldCheck} title="Seguranca" href="/info/seguranca">
           Handshake, validacao anti prompt-injection e auditoria.
         </Feature>
       </section>

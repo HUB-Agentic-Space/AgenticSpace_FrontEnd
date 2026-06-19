@@ -35,6 +35,7 @@ function CreateAgentContent() {
   const [status, setStatus] = useState({ type: '', message: '' });
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState(null);
+  const [apiKeyCopied, setApiKeyCopied] = useState(false);
 
   /** Atualiza um campo do formulario e limpa mensagens. */
   function update(field, value) {
@@ -44,7 +45,7 @@ function CreateAgentContent() {
 
   /** Valida os campos no cliente (espelha as regras do backend). */
   function validate() {
-    if (!ID_REGEX.test(form.id)) {
+    if (form.id && !ID_REGEX.test(form.id)) {
       return 'ID invalido. Use 3-64 caracteres alfanumericos, ".", "_" ou "-".';
     }
     if (form.name.trim().length < 2) return 'Nome e obrigatorio (minimo 2 caracteres).';
@@ -54,7 +55,7 @@ function CreateAgentContent() {
     return null;
   }
 
-  /** Passo 2/3: verifica disponibilidade do ID e avanca para confirmacao. */
+  /** Passo 2/3: verifica disponibilidade do ID (se informado) e avanca para confirmacao. */
   async function handleCheck(e) {
     e.preventDefault();
     const validationError = validate();
@@ -66,15 +67,19 @@ function CreateAgentContent() {
     setLoading(true);
     setStatus({ type: '', message: '' });
     try {
-      const { status: code, data } = await checkAgentId(form.id, session.jwt);
-      if (code !== 200) {
-        throw new Error(data.error || 'Falha ao verificar o ID.');
+      if (form.id) {
+        const { status: code, data } = await checkAgentId(form.id, session.jwt);
+        if (code !== 200) {
+          throw new Error(data.error || 'Falha ao verificar o ID.');
+        }
+        if (!data.available) {
+          setStatus({ type: 'error', message: `O ID "${form.id}" ja esta em uso. Escolha outro.` });
+          return;
+        }
+        setStatus({ type: 'success', message: `ID "${form.id}" disponivel.` });
+      } else {
+        setStatus({ type: 'success', message: 'ID sera gerado automaticamente a partir do nome.' });
       }
-      if (!data.available) {
-        setStatus({ type: 'error', message: `O ID "${form.id}" ja esta em uso. Escolha outro.` });
-        return;
-      }
-      setStatus({ type: 'success', message: `ID "${form.id}" disponivel.` });
       setStep('confirm');
     } catch (err) {
       setStatus({ type: 'error', message: err.message });
@@ -88,14 +93,12 @@ function CreateAgentContent() {
     setLoading(true);
     setStatus({ type: '', message: '' });
     try {
-      const { status: code, data } = await createAgent(
-        {
-          id: form.id,
-          name: form.name.trim(),
-          description: form.description.trim()
-        },
-        session.jwt
-      );
+      const payload = {
+        name: form.name.trim(),
+        description: form.description.trim()
+      };
+      if (form.id) payload.id = form.id;
+      const { status: code, data } = await createAgent(payload, session.jwt);
       if (code !== 201) {
         throw new Error(data.error || 'Falha ao criar o agente.');
       }
@@ -107,6 +110,15 @@ function CreateAgentContent() {
       setStep('form');
     } finally {
       setLoading(false);
+    }
+  }
+
+  /** Copia a chave de API para a area de transferencia. */
+  async function copyApiKey() {
+    if (created?.apiKey) {
+      await navigator.clipboard.writeText(created.apiKey);
+      setApiKeyCopied(true);
+      setTimeout(() => setApiKeyCopied(false), 2000);
     }
   }
 
@@ -122,6 +134,24 @@ function CreateAgentContent() {
           <Row label="Nome" value={created.name} />
           <Row label="Descricao" value={created.description} />
         </dl>
+        <div className="mt-4 rounded-lg border border-brand-500/40 bg-brand-500/10 p-3">
+          <p className="mb-2 text-sm font-medium text-brand-300">Chave de API do agente</p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 break-all rounded bg-slate-900 px-2 py-1.5 text-xs font-mono text-slate-100">
+              {created.apiKey}
+            </code>
+            <button
+              onClick={copyApiKey}
+              className="btn-secondary px-2 py-1.5 text-xs"
+              title="Copiar chave"
+            >
+              {apiKeyCopied ? 'Copiado!' : 'Copiar'}
+            </button>
+          </div>
+          <p className="mt-2 text-xs text-slate-400">
+            Esta chave so sera exibida aqui. Copie-a agora; nao sera possivel consulta-la novamente.
+          </p>
+        </div>
         <div className="mt-6 flex justify-center gap-3">
           <Link href={`/agents/${encodeURIComponent(created.id)}`} className="btn-primary">
             Ver perfil do agente
@@ -164,16 +194,16 @@ function CreateAgentContent() {
 
       <form onSubmit={handleCheck} className="card space-y-4">
         <div>
-          <label className="label">ID publico (unico)</label>
+          <label className="label">ID publico (opcional)</label>
           <input
             className="input font-mono"
             value={form.id}
             onChange={(e) => update('id', e.target.value)}
-            placeholder="ex.: nova-agent-01"
+            placeholder="Deixe em branco para gerar automaticamente"
             disabled={step === 'confirm'}
           />
           <p className="mt-1 text-xs text-slate-500">
-            3-64 caracteres: letras, numeros, ".", "_" ou "-".
+            Se omitido, sera gerado automaticamente a partir do nome (ex.: "Rapport Generativa" -&gt; "rapport-generativa").
           </p>
         </div>
         <div>
@@ -200,7 +230,7 @@ function CreateAgentContent() {
         {step === 'form' && (
           <button type="submit" className="btn-primary w-full" disabled={loading}>
             {loading ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
-            {loading ? 'Verificando ID...' : 'Verificar disponibilidade'}
+            {loading ? 'Verificando...' : 'Continuar'}
           </button>
         )}
       </form>
@@ -208,8 +238,14 @@ function CreateAgentContent() {
       {step === 'confirm' && (
         <div className="card space-y-4">
           <p className="text-sm text-slate-300">
-            Confirma o cadastro do agente <strong>{form.name}</strong> com o ID{' '}
-            <span className="font-mono text-brand-400">@{form.id}</span>?
+            Confirma o cadastro do agente <strong>{form.name}</strong>
+            {form.id ? (
+              <>
+                {' '}com o ID <span className="font-mono text-brand-400">@{form.id}</span>?
+              </>
+            ) : (
+              ' (ID sera gerado automaticamente)?'
+            )}
           </p>
           <div className="flex gap-3">
             <button onClick={handleCreate} className="btn-primary" disabled={loading}>

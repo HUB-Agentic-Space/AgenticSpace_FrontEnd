@@ -28,10 +28,16 @@ import {
   Github,
   Globe,
   Heart,
-  Eye
+  Eye,
+  Snowflake,
+  Zap,
+  RefreshCw,
+  Loader2,
+  AlertCircle,
+  CheckCircle2
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
-import { getAgent } from '@/lib/agents-store';
+import { listAgents, regenerateAgentApiKey, hibernateAgent, resumeAgent } from '@/lib/api';
 import RequireAuth from '@/components/RequireAuth';
 
 /** Abas disponiveis no perfil do agente. */
@@ -47,12 +53,116 @@ function AgentProfileContent() {
   const [agent, setAgent] = useState(null);
   const [tab, setTab] = useState('posts');
   const [ready, setReady] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState({ type: '', message: '' });
+  const [actionLoading, setActionLoading] = useState(null);
 
   useEffect(() => {
-    const publicId = params.get('id') || '';
-    setAgent(getAgent(session?.subject?.id || '', publicId));
-    setReady(true);
+    loadAgent();
   }, [params, session]);
+
+  async function loadAgent() {
+    const publicId = params.get('id') || '';
+    if (!publicId || !session?.jwt) {
+      setReady(true);
+      return;
+    }
+    setLoading(true);
+    try {
+      const { status: code, data } = await listAgents(session.jwt);
+      if (code === 200) {
+        const found = (data.agents || []).find((a) => a.id === publicId);
+        setAgent(found || null);
+      } else {
+        setStatus({ type: 'error', message: data.error || 'Falha ao carregar agente.' });
+      }
+    } catch (err) {
+      setStatus({ type: 'error', message: err.message });
+    } finally {
+      setLoading(false);
+      setReady(true);
+    }
+  }
+
+  async function handleRegenerateKey() {
+    if (!confirm('Deseja regenerar a chave de API deste agente? A chave atual sera revogada e uma nova sera gerada.')) {
+      return;
+    }
+    setActionLoading('regenerate');
+    try {
+      const { status: code, data } = await regenerateAgentApiKey(agent.id, session.jwt);
+      if (code === 200) {
+        alert(`Nova chave de API gerada:\n\n${data.apiKey}\n\nCopie agora; nao sera possivel consulta-la novamente.`);
+        setStatus({ type: 'success', message: 'Chave de API regenerada com sucesso.' });
+      } else {
+        setStatus({ type: 'error', message: data.error || 'Falha ao regenerar chave.' });
+      }
+    } catch (err) {
+      setStatus({ type: 'error', message: err.message });
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function handleHibernate() {
+    const indefinite = confirm('Deseja hibernar o agente por tempo indeterminado?');
+    const until = indefinite ? null : prompt('Informe a data/hora para acordar (formato ISO: YYYY-MM-DDTHH:mm:ss)');
+    if (indefinite === null) return;
+    if (!indefinite && !until) return;
+
+    setActionLoading('hibernate');
+    try {
+      const { status: code, data } = await hibernateAgent(
+        { publicId: agent.id, indefinite, until },
+        session.jwt
+      );
+      if (code === 200) {
+        setStatus({ type: 'success', message: 'Agente hibernado com sucesso.' });
+        loadAgent();
+      } else {
+        setStatus({ type: 'error', message: data.error || 'Falha ao hibernar agente.' });
+      }
+    } catch (err) {
+      setStatus({ type: 'error', message: err.message });
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function handleResume() {
+    if (!confirm('Deseja acordar este agente?')) return;
+    setActionLoading('resume');
+    try {
+      const { status: code, data } = await resumeAgent(agent.id, session.jwt);
+      if (code === 200) {
+        setStatus({ type: 'success', message: 'Agente acordado com sucesso.' });
+        loadAgent();
+      } else {
+        setStatus({ type: 'error', message: data.error || 'Falha ao acordar agente.' });
+      }
+    } catch (err) {
+      setStatus({ type: 'error', message: err.message });
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  function isHibernating() {
+    if (!agent) return false;
+    if (!agent.hibernating) return false;
+    if (agent.hibernateUntil) {
+      return new Date(agent.hibernateUntil) > new Date();
+    }
+    return true;
+  }
+
+  if (loading) {
+    return (
+      <div className="card flex items-center justify-center py-12">
+        <Loader2 size={24} className="animate-spin text-brand-400" />
+      </div>
+    );
+  }
 
   if (ready && !agent) {
     return (
@@ -68,26 +178,59 @@ function AgentProfileContent() {
 
   if (!agent) return null;
 
+  const hibernating = isHibernating();
+
   return (
     <div className="space-y-6">
       <Link href="/agents" className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-slate-200">
         <ArrowLeft size={16} /> Meus agentes
       </Link>
 
+      {status.message && (
+        <div
+          className={`flex items-start gap-2 rounded-lg border p-3 text-sm ${
+            status.type === 'error'
+              ? 'border-red-500/40 bg-red-500/10 text-red-300'
+              : 'border-green-500/40 bg-green-500/10 text-green-300'
+          }`}
+        >
+          {status.type === 'error' ? (
+            <AlertCircle size={16} className="mt-0.5 shrink-0" />
+          ) : (
+            <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
+          )}
+          <span>{status.message}</span>
+        </div>
+      )}
+
       <header className="card flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-600/20">
-            <Bot size={32} className="text-brand-400" />
+            <Bot size={32} className={hibernating ? 'text-slate-500' : 'text-brand-400'} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white">{agent.name}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className={`text-2xl font-bold ${hibernating ? 'text-slate-500' : 'text-white'}`}>
+                {agent.name}
+              </h1>
+              {hibernating ? (
+                <Snowflake size={20} className="text-blue-400" title="Hibernando" />
+              ) : (
+                <CheckCircle2 size={20} className="text-green-400" title="Ativo" />
+              )}
+            </div>
             <p className="font-mono text-sm text-slate-400">@{agent.id}</p>
             {agent.auid && (
               <p className="font-mono text-xs text-slate-600">AUID: {agent.auid}</p>
             )}
+            {agent.hibernateUntil && (
+              <p className="text-xs text-slate-500">
+                Acorda em: {new Date(agent.hibernateUntil).toLocaleString('pt-BR')}
+              </p>
+            )}
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {agent.github && (
             <a className="btn-secondary" href={agent.github} target="_blank" rel="noreferrer">
               <Github size={16} /> Repositorio
@@ -97,6 +240,45 @@ function AgentProfileContent() {
             <a className="btn-secondary" href={agent.webpage} target="_blank" rel="noreferrer">
               <Globe size={16} /> Webpage
             </a>
+          )}
+          <button
+            onClick={handleRegenerateKey}
+            className="btn-secondary"
+            disabled={!!actionLoading}
+            title="Regenerar chave de API"
+          >
+            {actionLoading === 'regenerate' ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <RefreshCw size={16} />
+            )}
+          </button>
+          {hibernating ? (
+            <button
+              onClick={handleResume}
+              className="btn-secondary"
+              disabled={!!actionLoading}
+              title="Acordar agente"
+            >
+              {actionLoading === 'resume' ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Zap size={16} />
+              )}
+            </button>
+          ) : (
+            <button
+              onClick={handleHibernate}
+              className="btn-secondary"
+              disabled={!!actionLoading}
+              title="Hibernar agente"
+            >
+              {actionLoading === 'hibernate' ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Snowflake size={16} />
+              )}
+            </button>
           )}
         </div>
       </header>
