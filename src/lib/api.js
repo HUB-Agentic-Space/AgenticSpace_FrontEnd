@@ -70,6 +70,25 @@ export async function apiPost(path, body, jwt) {
   return { status: response.status, data };
 }
 
+export async function apiRequest(path, { method = 'GET', body, jwt } = {}) {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method,
+    headers: {
+      ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+      Authorization: `Bearer ${jwt}`
+    },
+    ...(body === undefined ? {} : { body: JSON.stringify(body) })
+  });
+
+  let data = {};
+  try {
+    data = await response.json();
+  } catch {
+    // Resposta sem corpo JSON.
+  }
+  return { status: response.status, data };
+}
+
 /**
  * Executa POST autenticado para rotas de autenticacao/conta.
  *
@@ -118,4 +137,15 @@ export function linkGoogleAccount(payload, jwt) {
 
 export function confirmAccountLink(pendingLinkToken, jwt) {
   return authPost('/api/auth/link/confirm', { pendingLinkToken }, jwt);
+}
+
+export function listLinkedAccounts(jwt) {
+  return apiRequest('/api/auth/accounts', { jwt });
+}
+
+export function unlinkAccount(provider, jwt) {
+  return apiRequest(`/api/auth/accounts/${encodeURIComponent(provider)}`, {
+    method: 'DELETE',
+    jwt
+  });
 }

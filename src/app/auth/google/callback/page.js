@@ -73,7 +73,8 @@ function GoogleCallbackInner() {
             }
             if (data.status === 'blocked') {
               setError(
-                `${data.message} Dados encontrados: ${data.relatedData?.agents || 0} agente(s).`
+                `${data.message} Dados encontrados: ${data.relatedData?.agents || 0} agente(s) e ` +
+                  `${data.relatedData?.linkedAccounts || 0} outra(s) identidade(s).`
               );
               return;
             }

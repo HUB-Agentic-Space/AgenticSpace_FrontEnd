@@ -13,7 +13,7 @@
  * sessao autenticada (Credencial Verificavel).
  */
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   Github,
@@ -27,6 +27,7 @@ import {
   Copy,
   RefreshCw,
   Link as LinkIcon,
+  Unlink,
   AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
@@ -37,6 +38,8 @@ import {
   confirmAccountLink,
   getGoogleRedirectUri,
   linkMetaMaskAccount,
+  listLinkedAccounts,
+  unlinkAccount,
   regenerateApiKey
 } from '@/lib/api';
 
@@ -78,11 +81,30 @@ function ProfileContent() {
   const [linkBusy, setLinkBusy] = useState(null);
   const [linkMessage, setLinkMessage] = useState('');
   const [pendingLink, setPendingLink] = useState(null);
+  const [linkedAccounts, setLinkedAccounts] = useState([]);
+  const [accountsLoading, setAccountsLoading] = useState(true);
 
   const did = session?.subject?.id || '';
   const provider = session?.subject?.authenticationMethod || session?.subject?.provider || '—';
   const apiKeyValue = getApiKeyValue(session?.apiKey);
   const apiKeyExpiration = getApiKeyExpiration(session?.apiKey);
+  const normalizedProvider = provider === 'metamask' || provider === 'google' ? provider : '';
+  const mergeProvider = normalizedProvider === 'google' ? 'metamask' : 'google';
+  const mergedAccount = linkedAccounts.find((account) => account.provider === mergeProvider);
+
+  const refreshLinkedAccounts = useCallback(async () => {
+    if (!session?.jwt) return;
+    setAccountsLoading(true);
+    try {
+      const { status, data } = await listLinkedAccounts(session.jwt);
+      if (status >= 400) throw new Error(data.error || 'Falha ao consultar contas vinculadas.');
+      setLinkedAccounts(Array.isArray(data.accounts) ? data.accounts : []);
+    } catch (error) {
+      setLinkMessage(error.message);
+    } finally {
+      setAccountsLoading(false);
+    }
+  }, [session?.jwt]);
 
   useEffect(() => {
     try {
@@ -93,6 +115,10 @@ function ProfileContent() {
     }
     setAgents(listAgents(did));
   }, [did]);
+
+  useEffect(() => {
+    refreshLinkedAccounts();
+  }, [refreshLinkedAccounts]);
 
   /** Atualiza um campo do formulario. */
   function update(field, value) {
@@ -206,7 +232,8 @@ function ProfileContent() {
     }
     if (data.status === 'linked') {
       setPendingLink(null);
-      setLinkMessage('Conta conectada a este usuario.');
+      setLinkMessage('Contas mescladas. Os recursos permanecem com o usuario desta sessao.');
+      refreshLinkedAccounts();
       return;
     }
     if (data.status === 'confirmation_required') {
@@ -217,12 +244,40 @@ function ProfileContent() {
     if (data.status === 'blocked') {
       setPendingLink(null);
       setLinkMessage(
-        `${data.message} Dados encontrados: ${data.relatedData?.agents || 0} agente(s).`
+        `${data.message} Dados encontrados: ${data.relatedData?.agents || 0} agente(s) e ` +
+          `${data.relatedData?.linkedAccounts || 0} outra(s) identidade(s).`
       );
       return;
     }
     if (data.status === 'linked') return;
     setLinkMessage(data.message || 'Operacao concluida.');
+  }
+
+  async function handleUnlink() {
+    if (!mergedAccount) return;
+    const confirmed = window.confirm(
+      `Desconectar a conta ${mergeProvider === 'google' ? 'Google' : 'MetaMask'}? ` +
+        'A identidade externa sera removida do sistema; seus agentes e demais recursos permanecerao nesta conta.'
+    );
+    if (!confirmed) return;
+
+    setLinkBusy('unlink');
+    setLinkMessage('');
+    try {
+      const { status, data } = await unlinkAccount(mergeProvider, session.jwt);
+      if (status >= 400) throw new Error(data.error || data.message || 'Falha ao desconectar conta.');
+      setLinkedAccounts(Array.isArray(data.accounts) ? data.accounts : []);
+      setLinkMessage('Conta desconectada e removida do sistema. Seus recursos foram preservados.');
+    } catch (error) {
+      setLinkMessage(error.message);
+    } finally {
+      setLinkBusy(null);
+    }
+  }
+
+  function startMerge() {
+    if (mergeProvider === 'google') startGoogleLink();
+    else startMetaMaskLink(false);
   }
 
   return (
@@ -253,6 +308,28 @@ function ProfileContent() {
           <div>
             <dt className="text-slate-400">Provedor</dt>
             <dd className="text-slate-200 capitalize">{provider}</dd>
+          </div>
+          <div className="sm:col-span-2">
+            <dt className="text-slate-400">Mesclagem de contas</dt>
+            <dd className="mt-2 flex flex-wrap items-center gap-3">
+              <span className="text-slate-300">
+                {mergeProvider === 'google' ? 'Google' : 'MetaMask'}
+                {mergedAccount?.label ? ` (${mergedAccount.label})` : ''}
+              </span>
+              <button
+                type="button"
+                onClick={mergedAccount ? handleUnlink : startMerge}
+                disabled={linkBusy !== null || accountsLoading}
+                className="btn-secondary"
+              >
+                {mergedAccount ? <Unlink size={16} /> : <LinkIcon size={16} />}
+                {accountsLoading
+                  ? 'Consultando...'
+                  : mergedAccount
+                    ? 'Desconectar conta'
+                    : 'Mesclar conta'}
+              </button>
+            </dd>
           </div>
           <div className="sm:col-span-2">
             <dt className="text-slate-400">API Key</dt>
@@ -288,30 +365,6 @@ function ProfileContent() {
             </dd>
           </div>
         </dl>
-      </section>
-
-      <section className="card">
-        <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold text-white">
-          <LinkIcon size={18} className="text-brand-400" /> Contas conectadas
-        </h2>
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={startGoogleLink}
-            disabled={linkBusy !== null}
-            className="btn-secondary"
-          >
-            <LinkIcon size={16} /> Conectar Google
-          </button>
-          <button
-            type="button"
-            onClick={() => startMetaMaskLink(false)}
-            disabled={linkBusy !== null}
-            className="btn-secondary"
-          >
-            <LinkIcon size={16} /> Conectar MetaMask
-          </button>
-        </div>
         {linkMessage && (
           <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-100">
             <AlertTriangle size={16} className="mt-0.5 shrink-0" />
