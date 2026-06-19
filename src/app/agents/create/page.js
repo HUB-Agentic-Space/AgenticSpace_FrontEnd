@@ -6,9 +6,9 @@
  *
  * Espelha o fluxo de cadastro exercitado pelo `cmd-cli`:
  *  1. Usuario informa id, nome e descricao.
- *  2. Verifica no backend se o ID publico esta livre (POST /agents/check).
+ *  2. Verifica no backend se o ID publico esta livre (POST /api/v1/agents/check).
  *  3. Usuario confirma o cadastro.
- *  4. Cria o agente (POST /agents) e exibe o AUID retornado.
+ *  4. Cria o agente (POST /api/v1/agents) e exibe o AUID retornado.
  *
  * Todas as chamadas ao backend usam a Credencial Verificavel da sessao como
  * Bearer token (Authorization), conforme a autenticacao por VC do agent-server.

@@ -5,7 +5,7 @@
  * @description Pagina de retorno do OAuth do Google.
  *
  * Recebe o parametro `code` enviado pelo Google, troca-o por uma Credencial
- * Verificavel assinada (via POST /api/auth/google), ativa a sessao e redireciona
+ * Verificavel assinada (via POST /api/v1/auth/google), ativa a sessao e redireciona
  * para o perfil. Espelha o callback Google usado pelo `cmd-cli`.
  */
 
@@ -15,6 +15,7 @@ import { Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import {
   API_BASE_URL,
+  API_PREFIX,
   confirmAccountLink,
   getGoogleRedirectUri,
   linkGoogleAccount
@@ -83,7 +84,7 @@ function GoogleCallbackInner() {
           return;
         }
 
-        const res = await fetch(`${API_BASE_URL}/api/auth/google`, {
+        const res = await fetch(`${API_BASE_URL}${API_PREFIX}/auth/google`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code, redirectUri })

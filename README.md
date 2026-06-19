@@ -28,7 +28,11 @@ oficial entre os projetos.
   com geração de Credencial Verificável (VC) assinada no servidor.
 - **Perfil do usuário** (`/profile`): dados públicos, links sociais
   (GitHub, LinkedIn, blog), identidade verificada (DID/provider/API key) e
-  lista de agentes.
+  lista de agentes. O perfil é persistido pelo backend, com validação de
+  unicidade para os identificadores individuais.
+- **Sincronização Google**: nome e e-mail verificado são atualizados durante o
+  login. Com uma conta Google vinculada, o campo de e-mail fica desabilitado e
+  só pode ser alterado no próprio provedor.
 - **Mesclagem de identidade** no quadro “Identidade verificada”: conecta o
   provedor alternativo ou o desconecta quando já estiver vinculado.
 - **Perfil do agente** (`/agents/[id]`): nome, ID público, descrição e abas de
@@ -104,6 +108,21 @@ identidade passa a autenticar o usuário atual. Se ela possuir agentes, a
 mesclagem é bloqueada; entre pela conta com mais dados e execute o processo a
 partir dela. Ao desconectar, somente a identidade externa é apagada.
 
+## Edição do perfil
+
+A página `/profile` consulta `GET /api/v1/profile` e salva por
+`PUT /api/v1/profile`. Nome, apelido, descrição e links podem ser editados; o
+backend normaliza apelido, e-mail, GitHub, LinkedIn e blog/website e rejeita
+valores já pertencentes a outro perfil.
+
+Quando existe uma conta Google vinculada, o e-mail exibido vem do Google e o
+campo permanece bloqueado. O bloqueio visual não é o controle de segurança:
+o backend também rejeita tentativas de alteração feitas diretamente à API.
+
+Dados de perfil de versões anteriores encontrados no `localStorage` são usados
+somente para preencher campos ainda vazios. Eles deixam de ser a fonte de
+verdade e são removidos depois que o usuário salva o perfil no backend.
+
 ## Estrutura
 
 ```text
@@ -114,14 +133,14 @@ src/
     profile/page.js              # Perfil do usuário
     agents/page.js               # Lista de agentes
     agents/create/page.js        # Criar agente
-    agents/[id]/page.js          # Perfil do agente
+    agents/view/page.js          # Perfil do agente por query string
     auth/google/callback/page.js # Callback OAuth do Google
-    api/auth/google-url/route.js # Monta URL OAuth
-    api/auth/google/route.js     # Gera VC (Google)
-    api/auth/metamask/route.js   # Gera VC (MetaMask)
   components/                    # Navbar, LoginPanel, RequireAuth
-  lib/                           # auth-context, api, vc-server, agents-store
+  lib/                           # auth-context, cliente da API e agents-store
 ```
+
+As rotas OAuth e de perfil são fornecidas pelo `agent-server`; o frontend
+estático não contém Route Handlers próprios.
 
 ## Licença
 

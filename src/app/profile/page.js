@@ -8,9 +8,8 @@
  * do humano para a comunidade: nome, apelido, descricao, contato, links para
  * redes sociais, GitHub/repositorios e blog, alem da lista de seus agentes.
  *
- * Os dados de perfil sao editaveis e persistidos localmente (perfil ainda nao
- * possui endpoint dedicado no backend); a identidade (DID/provider) vem da
- * sessao autenticada (Credencial Verificavel).
+ * Os dados de perfil sao editaveis e persistidos pelo backend, que garante a
+ * titularidade exclusiva dos identificadores individuais.
  */
 
 import { useCallback, useEffect, useState } from 'react';
@@ -35,12 +34,15 @@ import { listAgents } from '@/lib/agents-store';
 import RequireAuth from '@/components/RequireAuth';
 import {
   API_BASE_URL,
+  API_PREFIX,
   confirmAccountLink,
   getGoogleRedirectUri,
+  getProfile,
   linkMetaMaskAccount,
   listLinkedAccounts,
   unlinkAccount,
-  regenerateApiKey
+  regenerateApiKey,
+  updateProfile
 } from '@/lib/api';
 
 /** Chave de persistencia local do perfil humano. */
@@ -76,6 +78,8 @@ function ProfileContent() {
   const [profile, setProfile] = useState(EMPTY_PROFILE);
   const [agents, setAgents] = useState([]);
   const [saved, setSaved] = useState(false);
+  const [profileBusy, setProfileBusy] = useState(true);
+  const [profileMessage, setProfileMessage] = useState('');
   const [copyStatus, setCopyStatus] = useState('');
   const [keyBusy, setKeyBusy] = useState(false);
   const [linkBusy, setLinkBusy] = useState(null);
@@ -91,6 +95,8 @@ function ProfileContent() {
   const normalizedProvider = provider === 'metamask' || provider === 'google' ? provider : '';
   const mergeProvider = normalizedProvider === 'google' ? 'metamask' : 'google';
   const mergedAccount = linkedAccounts.find((account) => account.provider === mergeProvider);
+  const hasGoogleIdentity =
+    normalizedProvider === 'google' || linkedAccounts.some((account) => account.provider === 'google');
 
   const refreshLinkedAccounts = useCallback(async () => {
     if (!session?.jwt) return;
@@ -107,14 +113,42 @@ function ProfileContent() {
   }, [session?.jwt]);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(`${PROFILE_KEY}:${did}`);
-      if (raw) setProfile({ ...EMPTY_PROFILE, ...JSON.parse(raw) });
-    } catch {
-      // Ignora.
+    let cancelled = false;
+    async function loadProfile() {
+      if (!session?.jwt) return;
+      setProfileBusy(true);
+      setProfileMessage('');
+      try {
+        const { status, data } = await getProfile(session.jwt);
+        if (status >= 400) throw new Error(data.error || 'Falha ao consultar o perfil.');
+        let loaded = { ...EMPTY_PROFILE, ...(data.profile || {}) };
+        const legacyRaw = localStorage.getItem(`${PROFILE_KEY}:${did}`);
+        if (legacyRaw) {
+          const legacy = { ...EMPTY_PROFILE, ...JSON.parse(legacyRaw) };
+          loaded = Object.fromEntries(
+            Object.keys(EMPTY_PROFILE).map((field) => [field, loaded[field] || legacy[field] || ''])
+          );
+        }
+        if (!cancelled) {
+          setProfile(loaded);
+          if (session.profileSync?.status === 'partial') {
+            setProfileMessage(
+              'O nome foi sincronizado, mas o e-mail do Google já pertence a outro perfil.'
+            );
+          }
+        }
+      } catch (error) {
+        if (!cancelled) setProfileMessage(error.message);
+      } finally {
+        if (!cancelled) setProfileBusy(false);
+      }
     }
+    loadProfile();
     setAgents(listAgents(did));
-  }, [did]);
+    return () => {
+      cancelled = true;
+    };
+  }, [did, session?.jwt, session?.profileSync?.status]);
 
   useEffect(() => {
     refreshLinkedAccounts();
@@ -124,16 +158,30 @@ function ProfileContent() {
   function update(field, value) {
     setProfile((p) => ({ ...p, [field]: value }));
     setSaved(false);
+    setProfileMessage('');
   }
 
-  /** Persiste o perfil localmente. */
-  function handleSave(e) {
+  /** Persiste o perfil no backend, que valida a unicidade global. */
+  async function handleSave(e) {
     e.preventDefault();
+    setProfileBusy(true);
+    setProfileMessage('');
     try {
-      localStorage.setItem(`${PROFILE_KEY}:${did}`, JSON.stringify(profile));
+      const { status, data } = await updateProfile(profile, session.jwt);
+      if (status >= 400) {
+        const fields = Array.isArray(data.fields) && data.fields.length > 0
+          ? ` Campos em conflito: ${data.fields.join(', ')}.`
+          : '';
+        throw new Error(`${data.error || 'Falha ao salvar o perfil.'}${fields}`);
+      }
+      setProfile({ ...EMPTY_PROFILE, ...data.profile });
+      localStorage.removeItem(`${PROFILE_KEY}:${did}`);
       setSaved(true);
-    } catch {
-      // Ignora.
+    } catch (error) {
+      setSaved(false);
+      setProfileMessage(error.message);
+    } finally {
+      setProfileBusy(false);
     }
   }
 
@@ -170,7 +218,7 @@ function ProfileContent() {
       const redirectUri = getGoogleRedirectUri();
       localStorage.setItem(GOOGLE_LINK_KEY, '1');
       const query = new URLSearchParams({ redirect_uri: redirectUri });
-      const res = await fetch(`${API_BASE_URL}/api/auth/google-url?${query}`);
+      const res = await fetch(`${API_BASE_URL}${API_PREFIX}/auth/google-url?${query}`);
       const data = await res.json();
       if (!res.ok || !data.authUrl) {
         throw new Error(data.error || 'Falha ao obter URL do Google.');
@@ -433,7 +481,13 @@ function ProfileContent() {
                 value={profile.email}
                 onChange={(e) => update('email', e.target.value)}
                 placeholder="voce@exemplo.com"
+                disabled={accountsLoading || hasGoogleIdentity}
               />
+              {hasGoogleIdentity && (
+                <p className="mt-1 text-xs text-slate-500">
+                  E-mail definido pela conta Google vinculada.
+                </p>
+              )}
             </div>
             <div>
               <label className="label">GitHub</label>
@@ -465,11 +519,12 @@ function ProfileContent() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button type="submit" className="btn-primary">
-              <Save size={16} /> Salvar perfil
+            <button type="submit" className="btn-primary" disabled={profileBusy}>
+              <Save size={16} /> {profileBusy ? 'Salvando...' : 'Salvar perfil'}
             </button>
             {saved && <span className="text-sm text-green-400">Perfil salvo.</span>}
           </div>
+          {profileMessage && <p className="text-sm text-red-400">{profileMessage}</p>}
         </form>
 
         <div className="space-y-6">

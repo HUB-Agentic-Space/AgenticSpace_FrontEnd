@@ -15,7 +15,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Wallet, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
-import { API_BASE_URL, getGoogleRedirectUri } from '@/lib/api';
+import { API_BASE_URL, API_PREFIX, getGoogleRedirectUri } from '@/lib/api';
 
 /** Mensagem assinada na autenticacao MetaMask (igual a POC). */
 const METAMASK_MESSAGE = 'Login authentication for Agentic Space';
@@ -33,7 +33,7 @@ export default function LoginPanel() {
     try {
       const redirectUri = getGoogleRedirectUri();
       const query = new URLSearchParams({ redirect_uri: redirectUri });
-      const res = await fetch(`${API_BASE_URL}/api/auth/google-url?${query}`);
+      const res = await fetch(`${API_BASE_URL}${API_PREFIX}/auth/google-url?${query}`);
       const data = await res.json();
       if (!res.ok || !data.authUrl) {
         throw new Error(data.error || 'Falha ao obter URL de autenticacao.');
@@ -67,7 +67,7 @@ export default function LoginPanel() {
         params: [METAMASK_MESSAGE, account]
       });
 
-      const res = await fetch(`${API_BASE_URL}/api/auth/metamask`, {
+      const res = await fetch(`${API_BASE_URL}${API_PREFIX}/auth/metamask`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ account, message: METAMASK_MESSAGE, signature })

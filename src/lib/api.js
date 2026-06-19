@@ -4,7 +4,7 @@
  *
  * Centraliza as chamadas autenticadas via Credencial Verificavel
  * (Authorization: Bearer <jwt>), espelhando os contratos consumidos pela POC
- * (`cmd-cli`) nos endpoints `/agents/check` e `/agents`.
+ * (`cmd-cli`) nos endpoints `/api/v1/agents/check` e `/api/v1/agents`.
  */
 
 /**
@@ -16,6 +16,7 @@
  * `http://localhost:4000`).
  */
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+export const API_PREFIX = '/api/v1';
 const UNAUTHORIZED_EVENT = 'agentic-space:unauthorized';
 
 function notifyUnauthorized(response) {
@@ -53,13 +54,13 @@ export function getGoogleRedirectUri() {
 /**
  * Executa um POST autenticado contra o backend.
  *
- * @param {string} path Caminho do endpoint (ex.: '/agents').
+ * @param {string} path Caminho do endpoint dentro da API (ex.: '/agents').
  * @param {Object} body Corpo JSON da requisicao.
  * @param {string} jwt JWT da credencial verificavel.
  * @returns {Promise<{ status: number, data: Object }>}
  */
 export async function apiPost(path, body, jwt) {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(`${API_BASE_URL}${API_PREFIX}${path}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -79,7 +80,7 @@ export async function apiPost(path, body, jwt) {
 }
 
 export async function apiRequest(path, { method = 'GET', body, jwt } = {}) {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(`${API_BASE_URL}${API_PREFIX}${path}`, {
     method,
     headers: {
       ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
@@ -133,28 +134,36 @@ export function createAgent(agent, jwt) {
 }
 
 export function regenerateApiKey(jwt) {
-  return authPost('/api/auth/api-key/regenerate', {}, jwt);
+  return authPost('/auth/api-key/regenerate', {}, jwt);
 }
 
 export function linkMetaMaskAccount(payload, jwt) {
-  return authPost('/api/auth/link/metamask', payload, jwt);
+  return authPost('/auth/link/metamask', payload, jwt);
 }
 
 export function linkGoogleAccount(payload, jwt) {
-  return authPost('/api/auth/link/google', payload, jwt);
+  return authPost('/auth/link/google', payload, jwt);
 }
 
 export function confirmAccountLink(pendingLinkToken, jwt) {
-  return authPost('/api/auth/link/confirm', { pendingLinkToken }, jwt);
+  return authPost('/auth/link/confirm', { pendingLinkToken }, jwt);
 }
 
 export function listLinkedAccounts(jwt) {
-  return apiRequest('/api/auth/accounts', { jwt });
+  return apiRequest('/auth/accounts', { jwt });
 }
 
 export function unlinkAccount(provider, jwt) {
-  return apiRequest(`/api/auth/accounts/${encodeURIComponent(provider)}`, {
+  return apiRequest(`/auth/accounts/${encodeURIComponent(provider)}`, {
     method: 'DELETE',
     jwt
   });
+}
+
+export function getProfile(jwt) {
+  return apiRequest('/profile', { jwt });
+}
+
+export function updateProfile(profile, jwt) {
+  return apiRequest('/profile', { method: 'PUT', body: profile, jwt });
 }

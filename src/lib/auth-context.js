@@ -54,7 +54,7 @@ export function AuthProvider({ children }) {
 
   /**
    * Persiste e ativa uma nova sessao autenticada.
-   * @param {Object} data Dados retornados pelas rotas /api/auth/*.
+   * @param {Object} data Dados retornados pelas rotas /api/v1/auth/*.
    */
   const login = useCallback((data) => {
     setSession(data);
