@@ -4,7 +4,7 @@
  * @file page.js (rota '/agents/create')
  * @description Fluxo de criacao de agente (RF-02, RF-03).
  *
- * Espelha o `createAgentFlow()` da POC (`backend/src/poc.js`):
+ * Espelha o fluxo de cadastro exercitado pelo `cmd-cli`:
  *  1. Usuario informa id, nome e descricao.
  *  2. Verifica no backend se o ID publico esta livre (POST /agents/check).
  *  3. Usuario confirma o cadastro.

@@ -4,7 +4,7 @@
  * @file LoginPanel.js
  * @description Painel de autenticacao com Google e MetaMask.
  *
- * Reproduz o fluxo da POC (`backend/src/poc.js` + `backend/src/server.js`):
+ * Reproduz o fluxo de autenticacao usado pelo `cmd-cli` e pelo backend:
  *  - Google: redireciona para a tela de consentimento OAuth e retorna via
  *    `/auth/google/callback`, onde o `code` e trocado por uma VC assinada.
  *  - MetaMask: solicita conexao da carteira (window.ethereum), assina uma

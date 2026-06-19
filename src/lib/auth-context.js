@@ -18,6 +18,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 
 /** Chave usada para persistir a sessao em localStorage. */
 const STORAGE_KEY = 'agentic_space_session';
+const LOCAL_SESSION_KEYS = ['agentic_space_session', 'agentic_space_link_google'];
 
 const AuthContext = createContext(null);
 
@@ -64,14 +65,29 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  /**
+   * Atualiza parcialmente a sessao atual e persiste o novo valor.
+   * @param {Object|Function} patch Campos a mesclar ou updater.
+   */
+  const updateSession = useCallback((patch) => {
+    setSession((current) => {
+      const next =
+        typeof patch === 'function'
+          ? patch(current)
+          : { ...(current || {}), ...(patch || {}) };
+      try {
+        if (next) localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        // Ignora falhas de persistencia.
+      }
+      return next;
+    });
+  }, []);
+
   /** Encerra a sessao e limpa o armazenamento local. */
   const logout = useCallback(() => {
     setSession(null);
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      // Ignora.
-    }
+    clearLocalSessionState();
   }, []);
 
   const value = {
@@ -79,15 +95,77 @@ export function AuthProvider({ children }) {
     loading,
     isAuthenticated: Boolean(session?.jwt),
     login,
+    updateSession,
     logout
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+function clearLocalSessionState() {
+  try {
+    for (const key of LOCAL_SESSION_KEYS) {
+      localStorage.removeItem(key);
+    }
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith('agentic_space_session:')) {
+        localStorage.removeItem(key);
+      }
+    }
+  } catch {
+    // Ignora.
+  }
+
+  try {
+    for (const key of Object.keys(sessionStorage)) {
+      if (key.startsWith('agentic_space_')) {
+        sessionStorage.removeItem(key);
+      }
+    }
+  } catch {
+    // Ignora.
+  }
+
+  clearClientCookies();
+}
+
+function clearClientCookies() {
+  if (typeof document === 'undefined') return;
+
+  const cookieNames = document.cookie
+    .split(';')
+    .map((cookie) => cookie.split('=')[0]?.trim())
+    .filter(Boolean);
+  if (cookieNames.length === 0) return;
+
+  const hostname = window.location.hostname;
+  const domainParts = hostname.split('.');
+  const domains = new Set(['', hostname]);
+  for (let index = 0; index < domainParts.length - 1; index += 1) {
+    domains.add(`.${domainParts.slice(index).join('.')}`);
+  }
+
+  const pathParts = window.location.pathname.split('/').filter(Boolean);
+  const paths = new Set(['/']);
+  let currentPath = '';
+  for (const part of pathParts) {
+    currentPath += `/${part}`;
+    paths.add(currentPath);
+  }
+
+  for (const name of cookieNames) {
+    for (const path of paths) {
+      for (const domain of domains) {
+        const domainPart = domain ? `; domain=${domain}` : '';
+        document.cookie = `${name}=; Max-Age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=${path}${domainPart}; SameSite=Lax`;
+      }
+    }
+  }
+}
+
 /**
  * Hook de acesso ao contexto de autenticacao.
- * @returns {{ session: Object|null, loading: boolean, isAuthenticated: boolean, login: Function, logout: Function }}
+ * @returns {{ session: Object|null, loading: boolean, isAuthenticated: boolean, login: Function, updateSession: Function, logout: Function }}
  */
 export function useAuth() {
   const ctx = useContext(AuthContext);

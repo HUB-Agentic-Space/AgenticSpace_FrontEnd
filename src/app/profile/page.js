@@ -23,11 +23,22 @@ import {
   Bot,
   KeyRound,
   Save,
-  ExternalLink
+  ExternalLink,
+  Copy,
+  RefreshCw,
+  Link as LinkIcon,
+  AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { listAgents } from '@/lib/agents-store';
 import RequireAuth from '@/components/RequireAuth';
+import {
+  API_BASE_URL,
+  confirmAccountLink,
+  getGoogleRedirectUri,
+  linkMetaMaskAccount,
+  regenerateApiKey
+} from '@/lib/api';
 
 /** Chave de persistencia local do perfil humano. */
 const PROFILE_KEY = 'agentic_space_profile';
@@ -43,14 +54,35 @@ const EMPTY_PROFILE = {
   blog: ''
 };
 
+const METAMASK_MESSAGE = 'Login authentication for Agentic Space';
+const GOOGLE_LINK_KEY = 'agentic_space_link_google';
+
+function getApiKeyValue(apiKey) {
+  if (!apiKey) return '';
+  if (typeof apiKey === 'string') return apiKey;
+  return apiKey.apiKey || '';
+}
+
+function getApiKeyExpiration(apiKey) {
+  if (!apiKey || typeof apiKey === 'string') return '';
+  return apiKey.expiresAt || apiKey.expirationDate || '';
+}
+
 function ProfileContent() {
-  const { session } = useAuth();
+  const { session, updateSession } = useAuth();
   const [profile, setProfile] = useState(EMPTY_PROFILE);
   const [agents, setAgents] = useState([]);
   const [saved, setSaved] = useState(false);
+  const [copyStatus, setCopyStatus] = useState('');
+  const [keyBusy, setKeyBusy] = useState(false);
+  const [linkBusy, setLinkBusy] = useState(null);
+  const [linkMessage, setLinkMessage] = useState('');
+  const [pendingLink, setPendingLink] = useState(null);
 
   const did = session?.subject?.id || '';
   const provider = session?.subject?.authenticationMethod || session?.subject?.provider || '—';
+  const apiKeyValue = getApiKeyValue(session?.apiKey);
+  const apiKeyExpiration = getApiKeyExpiration(session?.apiKey);
 
   useEffect(() => {
     try {
@@ -77,6 +109,120 @@ function ProfileContent() {
     } catch {
       // Ignora.
     }
+  }
+
+  async function copyApiKey() {
+    setCopyStatus('');
+    if (!apiKeyValue) {
+      setCopyStatus('Nenhuma API key ativa nesta sessao. Recrie a chave para copiar.');
+      return;
+    }
+    await navigator.clipboard.writeText(apiKeyValue);
+    setCopyStatus('API key copiada.');
+  }
+
+  async function handleRegenerateApiKey() {
+    setKeyBusy(true);
+    setCopyStatus('');
+    try {
+      const { status, data } = await regenerateApiKey(session.jwt);
+      if (status >= 400) throw new Error(data.error || 'Falha ao recriar API key.');
+      updateSession((current) => ({ ...current, apiKey: data.apiKey }));
+      setCopyStatus('Nova API key criada. Use o icone de copiar para leva-la ao clipboard.');
+    } catch (error) {
+      setCopyStatus(error.message);
+    } finally {
+      setKeyBusy(false);
+    }
+  }
+
+  async function startGoogleLink() {
+    setLinkMessage('');
+    setPendingLink(null);
+    setLinkBusy('google');
+    try {
+      const redirectUri = getGoogleRedirectUri();
+      localStorage.setItem(GOOGLE_LINK_KEY, '1');
+      const query = new URLSearchParams({ redirect_uri: redirectUri });
+      const res = await fetch(`${API_BASE_URL}/api/auth/google-url?${query}`);
+      const data = await res.json();
+      if (!res.ok || !data.authUrl) {
+        throw new Error(data.error || 'Falha ao obter URL do Google.');
+      }
+      window.location.href = data.authUrl;
+    } catch (error) {
+      localStorage.removeItem(GOOGLE_LINK_KEY);
+      setLinkMessage(error.message);
+      setLinkBusy(null);
+    }
+  }
+
+  async function startMetaMaskLink(confirmConflict = false) {
+    setLinkMessage('');
+    if (!confirmConflict) setPendingLink(null);
+    setLinkBusy('metamask');
+    try {
+      if (typeof window === 'undefined' || typeof window.ethereum === 'undefined') {
+        throw new Error('MetaMask nao esta instalado neste navegador.');
+      }
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      if (!accounts || accounts.length === 0) {
+        throw new Error('Nenhuma conta encontrada na carteira.');
+      }
+      const account = accounts[0];
+      const signature = await window.ethereum.request({
+        method: 'personal_sign',
+        params: [METAMASK_MESSAGE, account]
+      });
+      const { status, data } = await linkMetaMaskAccount(
+        { account, message: METAMASK_MESSAGE, signature, confirmConflict },
+        session.jwt
+      );
+      handleLinkResult(status, data);
+    } catch (error) {
+      setLinkMessage(error.message);
+    } finally {
+      setLinkBusy(null);
+    }
+  }
+
+  async function confirmPendingLink() {
+    if (!pendingLink?.pendingLinkToken) return;
+    setLinkBusy('confirm');
+    setLinkMessage('');
+    try {
+      const { status, data } = await confirmAccountLink(pendingLink.pendingLinkToken, session.jwt);
+      handleLinkResult(status, data);
+    } catch (error) {
+      setLinkMessage(error.message);
+    } finally {
+      setLinkBusy(null);
+    }
+  }
+
+  function handleLinkResult(status, data) {
+    if (status >= 400 && data.status !== 'blocked') {
+      throw new Error(data.error || 'Falha ao conectar conta.');
+    }
+    if (data.status === 'linked') {
+      setPendingLink(null);
+      setLinkMessage('Conta conectada a este usuario.');
+      return;
+    }
+    if (data.status === 'confirmation_required') {
+      setPendingLink(data);
+      setLinkMessage(data.message);
+      return;
+    }
+    if (data.status === 'blocked') {
+      setPendingLink(null);
+      setLinkMessage(
+        `${data.message} Dados encontrados: ${data.relatedData?.agents || 0} agente(s).`
+      );
+      return;
+    }
+    if (data.status === 'linked') return;
+    setLinkMessage(data.message || 'Operacao concluida.');
   }
 
   return (
@@ -110,11 +256,87 @@ function ProfileContent() {
           </div>
           <div className="sm:col-span-2">
             <dt className="text-slate-400">API Key</dt>
-            <dd className="break-all font-mono text-xs text-slate-300">
-              {session?.apiKey?.apiKey || '—'}
+            <dd className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="rounded border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-xs text-slate-300">
+                {apiKeyValue ? '••••••••••••••••••••••••••••••••' : '—'}
+              </span>
+              <button
+                type="button"
+                onClick={copyApiKey}
+                className="btn-secondary"
+                aria-label="Copiar API key"
+                title="Copiar API key"
+              >
+                <Copy size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={handleRegenerateApiKey}
+                disabled={keyBusy}
+                className="btn-secondary"
+              >
+                <RefreshCw size={16} /> {keyBusy ? 'Recriando...' : 'Recriar'}
+              </button>
+              {apiKeyExpiration && (
+                <span className="text-xs text-slate-500">
+                  expira em {new Date(apiKeyExpiration).toLocaleDateString()}
+                </span>
+              )}
+              {copyStatus && (
+                <span className="basis-full text-xs text-slate-400">{copyStatus}</span>
+              )}
             </dd>
           </div>
         </dl>
+      </section>
+
+      <section className="card">
+        <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold text-white">
+          <LinkIcon size={18} className="text-brand-400" /> Contas conectadas
+        </h2>
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={startGoogleLink}
+            disabled={linkBusy !== null}
+            className="btn-secondary"
+          >
+            <LinkIcon size={16} /> Conectar Google
+          </button>
+          <button
+            type="button"
+            onClick={() => startMetaMaskLink(false)}
+            disabled={linkBusy !== null}
+            className="btn-secondary"
+          >
+            <LinkIcon size={16} /> Conectar MetaMask
+          </button>
+        </div>
+        {linkMessage && (
+          <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-100">
+            <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+            <span>{linkMessage}</span>
+          </div>
+        )}
+        {pendingLink?.status === 'confirmation_required' && (
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={confirmPendingLink}
+              disabled={linkBusy !== null}
+              className="btn-primary"
+            >
+              Confirmar mesclagem
+            </button>
+            <button
+              type="button"
+              onClick={() => setPendingLink(null)}
+              className="btn-secondary"
+            >
+              Cancelar
+            </button>
+          </div>
+        )}
       </section>
 
       <div className="grid gap-8 lg:grid-cols-2">

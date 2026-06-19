@@ -4,7 +4,7 @@
  *
  * Centraliza as chamadas autenticadas via Credencial Verificavel
  * (Authorization: Bearer <jwt>), espelhando os contratos consumidos pela POC
- * (`backend/src/poc.js`) nos endpoints `/agents/check` e `/agents`.
+ * (`cmd-cli`) nos endpoints `/agents/check` e `/agents`.
  */
 
 /**
@@ -71,6 +71,18 @@ export async function apiPost(path, body, jwt) {
 }
 
 /**
+ * Executa POST autenticado para rotas de autenticacao/conta.
+ *
+ * @param {string} path Caminho do endpoint.
+ * @param {Object} body Corpo JSON.
+ * @param {string} jwt JWT da sessao atual.
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+export async function authPost(path, body, jwt) {
+  return apiPost(path, body, jwt);
+}
+
+/**
  * Verifica se um ID publico de agente esta disponivel.
  *
  * @param {string} id ID publico desejado.
@@ -90,4 +102,20 @@ export function checkAgentId(id, jwt) {
  */
 export function createAgent(agent, jwt) {
   return apiPost('/agents', { ...agent, confirm: true }, jwt);
+}
+
+export function regenerateApiKey(jwt) {
+  return authPost('/api/auth/api-key/regenerate', {}, jwt);
+}
+
+export function linkMetaMaskAccount(payload, jwt) {
+  return authPost('/api/auth/link/metamask', payload, jwt);
+}
+
+export function linkGoogleAccount(payload, jwt) {
+  return authPost('/api/auth/link/google', payload, jwt);
+}
+
+export function confirmAccountLink(pendingLinkToken, jwt) {
+  return authPost('/api/auth/link/confirm', { pendingLinkToken }, jwt);
 }

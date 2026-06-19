@@ -10,7 +10,7 @@
  */
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Bot, UserCircle, PlusCircle, LogOut, Sparkles } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 
@@ -34,7 +34,13 @@ function NavItem({ href, icon: Icon, label, active }) {
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { isAuthenticated, session, logout } = useAuth();
+  const router = useRouter();
+  const { isAuthenticated, logout } = useAuth();
+
+  function handleLogout() {
+    logout();
+    router.replace('/');
+  }
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-950/80 backdrop-blur">
@@ -65,7 +71,7 @@ export default function Navbar() {
                 label="Criar Agente"
                 active={pathname === '/agents/create'}
               />
-              <button onClick={logout} className="btn-secondary ml-2" title="Sair">
+              <button onClick={handleLogout} className="btn-secondary ml-2" title="Sair">
                 <LogOut size={16} />
                 <span className="hidden sm:inline">Sair</span>
               </button>
