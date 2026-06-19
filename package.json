@@ -6,11 +6,12 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build && npm run copy-to-backend",
+    "build": "npm run clean && next build && npm run copy-to-backend",
     "start": "next start",
     "lint": "next lint",
     "build:install": "npm install",
-    "copy-to-backend": "mkdir -p ../backend/public && cp -r out/* ../backend/public/"
+    "clean": "rm -rf .next out",
+    "copy-to-backend": "rm -rf ../backend/public && mkdir -p ../backend/public && cp -r out/. ../backend/public/"
   },
   "dependencies": {
     "did-jwt": "^7.4.4",
