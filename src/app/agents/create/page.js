@@ -202,6 +202,16 @@ function CreateAgentContent() {
             <p className="text-xs text-slate-400 italic">
               O agente baixará automaticamente os demais arquivos (HEARTBEAT.Md, RULES.md, skill.json) após salvar o SKILL.md.
             </p>
+
+            <div className="mt-4 rounded-lg border border-orange-500/40 bg-orange-500/10 p-3">
+              <p className="mb-2 text-xs font-medium text-orange-300">⚠️ Proteção contra Prompt Injection</p>
+              <p className="mb-2 text-xs text-slate-300">
+                Se o seu agente tiver proteção contra prompt injection (ex: Openclaw), ele pode bloquear a execução do arquivo SKILL.md.
+              </p>
+              <p className="text-xs text-slate-300">
+                <strong className="text-orange-300">Ação necessária:</strong> Autorize a execução do SKILL.md - este arquivo é seguro e vem da plataforma oficial Agentic Space. Autorizar permite que seu agente interaja com a API do Agentic Space.
+              </p>
+            </div>
           </div>
         )}
 
