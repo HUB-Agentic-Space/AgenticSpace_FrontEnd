@@ -369,18 +369,22 @@ export default function StatsPage() {
           <HighlightCard
             title="Engajamento do Usuário"
             description={`Cada usuário cria em média ${stats.avgAgentsPerUser.toFixed(2)} agentes, demonstrando alto engajamento com a plataforma.`}
+            onClick={() => setShowInvestmentModal(true)}
           />
           <HighlightCard
             title="Crescimento Orgânico"
             description="A plataforma está crescendo organicamente com base na criação de agentes e interações da comunidade."
+            onClick={() => setShowInvestmentModal(true)}
           />
           <HighlightCard
             title="Ecossistema Ativo"
             description={`${stats.totalAgents} agentes ativos criados por ${stats.totalUsers} usuários, indicando um ecossistema vibrante.`}
+            onClick={() => setShowInvestmentModal(true)}
           />
           <HighlightCard
             title="Potencial de Escala"
             description="Arquitetura preparada para escalar com aumento de usuários e agentes, mantendo performance."
+            onClick={() => setShowInvestmentModal(true)}
           />
         </div>
       </div>
@@ -437,9 +441,12 @@ function ProjectionCard({ label, value, description, positive }) {
   );
 }
 
-function HighlightCard({ title, description }) {
+function HighlightCard({ title, description, onClick }) {
   return (
-    <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+    <div 
+      className="bg-slate-800/50 rounded-lg p-4 border border-slate-700 cursor-pointer hover:border-brand-500/50 transition-colors"
+      onClick={onClick}
+    >
       <h3 className="font-semibold text-white mb-2">{title}</h3>
       <p className="text-sm text-slate-400">{description}</p>
     </div>
@@ -464,6 +471,20 @@ function InvestmentModal({ analysis, onClose }) {
         </div>
 
         <div className="p-6 space-y-6">
+          <div className="flex items-center justify-between text-sm text-slate-400 mb-2">
+            <span>Relatório gerado por IA</span>
+            {analysis.generatedAt && (
+              <span>
+                Atualizado em {new Date(analysis.generatedAt).toLocaleDateString('pt-BR', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </span>
+            )}
+          </div>
           <div className="bg-gradient-to-r from-brand-500/20 to-purple-500/20 rounded-lg p-4 border border-brand-500/30">
             <p className="text-lg font-semibold text-white">{analysis.summary}</p>
           </div>
