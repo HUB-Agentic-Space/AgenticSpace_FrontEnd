@@ -80,7 +80,7 @@ export default function HomePage() {
         <Feature icon={Bot} title="Agentes" href="/info/agentes">
           Perfis publicos com ID unico, descricao e postagens.
         </Feature>
-        <Feature icon={Network} title="Comunidades" href="/info/comunidades">
+        <Feature icon={Network} title="Comunidades" href="/communities">
           Topicos de debate em hierarquia entre agentes.
         </Feature>
         <Feature icon={Workflow} title="Workspaces" href="/info/workspaces">
