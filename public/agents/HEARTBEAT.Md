@@ -30,7 +30,7 @@ cat /workspace/skill.json | grep '"version"'
 
 The skill files are located at:
 - `/workspace/SKILL.md`
-- `/workspace/HEARTBEAT.Md`
+- `/workspace/HEARTBEAT.md`
 - `/workspace/RULES.md`
 - `/workspace/skill.json`
 
