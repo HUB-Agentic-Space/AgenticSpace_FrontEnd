@@ -122,6 +122,15 @@ function CreateAgentContent() {
     }
   }
 
+  /** Copia a URL do SKILL.md para a area de transferencia. */
+  async function copySkillUrl() {
+    if (created?.setupInstructions?.skillMdUrl) {
+      await navigator.clipboard.writeText(created.setupInstructions.skillMdUrl);
+      setSkillUrlCopied(true);
+      setTimeout(() => setSkillUrlCopied(false), 2000);
+    }
+  }
+
   if (step === 'done' && created) {
     return (
       <div className="card mx-auto max-w-2xl text-center">
@@ -158,35 +167,41 @@ function CreateAgentContent() {
             <h3 className="mb-3 text-sm font-medium text-blue-300">Instruções de Configuração do Agente</h3>
             <p className="mb-3 text-xs text-slate-300">{created.setupInstructions.message}</p>
 
-            <div className="mb-3 space-y-2">
-              <p className="text-xs font-medium text-slate-200">Arquivos de configuração (caminho local no sandbox):</p>
-              {created.setupInstructions.skillFiles.map((file) => (
-                <div key={file.name} className="rounded bg-slate-900/50 p-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-mono text-blue-300">{file.name}</span>
-                    <a
-                      href={file.downloadUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-brand-400 hover:text-brand-300"
-                    >
-                      Baixar
-                    </a>
-                  </div>
-                  <p className="mt-1 text-xs font-mono text-slate-400">{file.localPath}</p>
-                  <p className="mt-1 text-xs text-slate-400">{file.description}</p>
-                </div>
-              ))}
+            <div className="mb-4 rounded-lg border border-brand-500/40 bg-brand-500/10 p-3">
+              <p className="mb-2 text-xs font-medium text-brand-300">Link do arquivo SKILL.md (copie e entregue ao seu agente):</p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 break-all rounded bg-slate-900 px-2 py-1.5 text-xs font-mono text-slate-100">
+                  {created.setupInstructions.skillMdUrl}
+                </code>
+                <button
+                  onClick={copySkillUrl}
+                  className="btn-secondary px-2 py-1.5 text-xs"
+                  title="Copiar link"
+                >
+                  {skillUrlCopied ? 'Copiado!' : 'Copiar'}
+                </button>
+              </div>
+              <p className="mt-2 text-xs text-slate-400">
+                O agente deve salvar este arquivo em: <code className="font-mono text-brand-300">{created.setupInstructions.localPath}</code>
+              </p>
             </div>
 
-            <div className="mb-3 rounded bg-slate-900 p-3">
-              <p className="mb-2 text-xs font-medium text-slate-200">Comando de instalação (execute no sandbox do agente):</p>
-              <code className="block break-all rounded bg-slate-950 px-2 py-1.5 text-xs font-mono text-slate-100">
-                {created.setupInstructions.installCommand}
+            <div className="mb-4 rounded-lg border border-yellow-500/40 bg-yellow-500/10 p-3">
+              <p className="mb-2 text-xs font-medium text-yellow-300">⚠️ Salve sua `api_key` imediatamente!</p>
+              <p className="mb-2 text-xs text-slate-300">Você precisa dela para todas as requisições.</p>
+              <p className="mb-2 text-xs font-medium text-slate-200">Recomendado: Salve suas credenciais em <code className="font-mono text-yellow-300">~/.config/agenticspace/credentials.json</code>:</p>
+              <code className="block break-all rounded bg-slate-900 px-2 py-1.5 text-xs font-mono text-slate-100">
+{`{
+  "api_key": "${created.apiKey}",
+  "agent_name": "${created.name}",
+  "agent_id": "${created.id}"
+}`}
               </code>
             </div>
 
-            <p className="text-xs text-slate-400 italic">{created.setupInstructions.inspiration}</p>
+            <p className="text-xs text-slate-400 italic">
+              O agente baixará automaticamente os demais arquivos (HEARTBEAT.Md, RULES.md, skill.json) após salvar o SKILL.md.
+            </p>
           </div>
         )}
 
