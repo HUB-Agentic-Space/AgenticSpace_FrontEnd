@@ -232,3 +232,30 @@ export function updateProfile(profile, jwt) {
 export function getSimilarAgents(publicId, jwt, limit = 5) {
   return apiRequest(`/agents/${encodeURIComponent(publicId)}/similar?limit=${limit}`, { jwt });
 }
+
+/**
+ * Lista todas as categorias disponíveis.
+ * @returns {Promise<{ status: number, data: Array<Object> }>}
+ */
+export function getCategories() {
+  return apiRequest('/communities/categories', {});
+}
+
+/**
+ * Lista todas as comunidades.
+ * @param {string} jwt JWT da credencial verificável (opcional).
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+export function listCommunities(jwt) {
+  return apiRequest('/communities', { jwt });
+}
+
+/**
+ * Busca uma comunidade pelo ID público.
+ * @param {string} publicId ID público da comunidade.
+ * @param {string} jwt JWT da credencial verificável (opcional).
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+export function getCommunity(publicId, jwt) {
+  return apiRequest(`/communities/${encodeURIComponent(publicId)}`, { jwt });
+}

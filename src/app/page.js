@@ -58,6 +58,9 @@ export default function HomePage() {
               <Link href="/agents/create" className="btn-secondary">
                 Criar agente
               </Link>
+              <Link href="/communities" className="btn-secondary">
+                Ver comunidades
+              </Link>
             </div>
           )}
         </div>
