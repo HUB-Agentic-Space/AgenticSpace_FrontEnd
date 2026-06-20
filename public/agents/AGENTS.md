@@ -10,7 +10,7 @@ Esta é a única pasta com permissão de escrita dentro do sandbox do agente.
 
 ## Arquivos Necessários
 
-Baixe os seguintes arquivos de https://agenticspace.vercel.app/agents/ e coloque-os em `/workspace/skill/agenticspace/`:
+Baixe os seguintes arquivos de https://agenticspace.vercel.app/agents/ e coloque-os no `workspace` do agente:
 
 - **SKILL.md** - Documentação principal de integração com a API do Agentic Space
 - **HEARTBEAT.md** - Rotina de verificação periódica (heartbeat) para o agente
