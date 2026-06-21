@@ -69,6 +69,8 @@ export default function StatsPage() {
     // Projeções baseadas no histórico diário disponível.
     const visitsByDay = data.visitsByDay || [];
     const pageViewsByDay = data.pageViewsByDay || [];
+    const agentsByDay = data.agentsByDay || [];
+    const usersByDay = data.usersByDay || [];
 
     if (visitsByDay.length < 2) {
       setProjections(null);
@@ -77,13 +79,23 @@ export default function StatsPage() {
 
     const visitSeries = visitsByDay.map(v => v.visitors);
     const viewSeries = pageViewsByDay.map(v => v.views);
+    const agentSeries = agentsByDay.map(a => a.agents);
+    const userSeries = usersByDay.map(u => u.users);
 
     // Modelo de tendência amortecida (Holt damped trend): evita projeções
     // explosivas em séries curtas, comuns em sites recém-lançados.
     const visitForecast = forecastDampedTrend(visitSeries, HORIZON_DAYS);
     const viewForecast = forecastDampedTrend(viewSeries, HORIZON_DAYS);
+    const agentForecast = forecastDampedTrend(agentSeries, HORIZON_DAYS);
+    const userForecast = forecastDampedTrend(userSeries, HORIZON_DAYS);
 
     const lastVisitDate = new Date(visitsByDay[visitsByDay.length - 1].date);
+    const lastAgentDate = agentsByDay.length > 0
+      ? new Date(agentsByDay[agentsByDay.length - 1].date)
+      : lastVisitDate;
+    const lastUserDate = usersByDay.length > 0
+      ? new Date(usersByDay[usersByDay.length - 1].date)
+      : lastVisitDate;
 
     const projectedVisits = visitForecast.map((value, idx) => {
       const projectedDate = new Date(lastVisitDate);
@@ -105,6 +117,26 @@ export default function StatsPage() {
       };
     });
 
+    const projectedAgents = agentForecast.map((value, idx) => {
+      const projectedDate = new Date(lastAgentDate);
+      projectedDate.setDate(projectedDate.getDate() + idx + 1);
+      return {
+        date: projectedDate.toISOString().split('T')[0],
+        agents: value,
+        projected: true
+      };
+    });
+
+    const projectedUsers = userForecast.map((value, idx) => {
+      const projectedDate = new Date(lastUserDate);
+      projectedDate.setDate(projectedDate.getDate() + idx + 1);
+      return {
+        date: projectedDate.toISOString().split('T')[0],
+        users: value,
+        projected: true
+      };
+    });
+
     // Taxa de crescimento de curto prazo (primeiro passo previsto vs. último real).
     const lastVisitCount = visitSeries[visitSeries.length - 1] || 0;
     const nextDayVisits = visitForecast[0] || 0;
@@ -114,22 +146,83 @@ export default function StatsPage() {
 
     const projected30DayVisitors = projectedVisits.reduce((sum, p) => sum + p.visitors, 0);
     const projected30DayPageViews = projectedPageViews.reduce((sum, p) => sum + p.views, 0);
+    const projected30DayAgents = projectedAgents.reduce((sum, p) => sum + p.agents, 0);
+    const projected30DayUsers = projectedUsers.reduce((sum, p) => sum + p.users, 0);
+
+    // Calcular acumulado de usuários e agentes ao longo do tempo
+    const cumulativeAgents = calculateCumulative([...agentsByDay, ...projectedAgents], 'agents');
+    const cumulativeUsers = calculateCumulative([...usersByDay, ...projectedUsers], 'users');
+
+    // Calcular proporção agentes/humanos ao longo do tempo
+    const agentUserRatio = calculateAgentUserRatio(cumulativeAgents, cumulativeUsers);
 
     // [logs] Registro estruturado da projeção para auditoria/PDCL.
     console.log(
       `[${new Date().toISOString()}] [stats/page.js:calculateProjections] info ` +
       `projecao_calculada - dias_historico=${visitSeries.length} ` +
       `taxa_diaria=${dailyGrowthRate.toFixed(2)}% ` +
-      `visitantes_30d=${projected30DayVisitors} views_30d=${projected30DayPageViews}`
+      `visitantes_30d=${projected30DayVisitors} views_30d=${projected30DayPageViews} ` +
+      `agentes_30d=${projected30DayAgents} usuarios_30d=${projected30DayUsers}`
     );
 
     setProjections({
       visits: [...visitsByDay, ...projectedVisits],
       pageViews: [...pageViewsByDay, ...projectedPageViews],
+      agents: [...agentsByDay, ...projectedAgents],
+      users: [...usersByDay, ...projectedUsers],
+      cumulativeAgents,
+      cumulativeUsers,
+      agentUserRatio,
       growthRate: dailyGrowthRate,
       projected30DayVisitors,
-      projected30DayPageViews
+      projected30DayPageViews,
+      projected30DayAgents,
+      projected30DayUsers
     });
+  };
+
+  /**
+   * Calcula o acumulado de uma série temporal.
+   * @param {Array<{date: string, [key: string]: number}>} data - Dados diários
+   * @param {string} key - Chave do valor a acumular
+   * @returns {Array<{date: string, cumulative: number}>}
+   */
+  const calculateCumulative = (data, key) => {
+    let cumulative = 0;
+    return data.map(item => {
+      cumulative += item[key] || 0;
+      return {
+        date: item.date,
+        cumulative
+      };
+    });
+  };
+
+  /**
+   * Calcula a proporção agentes/humanos ao longo do tempo.
+   * @param {Array<{date: string, cumulative: number}>} cumulativeAgents
+   * @param {Array<{date: string, cumulative: number}>} cumulativeUsers
+   * @returns {Array<{date: string, ratio: number}>}
+   */
+  const calculateAgentUserRatio = (cumulativeAgents, cumulativeUsers) => {
+    const ratioMap = new Map();
+    
+    cumulativeAgents.forEach(item => {
+      ratioMap.set(item.date, { agents: item.cumulative, users: 0 });
+    });
+    
+    cumulativeUsers.forEach(item => {
+      const existing = ratioMap.get(item.date) || { agents: 0, users: 0 };
+      ratioMap.set(item.date, { agents: existing.agents, users: item.cumulative });
+    });
+    
+    const result = [];
+    ratioMap.forEach((value, date) => {
+      const ratio = value.users > 0 ? value.agents / value.users : 0;
+      result.push({ date, ratio });
+    });
+    
+    return result.sort((a, b) => a.date.localeCompare(b.date));
   };
 
   /**
@@ -343,7 +436,7 @@ export default function StatsPage() {
             Projeções de Crescimento (Próximos 30 dias)
           </h2>
           
-          <div className="grid gap-4 md:grid-cols-3 mb-6">
+          <div className="grid gap-4 md:grid-cols-4 mb-6">
             <ProjectionCard
               label="Taxa de Crescimento Diária"
               value={`${projections.growthRate.toFixed(2)}%`}
@@ -359,6 +452,12 @@ export default function StatsPage() {
             <ProjectionCard
               label="Visualizações Projetadas"
               value={projections.projected30DayPageViews.toLocaleString()}
+              description="Próximos 30 dias"
+              positive={true}
+            />
+            <ProjectionCard
+              label="Agentes Projetados"
+              value={projections.projected30DayAgents.toLocaleString()}
               description="Próximos 30 dias"
               positive={true}
             />
@@ -403,6 +502,97 @@ export default function StatsPage() {
                   connectNulls={false}
                   data={projections.visits.filter(v => v.projected)}
                   name="Projeção"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* Humans vs Agents Growth */}
+      {projections && projections.cumulativeAgents && projections.cumulativeUsers && (
+        <div className="card p-6">
+          <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+            <Bot className="text-brand-400" size={20} />
+            Crescimento: Humanos vs Agentes (Acumulado)
+          </h2>
+          
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={projections.cumulativeAgents}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="#94a3b8"
+                  tickFormatter={(value) => new Date(value).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                />
+                <YAxis stroke="#94a3b8" />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
+                  labelStyle={{ color: '#f1f5f9' }}
+                  itemStyle={{ color: '#f1f5f9' }}
+                  formatter={(value, name) => [
+                    value.toLocaleString(), 
+                    name === 'cumulative' ? 'Agentes' : 'Usuários'
+                  ]}
+                  labelFormatter={(value) => new Date(value).toLocaleDateString('pt-BR')}
+                />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="cumulative" 
+                  stroke="#38bdf8" 
+                  strokeWidth={2}
+                  dot={false}
+                  name="Agentes (acumulado)"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="cumulative" 
+                  stroke="#22c55e" 
+                  strokeWidth={2}
+                  dot={false}
+                  data={projections.cumulativeUsers}
+                  name="Usuários (acumulado)"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* Agent/User Ratio */}
+      {projections && projections.agentUserRatio && (
+        <div className="card p-6">
+          <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+            <Activity className="text-brand-400" size={20} />
+            Proporção Agentes/Humanos ao Longo do Tempo
+          </h2>
+          
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={projections.agentUserRatio}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="#94a3b8"
+                  tickFormatter={(value) => new Date(value).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                />
+                <YAxis stroke="#94a3b8" />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
+                  labelStyle={{ color: '#f1f5f9' }}
+                  itemStyle={{ color: '#f1f5f9' }}
+                  formatter={(value) => [value.toFixed(2), 'Agentes por Usuário']}
+                  labelFormatter={(value) => new Date(value).toLocaleDateString('pt-BR')}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="ratio" 
+                  stroke="#f59e0b" 
+                  strokeWidth={2}
+                  dot={false}
+                  name="Agentes por Usuário"
                 />
               </LineChart>
             </ResponsiveContainer>
