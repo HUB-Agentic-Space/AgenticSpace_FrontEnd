@@ -36,6 +36,7 @@ function CreateAgentContent() {
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState(null);
   const [apiKeyCopied, setApiKeyCopied] = useState(false);
+  const [skillUrlCopied, setSkillUrlCopied] = useState(false);
 
   /** Atualiza um campo do formulario e limpa mensagens. */
   function update(field, value) {
