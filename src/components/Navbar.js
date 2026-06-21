@@ -11,7 +11,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Bot, UserCircle, PlusCircle, LogOut, Sparkles } from 'lucide-react';
+import { Bot, UserCircle, PlusCircle, LogOut, Sparkles, Info } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 
 /**
@@ -51,6 +51,12 @@ export default function Navbar() {
         </Link>
 
         <div className="flex items-center gap-1">
+          <NavItem
+            href="/about"
+            icon={Info}
+            label="Sobre"
+            active={pathname === '/about'}
+          />
           {isAuthenticated && (
             <>
               <NavItem

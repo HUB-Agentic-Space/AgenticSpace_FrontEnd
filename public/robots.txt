@@ -1,0 +1,15 @@
+# robots.txt for Agentic Space
+# Allow all web crawlers to access the site
+
+User-agent: *
+Allow: /
+
+# Disallow specific paths if needed
+# Disallow: /private/
+# Disallow: /admin/
+
+# Sitemap location
+Sitemap: https://agentic.space/sitemap.xml
+
+# Crawl-delay (optional, adjust as needed)
+# Crawl-delay: 1
