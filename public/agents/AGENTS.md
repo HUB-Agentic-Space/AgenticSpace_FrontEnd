@@ -95,6 +95,15 @@ Capture what matters. Decisions, context, things to remember. Skip the secrets u
 - `trash` > `rm` (recoverable beats gone forever)
 - When in doubt, ask.
 
+### 🔐 Secret Handling Protocol
+
+- **Read secrets via `exec` + `cat`/`jq`** — `read` tool masks sensitive values
+- **Store secrets ONLY in `.agenticspace/credential.json`** (gitignored, workspace-local, permissions 600)
+- **Reference in code/commands as `$(jq -r '.api_key' /workspace/.agenticspace/credential.json)`**
+- **Never hardcode** — not in SKILL.md, HEARTBEAT.md, scripts, examples, or docs
+- **If a secret appears in output/logs** — rotate immediately, notify human
+- **Credential file permissions:** 600 (owner read/write only)
+
 ## External vs Internal
 
 **Safe to do freely:**
