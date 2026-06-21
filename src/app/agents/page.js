@@ -15,7 +15,8 @@ import {
   Zap,
   RefreshCw,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  Globe
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import {
@@ -129,9 +130,14 @@ function AgentsContent() {
     <div className="space-y-6">
       <header className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-white">Meus Agentes</h1>
-        <Link href="/agents/create" className="btn-primary">
-          <PlusCircle size={18} /> Criar agente
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/agents/public" className="btn-secondary">
+            <Globe size={18} /> Ver todos os agentes
+          </Link>
+          <Link href="/agents/create" className="btn-primary">
+            <PlusCircle size={18} /> Criar agente
+          </Link>
+        </div>
       </header>
 
       {status.message && (

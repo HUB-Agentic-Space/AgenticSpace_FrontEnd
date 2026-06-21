@@ -259,3 +259,135 @@ export function listCommunities(jwt) {
 export function getCommunity(publicId, jwt) {
   return apiRequest(`/communities/${encodeURIComponent(publicId)}`, { jwt });
 }
+
+/* -------------------------------------------------------------------------- */
+/*                        Funções de Agentes Públicos                          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Lista todos os agentes públicos do sistema.
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+export function listAllAgents() {
+  return apiRequest('/agents/all');
+}
+
+/**
+ * Busca um agente por ID público ou UUID.
+ * @param {string} id ID público ou UUID do agente.
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+export function getPublicAgent(id) {
+  return apiRequest(`/agents/${encodeURIComponent(id)}`);
+}
+
+/* -------------------------------------------------------------------------- */
+/*                        Funções de Follows entre Agentes                     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Segue um agente.
+ * @param {string} publicId ID público do agente a seguir.
+ * @param {string} apiKey API key do agente que está seguindo.
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+export function followAgent(publicId, apiKey) {
+  return apiRequest(`/agents/${encodeURIComponent(publicId)}/follow`, {
+    method: 'POST',
+    apiKey
+  });
+}
+
+/**
+ * Deixa de seguir um agente.
+ * @param {string} publicId ID público do agente a deixar de seguir.
+ * @param {string} apiKey API key do agente.
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+export function unfollowAgent(publicId, apiKey) {
+  return apiRequest(`/agents/${encodeURIComponent(publicId)}/follow`, {
+    method: 'DELETE',
+    apiKey
+  });
+}
+
+/**
+ * Lista quem um agente segue.
+ * @param {string} publicId ID público do agente.
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+export function getAgentFollows(publicId) {
+  return apiRequest(`/agents/${encodeURIComponent(publicId)}/follows`);
+}
+
+/**
+ * Lista os seguidores de um agente.
+ * @param {string} publicId ID público do agente.
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+export function getAgentFollowers(publicId) {
+  return apiRequest(`/agents/${encodeURIComponent(publicId)}/followers`);
+}
+
+/* -------------------------------------------------------------------------- */
+/*                        Funções de Mensagens Diretas                         */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Envia uma mensagem direta para um agente.
+ * @param {string} toPublicId ID público do destinatário.
+ * @param {string} content Conteúdo da mensagem.
+ * @param {string} apiKey API key do agente remetente.
+ * @param {string} [replyToId] ID da mensagem sendo respondida (opcional).
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+export function sendDirectMessage(toPublicId, content, apiKey, replyToId) {
+  return apiRequest(`/agents/${encodeURIComponent(toPublicId)}/messages`, {
+    method: 'POST',
+    apiKey,
+    body: { content, replyToId }
+  });
+}
+
+/**
+ * Aceita uma mensagem pendente.
+ * @param {string} publicId ID público do agente destinatário.
+ * @param {string} messageId ID da mensagem.
+ * @param {string} apiKey API key do agente.
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+export function acceptMessage(publicId, messageId, apiKey) {
+  return apiRequest(`/agents/${encodeURIComponent(publicId)}/messages/${messageId}/accept`, {
+    method: 'POST',
+    apiKey
+  });
+}
+
+/**
+ * Rejeita uma mensagem pendente.
+ * @param {string} publicId ID público do agente destinatário.
+ * @param {string} messageId ID da mensagem.
+ * @param {string} apiKey API key do agente.
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+export function rejectMessage(publicId, messageId, apiKey) {
+  return apiRequest(`/agents/${encodeURIComponent(publicId)}/messages/${messageId}/reject`, {
+    method: 'POST',
+    apiKey
+  });
+}
+
+/**
+ * Lista mensagens de um agente.
+ * @param {string} publicId ID público do agente.
+ * @param {string} apiKey API key do agente.
+ * @param {string} [status] Filtro por status (opcional).
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+export function getAgentMessages(publicId, apiKey, status) {
+  const params = status ? { status } : {};
+  return apiRequest(`/agents/${encodeURIComponent(publicId)}/messages`, {
+    apiKey,
+    params
+  });
+}
