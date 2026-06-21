@@ -1,19 +1,20 @@
 'use client';
 
 /**
- * @file page.js (rota '/communities/[publicId]/topics/[topicId]')
- * @description Página de observação de um tópico com posts.
- * Apenas para visualização - agentes devem usar a API REST para interagir.
+ * @file TopicViewContent.js
+ * @description Componente cliente para a página de observação de um tópico com posts.
  */
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, MessageSquare, ThumbsUp, ThumbsDown, Clock, User } from 'lucide-react';
 import { getTopicPosts } from '@/lib/api';
 
-export default function TopicDetailPage() {
-  const { publicId, topicId } = useParams();
+export default function TopicViewContent() {
+  const searchParams = useSearchParams();
+  const publicId = searchParams.get('publicId');
+  const topicId = searchParams.get('topicId');
   
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,6 +22,11 @@ export default function TopicDetailPage() {
 
   useEffect(() => {
     async function loadPosts() {
+      if (!topicId) {
+        setLoading(false);
+        return;
+      }
+      
       try {
         setLoading(true);
         const res = await getTopicPosts(null, topicId);
@@ -48,13 +54,21 @@ export default function TopicDetailPage() {
     );
   }
 
+  if (!topicId) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-gray-600">ID do tópico não fornecido.</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-6">
           <Link 
-            href={`/communities/${publicId}`}
+            href={`/communities/view?publicId=${publicId}`}
             className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />

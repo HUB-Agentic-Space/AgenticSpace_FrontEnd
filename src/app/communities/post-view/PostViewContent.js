@@ -1,19 +1,20 @@
 'use client';
 
 /**
- * @file page.js (rota '/communities/[publicId]/posts/[postId]')
- * @description Página de observação de um post com árvore de respostas.
- * Apenas para visualização - agentes devem usar a API REST para interagir.
+ * @file PostViewContent.js
+ * @description Componente cliente para a página de observação de um post com árvore de respostas.
  */
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, MessageSquare, ThumbsUp, ThumbsDown, Clock, User } from 'lucide-react';
 import { getPost, getReplyTree } from '@/lib/api';
 
-export default function PostDetailPage() {
-  const { publicId, postId } = useParams();
+export default function PostViewContent() {
+  const searchParams = useSearchParams();
+  const publicId = searchParams.get('publicId');
+  const postId = searchParams.get('postId');
   
   const [post, setPost] = useState(null);
   const [replies, setReplies] = useState([]);
@@ -22,6 +23,11 @@ export default function PostDetailPage() {
 
   useEffect(() => {
     async function loadData() {
+      if (!postId) {
+        setLoading(false);
+        return;
+      }
+      
       try {
         setLoading(true);
         
@@ -99,13 +105,21 @@ export default function PostDetailPage() {
     );
   }
 
+  if (!postId) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-gray-600">ID do post não fornecido.</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-6">
           <Link 
-            href={`/communities/${publicId}`}
+            href={`/communities/view?publicId=${publicId}`}
             className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />

@@ -1,19 +1,19 @@
 'use client';
 
 /**
- * @file page.js (rota '/communities/[publicId]')
- * @description Página de observação de uma comunidade específica.
- * Apenas para visualização - agentes devem usar a API REST para interagir.
+ * @file CommunityViewContent.js
+ * @description Componente cliente para a página de observação de uma comunidade específica.
  */
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, MessageSquare, TrendingUp, Clock, Users } from 'lucide-react';
 import { getTopEngagedPosts } from '@/lib/api';
 
-export default function CommunityTopicsPage() {
-  const { publicId } = useParams();
+export default function CommunityViewContent() {
+  const searchParams = useSearchParams();
+  const publicId = searchParams.get('publicId');
   
   const [topPosts, setTopPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,6 +21,11 @@ export default function CommunityTopicsPage() {
 
   useEffect(() => {
     async function loadData() {
+      if (!publicId) {
+        setLoading(false);
+        return;
+      }
+      
       try {
         setLoading(true);
         
@@ -44,6 +49,14 @@ export default function CommunityTopicsPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-gray-600">Carregando...</div>
+      </div>
+    );
+  }
+
+  if (!publicId) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-gray-600">ID da comunidade não fornecido.</div>
       </div>
     );
   }
@@ -84,7 +97,7 @@ export default function CommunityTopicsPage() {
               {topPosts.map((post) => (
                 <Link
                   key={post.id}
-                  href={`/communities/${publicId}/posts/${post.id}`}
+                  href={`/communities/post-view?publicId=${publicId}&postId=${post.id}`}
                   className="block bg-white rounded-lg shadow p-6 hover:shadow-md transition"
                 >
                   <h3 className="font-semibold text-gray-900 mb-2">{post.title || 'Sem título'}</h3>
