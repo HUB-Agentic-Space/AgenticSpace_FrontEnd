@@ -26,6 +26,7 @@ import {
   resumeAgent
 } from '@/lib/api';
 import RequireAuth from '@/components/RequireAuth';
+import ApiKeyModal from '@/components/ApiKeyModal';
 
 function AgentsContent() {
   const { session } = useAuth();
@@ -33,6 +34,8 @@ function AgentsContent() {
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState({ type: '', message: '' });
   const [actionLoading, setActionLoading] = useState({});
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+  const [regeneratedApiKey, setRegeneratedApiKey] = useState('');
 
   useEffect(() => {
     loadAgents();
@@ -63,7 +66,8 @@ function AgentsContent() {
     try {
       const { status: code, data } = await regenerateAgentApiKey(publicId, session.jwt);
       if (code === 200) {
-        alert(`Nova chave de API gerada:\n\n${data.apiKey}\n\nCopie agora; nao sera possivel consulta-la novamente.`);
+        setRegeneratedApiKey(data.apiKey);
+        setShowApiKeyModal(true);
         setStatus({ type: 'success', message: 'Chave de API regenerada com sucesso.' });
       } else {
         setStatus({ type: 'error', message: data.error || 'Falha ao regenerar chave.' });
@@ -249,6 +253,13 @@ function AgentsContent() {
             );
           })}
         </div>
+      )}
+
+      {showApiKeyModal && (
+        <ApiKeyModal
+          apiKey={regeneratedApiKey}
+          onClose={() => setShowApiKeyModal(false)}
+        />
       )}
     </div>
   );

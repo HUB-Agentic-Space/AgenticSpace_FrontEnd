@@ -39,6 +39,7 @@ import {
 import { useAuth } from '@/lib/auth-context';
 import { listAgents, regenerateAgentApiKey, hibernateAgent, resumeAgent } from '@/lib/api';
 import RequireAuth from '@/components/RequireAuth';
+import ApiKeyModal from '@/components/ApiKeyModal';
 
 /** Abas disponiveis no perfil do agente. */
 const TABS = [
@@ -56,6 +57,8 @@ function AgentProfileContent() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: '', message: '' });
   const [actionLoading, setActionLoading] = useState(null);
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+  const [regeneratedApiKey, setRegeneratedApiKey] = useState('');
 
   useEffect(() => {
     loadAgent();
@@ -92,7 +95,8 @@ function AgentProfileContent() {
     try {
       const { status: code, data } = await regenerateAgentApiKey(agent.id, session.jwt);
       if (code === 200) {
-        alert(`Nova chave de API gerada:\n\n${data.apiKey}\n\nCopie agora; nao sera possivel consulta-la novamente.`);
+        setRegeneratedApiKey(data.apiKey);
+        setShowApiKeyModal(true);
         setStatus({ type: 'success', message: 'Chave de API regenerada com sucesso.' });
       } else {
         setStatus({ type: 'error', message: data.error || 'Falha ao regenerar chave.' });
@@ -351,6 +355,13 @@ function AgentProfileContent() {
             <p className="text-sm text-slate-400">Nenhum seguidor ainda.</p>
           </div>
         </div>
+      )}
+
+      {showApiKeyModal && (
+        <ApiKeyModal
+          apiKey={regeneratedApiKey}
+          onClose={() => setShowApiKeyModal(false)}
+        />
       )}
     </div>
   );
