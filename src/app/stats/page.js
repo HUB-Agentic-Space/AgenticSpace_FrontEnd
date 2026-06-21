@@ -63,8 +63,10 @@ export default function StatsPage() {
     }
   };
 
+  const HORIZON_DAYS = 30;
+
   const calculateProjections = (data) => {
-    // Calcular projeções de crescimento baseadas nos últimos 30 dias
+    // Projeções baseadas no histórico diário disponível.
     const visitsByDay = data.visitsByDay || [];
     const pageViewsByDay = data.pageViewsByDay || [];
 
@@ -73,55 +75,104 @@ export default function StatsPage() {
       return;
     }
 
-    // Calcular taxa de crescimento diária média
-    const recentVisits = visitsByDay.slice(-7);
-    const growthRate = calculateGrowthRate(recentVisits.map(v => v.visitors));
+    const visitSeries = visitsByDay.map(v => v.visitors);
+    const viewSeries = pageViewsByDay.map(v => v.views);
 
-    // Projetar próximos 30 dias
-    const projectedVisits = [];
-    const projectedPageViews = [];
+    // Modelo de tendência amortecida (Holt damped trend): evita projeções
+    // explosivas em séries curtas, comuns em sites recém-lançados.
+    const visitForecast = forecastDampedTrend(visitSeries, HORIZON_DAYS);
+    const viewForecast = forecastDampedTrend(viewSeries, HORIZON_DAYS);
+
     const lastVisitDate = new Date(visitsByDay[visitsByDay.length - 1].date);
-    const lastVisitCount = visitsByDay[visitsByDay.length - 1].visitors;
-    const lastPageViewCount = pageViewsByDay[pageViewsByDay.length - 1]?.views || 0;
 
-    for (let i = 1; i <= 30; i++) {
+    const projectedVisits = visitForecast.map((value, idx) => {
       const projectedDate = new Date(lastVisitDate);
-      projectedDate.setDate(projectedDate.getDate() + i);
-      
-      const projectedVisitors = Math.round(lastVisitCount * Math.pow(1 + growthRate, i));
-      const projectedViews = Math.round(lastPageViewCount * Math.pow(1 + growthRate, i));
-
-      projectedVisits.push({
+      projectedDate.setDate(projectedDate.getDate() + idx + 1);
+      return {
         date: projectedDate.toISOString().split('T')[0],
-        visitors: projectedVisitors,
+        visitors: value,
         projected: true
-      });
+      };
+    });
 
-      projectedPageViews.push({
+    const projectedPageViews = viewForecast.map((value, idx) => {
+      const projectedDate = new Date(lastVisitDate);
+      projectedDate.setDate(projectedDate.getDate() + idx + 1);
+      return {
         date: projectedDate.toISOString().split('T')[0],
-        views: projectedViews,
+        views: value,
         projected: true
-      });
-    }
+      };
+    });
+
+    // Taxa de crescimento de curto prazo (primeiro passo previsto vs. último real).
+    const lastVisitCount = visitSeries[visitSeries.length - 1] || 0;
+    const nextDayVisits = visitForecast[0] || 0;
+    const dailyGrowthRate = lastVisitCount > 0
+      ? ((nextDayVisits - lastVisitCount) / lastVisitCount) * 100
+      : 0;
+
+    const projected30DayVisitors = projectedVisits.reduce((sum, p) => sum + p.visitors, 0);
+    const projected30DayPageViews = projectedPageViews.reduce((sum, p) => sum + p.views, 0);
+
+    // [logs] Registro estruturado da projeção para auditoria/PDCL.
+    console.log(
+      `[${new Date().toISOString()}] [stats/page.js:calculateProjections] info ` +
+      `projecao_calculada - dias_historico=${visitSeries.length} ` +
+      `taxa_diaria=${dailyGrowthRate.toFixed(2)}% ` +
+      `visitantes_30d=${projected30DayVisitors} views_30d=${projected30DayPageViews}`
+    );
 
     setProjections({
       visits: [...visitsByDay, ...projectedVisits],
       pageViews: [...pageViewsByDay, ...projectedPageViews],
-      growthRate: growthRate * 100,
-      projected30DayVisitors: projectedVisits.reduce((sum, p) => sum + p.visitors, 0),
-      projected30DayPageViews: projectedPageViews.reduce((sum, p) => sum + p.views, 0)
+      growthRate: dailyGrowthRate,
+      projected30DayVisitors,
+      projected30DayPageViews
     });
   };
 
-  const calculateGrowthRate = (values) => {
-    if (values.length < 2) return 0;
-    let totalGrowth = 0;
-    for (let i = 1; i < values.length; i++) {
-      if (values[i - 1] > 0) {
-        totalGrowth += (values[i] - values[i - 1]) / values[i - 1];
-      }
+  /**
+   * Previsão por suavização exponencial com tendência amortecida (Holt damped trend).
+   *
+   * Modelo aditivo com fator de amortecimento `phi` (< 1) que achata a tendência
+   * ao longo do horizonte. Diferente do crescimento exponencial composto, o
+   * total acumulado da tendência converge (limite trend * phi/(1-phi)), evitando
+   * projeções "estratosféricas" quando há poucos dias de dados ruidosos.
+   *
+   * @param {number[]} series - Série histórica diária (ex.: visitantes por dia).
+   * @param {number} horizon - Número de dias a projetar.
+   * @param {{alpha?: number, beta?: number, phi?: number}} [options]
+   * @returns {number[]} Valores projetados (>= 0, arredondados).
+   */
+  const forecastDampedTrend = (series, horizon, options = {}) => {
+    const clean = series.filter(v => Number.isFinite(v));
+    if (clean.length === 0) return Array(horizon).fill(0);
+    if (clean.length === 1) return Array(horizon).fill(Math.max(0, Math.round(clean[0])));
+
+    const alpha = options.alpha ?? 0.5; // suavização do nível
+    const beta = options.beta ?? 0.3;   // suavização da tendência
+    const phi = options.phi ?? 0.85;    // amortecimento da tendência (< 1)
+
+    let level = clean[0];
+    let trend = clean[1] - clean[0];
+
+    for (let t = 1; t < clean.length; t++) {
+      const prevLevel = level;
+      level = alpha * clean[t] + (1 - alpha) * (prevLevel + phi * trend);
+      trend = beta * (level - prevLevel) + (1 - beta) * phi * trend;
     }
-    return totalGrowth / (values.length - 1);
+
+    const forecast = [];
+    let phiPow = 1;
+    let phiSum = 0;
+    for (let h = 1; h <= horizon; h++) {
+      phiPow *= phi;   // phi^h
+      phiSum += phiPow; // phi + phi^2 + ... + phi^h
+      const value = level + phiSum * trend;
+      forecast.push(Math.max(0, Math.round(value)));
+    }
+    return forecast;
   };
 
   if (loading) {
@@ -294,9 +345,9 @@ export default function StatsPage() {
           
           <div className="grid gap-4 md:grid-cols-3 mb-6">
             <ProjectionCard
-              label="Taxa de Crescimento"
+              label="Taxa de Crescimento Diária"
               value={`${projections.growthRate.toFixed(2)}%`}
-              description="Baseada nos últimos 7 dias"
+              description="Tendência amortecida (Holt)"
               positive={projections.growthRate >= 0}
             />
             <ProjectionCard
