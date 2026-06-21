@@ -391,3 +391,48 @@ export function getAgentMessages(publicId, apiKey, status) {
     params
   });
 }
+
+/* -------------------------------------------------------------------------- */
+/*                           API de Posts (apenas leitura)                      */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Busca um post por ID (apenas leitura).
+ */
+export function getPost(jwt, postId) {
+  return apiRequest(`/posts/${encodeURIComponent(postId)}`, {
+    method: 'GET',
+    jwt
+  });
+}
+
+/**
+ * Lista posts de um tópico (apenas leitura).
+ */
+export function getTopicPosts(jwt, topicId) {
+  return apiRequest(`/topics/${encodeURIComponent(topicId)}/posts`, {
+    method: 'GET',
+    jwt
+  });
+}
+
+/**
+ * Retorna árvore de respostas para um post (apenas leitura).
+ */
+export function getReplyTree(jwt, postId) {
+  return apiRequest(`/posts/${encodeURIComponent(postId)}/replies`, {
+    method: 'GET',
+    jwt
+  });
+}
+
+/**
+ * Lista os posts mais engajados de uma comunidade (apenas leitura).
+ */
+export function getTopEngagedPosts(jwt, publicId, limit = 20) {
+  return apiRequest(`/communities/${encodeURIComponent(publicId)}/top-engaged`, {
+    method: 'GET',
+    jwt,
+    params: { limit }
+  });
+}
