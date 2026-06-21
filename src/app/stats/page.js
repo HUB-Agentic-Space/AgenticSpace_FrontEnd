@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Users, Eye, Bot, TrendingUp, BarChart3, ArrowLeft, Calendar, Activity, X, Sparkles, DollarSign, Target, Zap } from 'lucide-react';
+import { Users, Eye, Bot, TrendingUp, BarChart3, ArrowLeft, Calendar, Activity, X, Sparkles, DollarSign, Target, Zap, AlertTriangle, Server, Cpu } from 'lucide-react';
 import Link from 'next/link';
 import {
   LineChart,
@@ -30,10 +30,13 @@ export default function StatsPage() {
   const [projections, setProjections] = useState(null);
   const [investmentAnalysis, setInvestmentAnalysis] = useState(null);
   const [showInvestmentModal, setShowInvestmentModal] = useState(false);
+  const [vercelMetrics, setVercelMetrics] = useState(null);
+  const [vercelLoading, setVercelLoading] = useState(true);
 
   useEffect(() => {
     fetchStats();
     fetchInvestmentAnalysis();
+    fetchVercelMetrics();
   }, []);
 
   const fetchStats = async () => {
@@ -60,6 +63,20 @@ export default function StatsPage() {
       }
     } catch (error) {
       console.error('Erro ao buscar análise de investimento:', error);
+    }
+  };
+
+  const fetchVercelMetrics = async () => {
+    try {
+      const response = await fetch('/api/v1/vercel-metrics');
+      if (response.ok) {
+        const data = await response.json();
+        setVercelMetrics(data);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar métricas da Vercel:', error);
+    } finally {
+      setVercelLoading(false);
     }
   };
 
@@ -630,6 +647,103 @@ export default function StatsPage() {
         </div>
       </div>
 
+      {/* Vercel Cost Projections */}
+      {vercelMetrics && vercelMetrics.projections && (
+        <div className="card p-6">
+          <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+            <Server className="text-brand-400" size={20} />
+            Projeções de Custo - Vercel
+          </h2>
+
+          {/* Current Plan Status */}
+          <div className="mb-6 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-slate-400">Plano Atual</span>
+              <span className="text-lg font-bold text-white">{vercelMetrics.projections.currentPlan.toUpperCase()}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-slate-400">Custo Mensal</span>
+              <span className="text-lg font-bold text-green-400">${vercelMetrics.projections.plans.hobby.cost}/mês</span>
+            </div>
+          </div>
+
+          {/* Upgrade Warning */}
+          {vercelMetrics.projections.recommendedPlan === 'pro' && (
+            <div className="mb-6 p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/30">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="text-yellow-400 size-5 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-yellow-400 mb-1">Recomendação de Upgrade</h3>
+                  <p className="text-sm text-slate-300 mb-2">
+                    Considere fazer upgrade para o plano Pro nos próximos meses.
+                  </p>
+                  <ul className="text-sm text-slate-400 space-y-1">
+                    {vercelMetrics.projections.upgradeReasons.map((reason, idx) => (
+                      <li key={idx}>• {reason}</li>
+                    ))}
+                  </ul>
+                  {vercelMetrics.projections.monthsToUpgrade && (
+                    <p className="text-sm text-yellow-400 mt-2">
+                      Estimativa: {vercelMetrics.projections.monthsToUpgrade} meses até atingir limites (crescimento de 10%/mês)
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Usage Metrics */}
+          <div className="grid gap-4 md:grid-cols-2 mb-6">
+            <UsageMetricCard
+              icon={<Bot size={20} className="text-brand-400" />}
+              label="Function Invocations"
+              current={vercelMetrics.projections.usage.functionInvocations.current}
+              limit={vercelMetrics.projections.usage.functionInvocations.limit}
+              percent={vercelMetrics.projections.usage.functionInvocations.percent}
+              status={vercelMetrics.projections.usage.functionInvocations.status}
+            />
+            <UsageMetricCard
+              icon={<Server size={20} className="text-brand-400" />}
+              label="Fast Transfer"
+              current={vercelMetrics.projections.usage.fastTransfer.current}
+              limit={vercelMetrics.projections.usage.fastTransfer.limit}
+              percent={vercelMetrics.projections.usage.fastTransfer.percent}
+              status={vercelMetrics.projections.usage.fastTransfer.status}
+              formatBytes={true}
+            />
+            <UsageMetricCard
+              icon={<Cpu size={20} className="text-brand-400" />}
+              label="CPU Hours"
+              current={vercelMetrics.projections.usage.cpu.current}
+              limit={vercelMetrics.projections.usage.cpu.limit}
+              percent={vercelMetrics.projections.usage.cpu.percent}
+              status={vercelMetrics.projections.usage.cpu.status}
+              formatMs={true}
+            />
+            <UsageMetricCard
+              icon={<Activity size={20} className="text-brand-400" />}
+              label="Edge Requests"
+              current={vercelMetrics.projections.usage.edgeRequests.current}
+              limit={vercelMetrics.projections.usage.edgeRequests.limit}
+              percent={vercelMetrics.projections.usage.edgeRequests.percent}
+              status={vercelMetrics.projections.usage.edgeRequests.status}
+            />
+          </div>
+
+          {/* Plan Comparison */}
+          <div className="grid gap-4 md:grid-cols-2">
+            <PlanCard
+              plan={vercelMetrics.projections.plans.hobby}
+              isRecommended={vercelMetrics.projections.recommendedPlan === 'hobby'}
+            />
+            <PlanCard
+              plan={vercelMetrics.projections.plans.pro}
+              isRecommended={vercelMetrics.projections.recommendedPlan === 'pro'}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Investment Modal */}
       {showInvestmentModal && investmentAnalysis && (
         <InvestmentModal
@@ -792,6 +906,94 @@ function BenefitCard({ icon, title, description }) {
         <h4 className="font-semibold text-white text-sm">{title}</h4>
       </div>
       <p className="text-xs text-slate-400">{description}</p>
+    </div>
+  );
+}
+
+function UsageMetricCard({ icon, label, current, limit, percent, status, formatBytes = false, formatMs = false }) {
+  const formatValue = (value) => {
+    if (formatBytes) {
+      if (value >= 1024 * 1024 * 1024) {
+        return `${(value / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+      }
+      if (value >= 1024 * 1024) {
+        return `${(value / (1024 * 1024)).toFixed(2)} MB`;
+      }
+      if (value >= 1024) {
+        return `${(value / 1024).toFixed(2)} KB`;
+      }
+      return `${value} B`;
+    }
+    if (formatMs) {
+      if (value >= 3600 * 1000) {
+        return `${(value / (3600 * 1000)).toFixed(2)}h`;
+      }
+      if (value >= 60 * 1000) {
+        return `${(value / (60 * 1000)).toFixed(2)}m`;
+      }
+      return `${(value / 1000).toFixed(2)}s`;
+    }
+    return value.toLocaleString();
+  };
+
+  const statusColor = status === 'warning' ? 'text-yellow-400' : 'text-green-400';
+  const borderColor = status === 'warning' ? 'border-yellow-500/30' : 'border-green-500/30';
+  const bgColor = status === 'warning' ? 'bg-yellow-500/10' : 'bg-green-500/10';
+
+  return (
+    <div className={`bg-slate-800/50 rounded-lg p-4 border ${borderColor}`}>
+      <div className="flex items-center gap-2 mb-2">
+        {icon}
+        <h4 className="font-semibold text-white text-sm">{label}</h4>
+      </div>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs text-slate-400">Uso Atual</span>
+        <span className="text-sm font-bold text-white">{formatValue(current)}</span>
+      </div>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs text-slate-400">Limite</span>
+        <span className="text-sm text-slate-300">{formatValue(limit)}</span>
+      </div>
+      <div className="w-full bg-slate-700 rounded-full h-2 mb-2">
+        <div
+          className={`h-2 rounded-full ${bgColor}`}
+          style={{ width: `${Math.min(percent, 100)}%` }}
+        />
+      </div>
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-slate-400">Utilização</span>
+        <span className={`text-sm font-bold ${statusColor}`}>{percent}%</span>
+      </div>
+    </div>
+  );
+}
+
+function PlanCard({ plan, isRecommended }) {
+  const formatBytes = (value) => {
+    if (value >= 1024 * 1024 * 1024) {
+      return `${(value / (1024 * 1024 * 1024)).toFixed(0)} GB`;
+    }
+    if (value >= 1024 * 1024) {
+      return `${(value / (1024 * 1024)).toFixed(0)} MB`;
+    }
+    return `${value} B`;
+  };
+
+  return (
+    <div className={`bg-slate-800/50 rounded-lg p-4 border ${isRecommended ? 'border-brand-500/50' : 'border-slate-700'}`}>
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="font-semibold text-white">{plan.name}</h4>
+        {isRecommended && (
+          <span className="text-xs bg-brand-500/20 text-brand-400 px-2 py-1 rounded">Recomendado</span>
+        )}
+      </div>
+      <div className="text-2xl font-bold text-green-400 mb-3">${plan.cost}/mês</div>
+      <ul className="space-y-2 text-sm text-slate-300">
+        <li>• {plan.functionInvocations.toLocaleString()} function invocations</li>
+        <li>• {formatBytes(plan.fastTransfer)} fast transfer</li>
+        {plan.cpuHours && <li>• {(plan.cpuHours / (3600 * 1000)).toFixed(1)}h CPU</li>}
+        <li>• {plan.edgeRequests.toLocaleString()} edge requests</li>
+      </ul>
     </div>
   );
 }
