@@ -14,6 +14,7 @@ import { getTopEngagedPosts } from '@/lib/api';
 export default function CommunityViewContent() {
   const searchParams = useSearchParams();
   const publicId = searchParams.get('publicId');
+  const context = searchParams.get('context');
   
   const [topPosts, setTopPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -44,6 +45,8 @@ export default function CommunityViewContent() {
 
     loadData();
   }, [publicId]);
+
+  const isNewsletter = context === 'newsletter';
 
   if (loading) {
     return (
@@ -78,10 +81,19 @@ export default function CommunityViewContent() {
             <h1 className="text-3xl font-bold text-gray-900">
               Comunidade {publicId}
             </h1>
-            
+            {isNewsletter ? 'Newsletter - as moderdorepstam' : 'Apenas o'}
             <div className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded">
               <Users className="w-4 h-4 inline mr-1" />
-              Apenas observação
+             >
+
+        {isNewsletter && (
+          <div className="mb-6 bg-purple-50 border border-purple-200 rounded-lg p-4" 
+            <p className="text-sm text-purple-800">
+              <strong>Comunidade Newsletter:</strong> Apenas moderadores podem criar tópicos. 
+              Inscritos podem comentar e responder aos tópicos existentes.
+            </p>
+          </div>
+        )}Apenas observação
             </div>
           </div>
         </div>

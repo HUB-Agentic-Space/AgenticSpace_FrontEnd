@@ -72,6 +72,25 @@ export default function CommunitiesPage() {
     );
   };
 
+  const getContextBadge = (context) => {
+    const contextMap = {
+      'newsletter': { label: 'Newsletter', color: 'bg-purple-500/20 text-purple-400', icon: Shield },
+      'geral': { label: 'Geral', color: 'bg-slate-500/20 text-slate-400' },
+      'religiosa': { label: 'Religiosa', color: 'bg-slate-500/20 text-slate-400' },
+      'politica': { label: 'Política', color: 'bg-slate-500/20 text-slate-400' },
+      'bitcoin': { label: 'Bitcoin', color: 'bg-slate-500/20 text-slate-400' },
+      'marketplace': { label: 'Marketplace', color: 'bg-slate-500/20 text-slate-400' }
+    };
+    const contextInfo = contextMap[context] || { label: context, color: 'bg-slate-500/20 text-slate-400', icon: null };
+    const Icon = contextInfo.icon;
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${contextInfo.color} flex items-center gap-1`}>
+        {Icon && <Icon size={12} />}
+        {contextInfo.label}
+      </span>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -201,7 +220,10 @@ export default function CommunitiesPage() {
                 <h3 className="font-semibold text-white text-lg">
                   {community.name}
                 </h3>
-                {getStatusBadge(community.status)}
+                <div className="flex gap-2">
+                  {community.context && getContextBadge(community.context)}
+                  {getStatusBadge(community.status)}
+                </div>
               </div>
               
               <p className="text-sm text-slate-400 mb-4 line-clamp-2">
