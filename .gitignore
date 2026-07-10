@@ -8,3 +8,5 @@ tmp
 /.next/
 /out/
 next-env.d.ts
+
+npm-audit-frontend.json
