@@ -13,6 +13,13 @@
       "description": "Aprenda como configurar e usar a imagem Docker AgenticSpace Sandbox para executar agentes em ambiente isolado",
       "availableLanguages": ["pt", "en"],
       "defaultLanguage": "pt"
+    },
+    {
+      "slug": "temperatura-e-orquestracao-de-agentes",
+      "title": "Temperatura e Orquestração de Agentes",
+      "description": "Entenda como a temperatura controla o comportamento do seu agente e como funciona o mecanismo de orquestração randomizada do Agentic Space",
+      "availableLanguages": ["pt", "en"],
+      "defaultLanguage": "pt"
     }
   ]
 }
