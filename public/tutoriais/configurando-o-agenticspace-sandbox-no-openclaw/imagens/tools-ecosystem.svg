@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="cliGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ef4444;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#dc2626;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="pythonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="libGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="800" height="450" fill="#f8fafc" rx="10"/>
+  
+  <!-- Title -->
+  <text x="400" y="40" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#1e293b" text-anchor="middle">AgenticSpace Sandbox Tools Ecosystem</text>
+  
+  <!-- CLI Tools Section -->
+  <rect x="30" y="70" width="240" height="350" fill="url(#cliGrad)" rx="10" opacity="0.1"/>
+  <rect x="30" y="70" width="240" height="350" fill="none" stroke="#dc2626" stroke-width="2" rx="10"/>
+  <text x="150" y="100" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#dc2626" text-anchor="middle">CLI Tools</text>
+  
+  <!-- CLI items -->
+  <rect x="50" y="120" width="200" height="35" fill="white" stroke="#ef4444" stroke-width="1" rx="5"/>
+  <text x="150" y="142" font-family="Arial, sans-serif" font-size="12" fill="#374151" text-anchor="middle">curl</text>
+  
+  <rect x="50" y="165" width="200" height="35" fill="white" stroke="#ef4444" stroke-width="1" rx="5"/>
+  <text x="150" y="187" font-family="Arial, sans-serif" font-size="12" fill="#374151" text-anchor="middle">wget</text>
+  
+  <rect x="50" y="210" width="200" height="35" fill="white" stroke="#ef4444" stroke-width="1" rx="5"/>
+  <text x="150" y="232" font-family="Arial, sans-serif" font-size="12" fill="#374151" text-anchor="middle">jq</text>
+  
+  <rect x="50" y="255" width="200" height="35" fill="white" stroke="#ef4444" stroke-width="1" rx="5"/>
+  <text x="150" y="277" font-family="Arial, sans-serif" font-size="12" fill="#374151" text-anchor="middle">htmlq</text>
+  
+  <rect x="50" y="300" width="200" height="35" fill="white" stroke="#ef4444" stroke-width="1" rx="5"/>
+  <text x="150" y="322" font-family="Arial, sans-serif" font-size="12" fill="#374151" text-anchor="middle">xidel</text>
+  
+  <rect x="50" y="345" width="200" height="35" fill="white" stroke="#ef4444" stroke-width="1" rx="5"/>
+  <text x="150" y="367" font-family="Arial, sans-serif" font-size="12" fill="#374151" text-anchor="middle">more...</text>
+  
+  <!-- Python Tools Section -->
+  <rect x="280" y="70" width="240" height="350" fill="url(#pythonGrad)" rx="10" opacity="0.1"/>
+  <rect x="280" y="70" width="240" height="350" fill="none" stroke="#2563eb" stroke-width="2" rx="10"/>
+  <text x="400" y="100" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#2563eb" text-anchor="middle">Python Tools</text>
+  
+  <!-- Python items -->
+  <rect x="300" y="120" width="200" height="35" fill="white" stroke="#3b82f6" stroke-width="1" rx="5"/>
+  <text x="400" y="142" font-family="Arial, sans-serif" font-size="12" fill="#374151" text-anchor="middle">scrape-url</text>
+  
+  <rect x="300" y="165" width="200" height="35" fill="white" stroke="#3b82f6" stroke-width="1" rx="5"/>
+  <text x="400" y="187" font-family="Arial, sans-serif" font-size="12" fill="#374151" text-anchor="middle">extract-data</text>
+  
+  <rect x="300" y="210" width="200" height="35" fill="white" stroke="#3b82f6" stroke-width="1" rx="5"/>
+  <text x="400" y="232" font-family="Arial, sans-serif" font-size="12" fill="#374151" text-anchor="middle">find-feeds</text>
+  
+  <rect x="300" y="255" width="200" height="35" fill="white" stroke="#3b82f6" stroke-width="1" rx="5"/>
+  <text x="400" y="277" font-family="Arial, sans-serif" font-size="12" fill="#374151" text-anchor="middle">parse-feed</text>
+  
+  <rect x="300" y="300" width="200" height="35" fill="white" stroke="#3b82f6" stroke-width="1" rx="5"/>
+  <text x="400" y="322" font-family="Arial, sans-serif" font-size="12" fill="#374151" text-anchor="middle">screenshot</text>
+  
+  <rect x="300" y="345" width="200" height="35" fill="white" stroke="#3b82f6" stroke-width="1" rx="5"/>
+  <text x="400" y="367" font-family="Arial, sans-serif" font-size="12" fill="#374151" text-anchor="middle">api-fetch</text>
+  
+  <!-- Libraries Section -->
+  <rect x="530" y="70" width="240" height="350" fill="url(#libGrad)" rx="10" opacity="0.1"/>
+  <rect x="530" y="70" width="240" height="350" fill="none" stroke="#059669" stroke-width="2" rx="10"/>
+  <text x="650" y="100" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#059669" text-anchor="middle">Libraries</text>
+  
+  <!-- Library items -->
+  <rect x="550" y="120" width="200" height="35" fill="white" stroke="#10b981" stroke-width="1" rx="5"/>
+  <text x="650" y="142" font-family="Arial, sans-serif" font-size="12" fill="#374151" text-anchor="middle">Scrapy</text>
+  
+  <rect x="550" y="165" width="200" height="35" fill="white" stroke="#10b981" stroke-width="1" rx="5"/>
+  <text x="650" y="187" font-family="Arial, sans-serif" font-size="12" fill="#374151" text-anchor="middle">BeautifulSoup</text>
+  
+  <rect x="550" y="210" width="200" height="35" fill="white" stroke="#10b981" stroke-width="1" rx="5"/>
+  <text x="650" y="232" font-family="Arial, sans-serif" font-size="12" fill="#374151" text-anchor="middle">Playwright</text>
+  
+  <rect x="550" y="255" width="200" height="35" fill="white" stroke="#10b981" stroke-width="1" rx="5"/>
+  <text x="650" y="277" font-family="Arial, sans-serif" font-size="12" fill="#374151" text-anchor="middle">feedparser</text>
+  
+  <rect x="550" y="300" width="200" height="35" fill="white" stroke="#10b981" stroke-width="1" rx="5"/>
+  <text x="650" y="322" font-family="Arial, sans-serif" font-size="12" fill="#374151" text-anchor="middle">httpx</text>
+  
+  <rect x="550" y="345" width="200" height="35" fill="white" stroke="#10b981" stroke-width="1" rx="5"/>
+  <text x="650" y="367" font-family="Arial, sans-serif" font-size="12" fill="#374151" text-anchor="middle">aiohttp</text>
+  
+  <!-- Bottom note -->
+  <rect x="30" y="430" width="740" height="15" fill="#fef3c7" rx="5"/>
+  <text x="400" y="442" font-family="Arial, sans-serif" font-size="11" fill="#92400e" text-anchor="middle">All tools pre-installed and ready to use in the sandbox environment</text>
+</svg>

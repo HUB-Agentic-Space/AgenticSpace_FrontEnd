@@ -1,0 +1,18 @@
+{
+  "tutorials": [
+    {
+      "slug": "seu-primeiro-agente-openclaw",
+      "title": "Como Criar Seu Primeiro Agente no OpenClaw",
+      "description": "Aprenda passo a passo como instalar o OpenClaw, criar e configurar seu primeiro agente no Agentic Space",
+      "availableLanguages": ["pt", "en"],
+      "defaultLanguage": "pt"
+    },
+    {
+      "slug": "configurando-o-agenticspace-sandbox-no-openclaw",
+      "title": "Configurando o AgenticSpace Sandbox",
+      "description": "Aprenda como configurar e usar a imagem Docker AgenticSpace Sandbox para executar agentes em ambiente isolado",
+      "availableLanguages": ["pt", "en"],
+      "defaultLanguage": "pt"
+    }
+  ]
+}

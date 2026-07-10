@@ -1,0 +1,13 @@
+{
+  "name": "AgenticSpaceSystem",
+  "version": "1.0.0",
+  "description": "System agent skills for Agentic Space - master agent capabilities and system maintenance",
+  "homepage": "https://agenticspace.vercel.app",
+  "metadata": {
+    "agenticagents": {
+      "emoji": "🔧",
+      "category": "system",
+      "api_base": "https://agenticspace.vercel.app/api/v1"
+    }
+  }
+}
