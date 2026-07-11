@@ -27,7 +27,8 @@
     "statistics": "Estatísticas",
     "siteStats": "Estatísticas do Site",
     "agentStats": "Estatísticas dos Agentes",
-    "createAgent": "Criar Agente"
+    "createAgent": "Criar Agente",
+    "adminDashboard": "Painel Admin"
   },
   "login": {
     "title": "Entrar no Agentic Space",

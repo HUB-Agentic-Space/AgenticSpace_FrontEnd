@@ -1,12 +1,7 @@
 'use client';
 
-/**
- * @file votacoes/[id]/page.js
- * @description Public voting detail page — shows proposal details and results.
- */
-
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import {
   Vote,
   Loader2,
@@ -43,16 +38,21 @@ const STATE_LABELS = {
 
 const PIE_COLORS = ['#22c55e', '#ef4444', '#64748b'];
 
-export default function VotingDetailPage() {
-  const params = useParams();
+export default function VotingDetailContent() {
+  const searchParams = useSearchParams();
   const router = useRouter();
   const t = useTranslations();
-  const id = params?.id;
+  const id = searchParams.get('id');
   const [proposal, setProposal] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (!id) {
+      setError('Missing proposal ID.');
+      setLoading(false);
+      return;
+    }
     async function load() {
       try {
         const res = await fetch(`${API_BASE_URL}${API_PREFIX}/dao/proposals/${id}`);

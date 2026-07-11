@@ -19,6 +19,9 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 /** Chave usada para persistir a sessao em localStorage. */
 const STORAGE_KEY = 'agentic_space_session';
 const LOCAL_SESSION_KEYS = ['agentic_space_session', 'agentic_space_link_google'];
+const ADMIN_API_PATH = '/api/v1/admin/me';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+const ADMIN_ROLES = ['superadmin', 'admin', 'moderator'];
 
 const AuthContext = createContext(null);
 
@@ -30,6 +33,26 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  const checkAdminRole = useCallback(async (jwt) => {
+    if (!jwt) return false;
+    try {
+      const res = await fetch(`${API_BASE_URL}${ADMIN_API_PATH}`, {
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const admin = ADMIN_ROLES.includes(data.role);
+        setIsAdmin(admin);
+        return admin;
+      }
+    } catch {
+      // ignore
+    }
+    setIsAdmin(false);
+    return false;
+  }, []);
 
   // Hidrata a sessao a partir do localStorage no primeiro render do cliente.
   useEffect(() => {
@@ -41,9 +64,10 @@ export function AuthProvider({ children }) {
         const valid = !exp || Date.now() < new Date(exp).getTime();
         if (parsed?.jwt && valid) {
           setSession(parsed);
-        } else {
-          localStorage.removeItem(STORAGE_KEY);
+          checkAdminRole(parsed.jwt).finally(() => setLoading(false));
+          return;
         }
+        localStorage.removeItem(STORAGE_KEY);
       }
     } catch {
       localStorage.removeItem(STORAGE_KEY);
@@ -63,7 +87,10 @@ export function AuthProvider({ children }) {
     } catch {
       // Ignora falhas de persistencia (ex.: modo privado).
     }
-  }, []);
+    if (data?.jwt) {
+      checkAdminRole(data.jwt);
+    }
+  }, [checkAdminRole]);
 
   /**
    * Atualiza parcialmente a sessao atual e persiste o novo valor.
@@ -87,6 +114,7 @@ export function AuthProvider({ children }) {
   /** Encerra a sessao e limpa o armazenamento local. */
   const logout = useCallback(() => {
     setSession(null);
+    setIsAdmin(false);
     clearLocalSessionState();
   }, []);
 
@@ -100,6 +128,7 @@ export function AuthProvider({ children }) {
     session,
     loading,
     isAuthenticated: Boolean(session?.jwt),
+    isAdmin,
     login,
     updateSession,
     logout
@@ -171,7 +200,7 @@ function clearClientCookies() {
 
 /**
  * Hook de acesso ao contexto de autenticacao.
- * @returns {{ session: Object|null, loading: boolean, isAuthenticated: boolean, login: Function, updateSession: Function, logout: Function }}
+ * @returns {{ session: Object|null, loading: boolean, isAuthenticated: boolean, isAdmin: boolean, login: Function, updateSession: Function, logout: Function }}
  */
 export function useAuth() {
   const ctx = useContext(AuthContext);

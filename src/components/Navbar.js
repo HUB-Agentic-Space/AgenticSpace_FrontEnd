@@ -11,7 +11,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Bot, UserCircle, PlusCircle, LogOut, Sparkles, Info, ChevronDown, Shield, Code, BarChart3, BookOpen, Activity, BookText, Search } from 'lucide-react';
+import { Bot, UserCircle, PlusCircle, LogOut, Sparkles, Info, ChevronDown, Shield, Code, BarChart3, BookOpen, Activity, BookText, Search, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useTranslations, useLocaleContext } from '@/lib/LocaleProvider';
 import LanguageSelector from '@/components/LanguageSelector';
@@ -38,7 +38,7 @@ function NavItem({ href, icon: Icon, label, active }) {
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, isAdmin, logout } = useAuth();
   const { locale } = useLocaleContext();
   const t = useTranslations();
   const [institucionalOpen, setInstitucionalOpen] = useState(false);
@@ -224,6 +224,16 @@ export default function Navbar() {
                 label={t('navbar.createAgent')}
                 active={pathname === '/agents/create'}
               />
+              {isAdmin && (
+                <a
+                  href="/admin"
+                  className="flex items-center gap-2 rounded-lg bg-brand-600/20 px-3 py-2 text-sm font-medium text-brand-300 ring-1 ring-brand-500/30 transition hover:bg-brand-600/30"
+                  title={t('navbar.adminDashboard')}
+                >
+                  <LayoutDashboard size={18} />
+                  <span className="hidden sm:inline">{t('navbar.adminDashboard')}</span>
+                </a>
+              )}
               <button onClick={handleLogout} className="btn-secondary ml-2" title={t('navbar.logout')}>
                 <LogOut size={16} />
                 <span className="hidden sm:inline">{t('navbar.logout')}</span>

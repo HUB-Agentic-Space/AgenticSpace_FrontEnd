@@ -137,7 +137,7 @@ function ProposalCard({ proposal, t }) {
 
   return (
     <Link
-      href={`/votacoes/${proposal.id}`}
+      href={`/votacoes/view?id=${proposal.id}`}
       className="block rounded-xl border border-slate-800 bg-slate-900/60 p-5 transition hover:border-brand-500"
     >
       <div className="flex items-start justify-between">
