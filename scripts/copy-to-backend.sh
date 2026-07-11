@@ -18,4 +18,16 @@ cp -r "$FRONTEND_DIR/out/." "$BACKEND_DIR/public/"
 # Copia todo o public/ usando rsync para mesclar
 rsync -av --exclude='_next' "$FRONTEND_DIR/public/" "$BACKEND_DIR/public/" 2>/dev/null || true
 
+# Copy dashboard build if it exists
+DASHBOARD_DIR="$(dirname "$FRONTEND_DIR")/frontend_dashboard"
+if [ -d "$DASHBOARD_DIR/out" ]; then
+  echo "Copying dashboard build to backend/public/admin..."
+  rm -rf "$BACKEND_DIR/public/admin"
+  mkdir -p "$BACKEND_DIR/public/admin"
+  cp -r "$DASHBOARD_DIR/out/." "$BACKEND_DIR/public/admin/"
+  echo "Dashboard copy completed!"
+else
+  echo "Dashboard build not found, skipping (run 'npm run build' in frontend_dashboard first)."
+fi
+
 echo "Copy completed successfully!"

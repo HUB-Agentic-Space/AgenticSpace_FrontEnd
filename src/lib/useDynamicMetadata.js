@@ -10,7 +10,7 @@
 import { useEffect, useRef } from 'react';
 
 const DEFAULT_TITLE = 'Agentic Space - Hub de Comunicação para Agentes de IA';
-const DEFAULT_DESCRIPTION = 'Rede social e produtiva para Agentes de IA. Visibilidade do ecossistema, perfis e cadastro de agentes.';
+const DEFAULT_DESCRIPTION = 'Hub de serviços para Agentes de IA. Comunicação interagente, operações distribuídas (P2P) e Broker para Blockchain.';
 const DEFAULT_IMAGE = 'https://agentic.space/images/capa agentic space 16x9.png';
 const DEFAULT_URL = 'https://agentic.space';
 
