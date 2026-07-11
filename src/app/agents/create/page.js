@@ -14,12 +14,12 @@
  * pois definem a identidade do agente na plataforma.
  */
 
-import { useState, Suspense, useMemo } from 'react';
+import { useState, useEffect, useRef, Suspense, useMemo } from 'react';
 import Link from 'next/link';
-import { Bot, CheckCircle2, AlertCircle, Loader2, ShieldCheck, Minus, Plus, Thermometer, Lock } from 'lucide-react';
+import { Bot, CheckCircle2, AlertCircle, Loader2, ShieldCheck, Minus, Plus, Thermometer, Lock, Sparkles } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useTranslations } from '@/lib/LocaleProvider';
-import { validateAgentCreation, createAgent } from '@/lib/api';
+import { checkAgentName, checkAgentId, generateAgentName, validateAgentCreation, createAgent } from '@/lib/api';
 import { saveAgent } from '@/lib/agents-store';
 import RequireAuth from '@/components/RequireAuth';
 
@@ -106,6 +106,14 @@ function CreateAgentContent() {
   const [jsonCopied, setJsonCopied] = useState(false);
   const [suggestions, setSuggestions] = useState({ names: [], ids: [] });
   const [descValidation, setDescValidation] = useState(null);
+  const [generatingName, setGeneratingName] = useState(false);
+  const [nameGenerated, setNameGenerated] = useState(false);
+
+  // Estados para verificacao em tempo real (debounced)
+  const [nameCheck, setNameCheck] = useState({ loading: false, available: null });
+  const [idCheck, setIdCheck] = useState({ loading: false, available: null });
+  const nameTimerRef = useRef(null);
+  const idTimerRef = useRef(null);
 
   /** Slug sugerido a partir do nome (auto-gerado enquanto o usuário não edita o ID). */
   const suggestedId = useMemo(() => slugify(form.name), [form.name]);
@@ -133,12 +141,41 @@ function CreateAgentContent() {
     setStatus({ type: '', message: '' });
     setSuggestions({ names: [], ids: [] });
     setDescValidation(null);
+    setNameCheck({ loading: false, available: null });
+  }
+
+  /** Gera um nome para o agente baseado na descrição usando LLM. */
+  async function handleGenerateName() {
+    if (form.description.trim().length < 2) {
+      setStatus({ type: 'error', message: t('agentsCreate.validation.descriptionRequired') });
+      return;
+    }
+
+    setGeneratingName(true);
+    setStatus({ type: '', message: '' });
+    try {
+      const { status: code, data } = await generateAgentName(form.description.trim(), session.jwt);
+      if (code !== 200) {
+        throw new Error(data.error || t('agentsCreate.errorMessages.generateName'));
+      }
+      setForm((f) => ({ ...f, name: data.name, id: data.suggestedId }));
+      setNameGenerated(true);
+      setStatus({ type: 'success', message: t('agentsCreate.success.nameGenerated') });
+    } catch (err) {
+      setStatus({ type: 'error', message: err.message });
+    } finally {
+      setGeneratingName(false);
+    }
   }
 
   /** Marca o ID como tocado e atualiza seu valor. */
   function updateId(value) {
     setIdTouched(true);
-    update('id', value);
+    setForm((f) => ({ ...f, id: value }));
+    setStatus({ type: '', message: '' });
+    setSuggestions({ names: [], ids: [] });
+    setDescValidation(null);
+    setIdCheck({ loading: false, available: null });
   }
 
   /** Ajusta a temperatura dentro dos limites aceitos pela API (0.0 a 1.0). */
@@ -149,6 +186,69 @@ function CreateAgentContent() {
       return { ...f, temperature: clamped };
     });
   }
+
+  /** Debounce: verifica disponibilidade do nome no backend em tempo real. */
+  useEffect(() => {
+    const trimmedName = form.name.trim();
+    if (trimmedName.length < 2 || step !== 'form' || !session?.jwt) {
+      setNameCheck({ loading: false, available: null });
+      return;
+    }
+
+    setNameCheck({ loading: true, available: null });
+
+    if (nameTimerRef.current) clearTimeout(nameTimerRef.current);
+    nameTimerRef.current = setTimeout(async () => {
+      try {
+        const { status: code, data } = await checkAgentName(trimmedName, session.jwt);
+        if (code === 200) {
+          setNameCheck({ loading: false, available: data.available });
+        } else {
+          setNameCheck({ loading: false, available: null });
+        }
+      } catch {
+        setNameCheck({ loading: false, available: null });
+      }
+    }, 500);
+
+    return () => {
+      if (nameTimerRef.current) clearTimeout(nameTimerRef.current);
+    };
+  }, [form.name, step, session?.jwt]);
+
+  /** Debounce: verifica disponibilidade do ID público no backend em tempo real. */
+  useEffect(() => {
+    const idToCheck = effectiveId;
+    if (!idToCheck || idToCheck.length < 3 || step !== 'form' || !session?.jwt) {
+      setIdCheck({ loading: false, available: null });
+      return;
+    }
+
+    if (!ID_REGEX.test(idToCheck)) {
+      setIdCheck({ loading: false, available: null });
+      return;
+    }
+
+    setIdCheck({ loading: true, available: null });
+
+    if (idTimerRef.current) clearTimeout(idTimerRef.current);
+    idTimerRef.current = setTimeout(async () => {
+      try {
+        const { status: code, data } = await checkAgentId(idToCheck, session.jwt);
+        if (code === 200) {
+          setIdCheck({ loading: false, available: data.available });
+        } else {
+          setIdCheck({ loading: false, available: null });
+        }
+      } catch {
+        setIdCheck({ loading: false, available: null });
+      }
+    }, 500);
+
+    return () => {
+      if (idTimerRef.current) clearTimeout(idTimerRef.current);
+    };
+  }, [effectiveId, step, session?.jwt]);
 
   /** Valida os campos no cliente (espelha as regras do backend). */
   function validate() {
@@ -168,6 +268,16 @@ function CreateAgentContent() {
     const validationError = validate();
     if (validationError) {
       setStatus({ type: 'error', message: validationError });
+      return;
+    }
+
+    if (nameCheck.available === false) {
+      setStatus({ type: 'error', message: t('agentsCreate.errorMessages.nameInUse', { name: form.name }) });
+      return;
+    }
+
+    if (effectiveId && idCheck.available === false) {
+      setStatus({ type: 'error', message: t('agentsCreate.errorMessages.idInUse', { id: effectiveId }) });
       return;
     }
 
@@ -481,36 +591,88 @@ function CreateAgentContent() {
               {t('agentsCreate.descValidation.valid')}
             </div>
           )}
+          {/* Botão para gerar nome via LLM */}
+          {step === 'form' && (
+            <button
+              type="button"
+              onClick={handleGenerateName}
+              disabled={generatingName || form.description.trim().length < 2}
+              className="mt-2 flex items-center gap-2 rounded-lg border border-brand-500/40 bg-brand-500/10 px-3 py-2 text-sm font-medium text-brand-300 hover:bg-brand-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {generatingName ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Sparkles size={16} />
+              )}
+              {generatingName ? t('agentsCreate.generatingName') : t('agentsCreate.generateNameButton')}
+            </button>
+          )}
         </div>
 
         {/* 2. Nome (segundo campo) */}
         <div>
           <label className="label">{t('agentsCreate.name')}</label>
-          <input
-            className="input"
-            value={form.name}
-            onChange={(e) => updateName(e.target.value)}
-            placeholder={t('agentsCreate.namePlaceholder')}
-            disabled={step === 'confirm'}
-          />
+          <div className="relative">
+            <input
+              className="input pr-10"
+              value={form.name}
+              onChange={(e) => updateName(e.target.value)}
+              placeholder={t('agentsCreate.namePlaceholder')}
+              disabled={step === 'confirm' || !nameGenerated}
+            />
+            {nameCheck.loading && (
+              <Loader2 size={16} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-slate-400" />
+            )}
+            {!nameCheck.loading && nameCheck.available === true && (
+              <CheckCircle2 size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-green-400" />
+            )}
+            {!nameCheck.loading && nameCheck.available === false && (
+              <AlertCircle size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-red-400" />
+            )}
+          </div>
+          {nameCheck.available === false && (
+            <p className="mt-1 text-xs text-red-400">
+              {t('agentsCreate.errorMessages.nameInUse', { name: form.name })}
+            </p>
+          )}
+          {nameCheck.available === true && (
+            <p className="mt-1 text-xs text-green-400">
+              {t('agentsCreate.success.nameAvailable')}
+            </p>
+          )}
         </div>
 
-        {/* 3. ID público (terceiro campo, sugerido a partir do nome) */}
+        {/* 3. ID público (terceiro campo, auto-gerado e somente leitura) */}
         <div>
           <label className="label">{t('agentsCreate.publicIdLabel')}</label>
-          <input
-            className="input font-mono"
-            value={form.id}
-            onChange={(e) => updateId(e.target.value)}
-            placeholder={t('agentsCreate.publicIdPlaceholder')}
-            disabled={step === 'confirm'}
-          />
+          <div className="relative">
+            <input
+              className="input font-mono pr-10 bg-slate-900/60 text-slate-400 cursor-not-allowed"
+              value={form.id}
+              readOnly
+              placeholder={t('agentsCreate.publicIdPlaceholder')}
+            />
+            {idCheck.loading && (
+              <Loader2 size={16} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-slate-400" />
+            )}
+            {!idCheck.loading && idCheck.available === true && (
+              <CheckCircle2 size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-green-400" />
+            )}
+            {!idCheck.loading && idCheck.available === false && (
+              <AlertCircle size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-red-400" />
+            )}
+          </div>
           <p className="mt-1 text-xs text-slate-500">
             {t('agentsCreate.publicIdHint')}
           </p>
-          {!idTouched && suggestedId && suggestedId !== form.id && (
-            <p className="mt-1 text-xs text-brand-300">
-              {t('agentsCreate.suggestedId', { id: suggestedId })}
+          {idCheck.available === false && (
+            <p className="mt-1 text-xs text-red-400">
+              {t('agentsCreate.errorMessages.idInUse', { id: effectiveId })}
+            </p>
+          )}
+          {idCheck.available === true && (
+            <p className="mt-1 text-xs text-green-400">
+              {t('agentsCreate.success.idAvailable', { id: effectiveId })}
             </p>
           )}
         </div>

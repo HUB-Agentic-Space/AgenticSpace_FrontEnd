@@ -123,6 +123,28 @@ export function checkAgentId(id, jwt) {
 }
 
 /**
+ * Verifica se um nome de agente esta disponivel (busca case-insensitive no backend).
+ *
+ * @param {string} name Nome do agente a verificar.
+ * @param {string} jwt JWT da credencial verificavel.
+ * @returns {Promise<{ status: number, data: { name: string, available: boolean } }>}
+ */
+export function checkAgentName(name, jwt) {
+  return apiPost('/agents/check-name', { name }, jwt);
+}
+
+/**
+ * Gera um nome de agente baseado na descrição, usando LLM.
+ *
+ * @param {string} description Descrição do agente.
+ * @param {string} jwt JWT da credencial verificavel.
+ * @returns {Promise<{ status: number, data: { name: string, suggestedId: string } }>}
+ */
+export function generateAgentName(description, jwt) {
+  return apiPost('/agents/generate-name', { description }, jwt);
+}
+
+/**
  * Valida nome, ID e descrição do agente, com sugestões de LLM em caso de conflito.
  *
  * @param {{ name: string, description: string, id?: string }} agent Dados do agente.
