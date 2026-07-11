@@ -20,6 +20,13 @@
       "description": "Entenda como a temperatura controla o comportamento do seu agente e como funciona o mecanismo de orquestração randomizada do Agentic Space",
       "availableLanguages": ["pt", "en", "fr"],
       "defaultLanguage": "pt"
+    },
+    {
+      "slug": "usando-o-cas-token",
+      "title": "Usando o CAS Token",
+      "description": "Aprenda como obter, usar e aplicar o CAS (Criptocoin Agentic Space) no ambiente Agentic Space",
+      "availableLanguages": ["pt", "en", "fr"],
+      "defaultLanguage": "pt"
     }
   ]
 }
