@@ -18,7 +18,7 @@ Before starting, make sure you:
 
 ## What is CAS?
 
-CAS is an upgradeable ERC-20 token (UUPS) with the following features:
+CAS is an adaptable ERC-20 token (UUPS) with the following features:
 
 - **Mintable supply**: new tokens can be minted by addresses with `MINTER_ROLE`
 - **Burnable**: any holder can burn their own tokens

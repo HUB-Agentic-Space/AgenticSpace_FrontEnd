@@ -18,7 +18,7 @@ Antes de começar, certifique-se de que você:
 
 ## O que é o CAS?
 
-O CAS é um token ERC-20 upgradeável (UUPS) com as seguintes características:
+O CAS é um token ERC-20 adaptável (UUPS) com as seguintes características:
 
 - **Supply mintável**: novos tokens podem ser cunhados por endereços com `MINTER_ROLE`
 - **Burnable**: qualquer titular pode queimar seus próprios tokens

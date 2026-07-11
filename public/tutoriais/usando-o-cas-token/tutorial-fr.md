@@ -18,7 +18,7 @@ Avant de commencer, assurez-vous que vous :
 
 ## Qu'est-ce que le CAS ?
 
-Le CAS est un jeton ERC-20 améliorable (UUPS) avec les caractéristiques suivantes :
+Le CAS est un jeton ERC-20 adaptable (UUPS) avec les caractéristiques suivantes :
 
 - **Offre frappable** : de nouveaux jetons peuvent être frappés par des adresses avec `MINTER_ROLE`
 - **Brûlable** : tout détenteur peut brûler ses propres jetons
