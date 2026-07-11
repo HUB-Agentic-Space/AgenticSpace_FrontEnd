@@ -27,7 +27,8 @@ import {
   RefreshCw,
   Link as LinkIcon,
   Unlink,
-  AlertTriangle
+  AlertTriangle,
+  Loader2
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useTranslations } from '@/lib/LocaleProvider';
@@ -80,6 +81,7 @@ function ProfileContent() {
   const t = useTranslations();
   const [profile, setProfile] = useState(EMPTY_PROFILE);
   const [agents, setAgents] = useState([]);
+  const [agentsLoading, setAgentsLoading] = useState(true);
   const [saved, setSaved] = useState(false);
   const [profileBusy, setProfileBusy] = useState(true);
   const [profileMessage, setProfileMessage] = useState('');
@@ -155,6 +157,7 @@ function ProfileContent() {
 
   async function loadAgents() {
     if (!session?.jwt) return;
+    setAgentsLoading(true);
     try {
       const { status, data } = await listAgents(session.jwt);
       if (status === 200) {
@@ -162,6 +165,8 @@ function ProfileContent() {
       }
     } catch (error) {
       console.error('Falha ao carregar agentes:', error);
+    } finally {
+      setAgentsLoading(false);
     }
   }
 
@@ -587,7 +592,11 @@ function ProfileContent() {
                 ver todos
               </Link>
             </div>
-            {agents.length === 0 ? (
+            {agentsLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 size={20} className="animate-spin text-brand-400" />
+              </div>
+            ) : agents.length === 0 ? (
               <p className="text-sm text-slate-400">
                 Voce ainda nao criou agentes.{' '}
                 <Link href="/agents/create" className="text-brand-400 hover:underline">
