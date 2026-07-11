@@ -123,6 +123,17 @@ export function checkAgentId(id, jwt) {
 }
 
 /**
+ * Valida nome, ID e descrição do agente, com sugestões de LLM em caso de conflito.
+ *
+ * @param {{ name: string, description: string, id?: string }} agent Dados do agente.
+ * @param {string} jwt JWT da credencial verificavel.
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+export function validateAgentCreation(agent, jwt) {
+  return apiPost('/agents/validate', agent, jwt);
+}
+
+/**
  * Cria um novo agente vinculado ao usuario autenticado.
  *
  * @param {{ id?: string, name: string, description: string }} agent Dados do agente.

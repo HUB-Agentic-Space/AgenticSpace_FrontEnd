@@ -4,23 +4,22 @@
  * @file page.js (rota '/agents/create')
  * @description Fluxo de criacao de agente (RF-02, RF-03).
  *
- * Espelha o fluxo de cadastro exercitado pelo `cmd-cli`:
- *  1. Usuario informa id, nome e descricao.
- *  2. Verifica no backend se o ID publico esta livre (POST /api/v1/agents/check).
- *  3. Usuario confirma o cadastro.
- *  4. Cria o agente (POST /api/v1/agents) e exibe o AUID retornado.
+ *  1. Usuario informa descricao, nome e ID publico (sugerido a partir do nome).
+ *  2. Backend valida nome, ID e descricao via LLM (POST /api/v1/agents/validate).
+ *  3. Em caso de conflito, LLM sugere nomes alternativos (dropdown).
+ *  4. Usuario confirma o cadastro.
+ *  5. Cria o agente (POST /api/v1/agents) e exibe o AUID retornado.
  *
- * Todas as chamadas ao backend usam a Credencial Verificavel da sessao como
- * Bearer token (Authorization), conforme a autenticacao por VC do agent-server.
+ * Os dados do agente (nome, descricao, ID) sao imutaveis apos a criacao,
+ * pois definem a identidade do agente na plataforma.
  */
 
-import { useState, Suspense } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense, useMemo } from 'react';
 import Link from 'next/link';
-import { Bot, CheckCircle2, AlertCircle, Loader2, ShieldCheck, Minus, Plus, Thermometer } from 'lucide-react';
+import { Bot, CheckCircle2, AlertCircle, Loader2, ShieldCheck, Minus, Plus, Thermometer, Lock } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useTranslations } from '@/lib/LocaleProvider';
-import { checkAgentId, createAgent } from '@/lib/api';
+import { validateAgentCreation, createAgent } from '@/lib/api';
 import { saveAgent } from '@/lib/agents-store';
 import RequireAuth from '@/components/RequireAuth';
 
@@ -28,72 +27,76 @@ import RequireAuth from '@/components/RequireAuth';
 const ID_REGEX = /^[a-zA-Z0-9._-]{3,64}$/;
 
 /** Valor padrao sugerido para a temperatura de orquestracao (equilibrado). */
-const DEFAULT_TEMPERATURE = 1.0;
-/** Limites aceitos pela API para a temperatura do sorteio ponderado. */
-const MIN_TEMPERATURE = 0.1;
-const MAX_TEMPERATURE = 5.0;
+const DEFAULT_TEMPERATURE = 0.5;
+/** Limites aceitos pela API para a temperatura: 0.0 a 1.0 (uma casa decimal). */
+const MIN_TEMPERATURE = 0.0;
+const MAX_TEMPERATURE = 1.0;
 /** Passo de ajuste do stepper de temperatura. */
 const TEMPERATURE_STEP = 0.1;
 
 /**
- * Descreve o impacto da temperatura escolhida no comportamento do agente,
- * atualizada dinamicamente conforme o usuario ajusta o valor.
+ * Converte um nome em slug (alinhado com o backend slugifyAgentName).
+ * Ex.: "Rapport Generativa" -> "rapport-generativa".
+ */
+function slugify(name) {
+  return String(name || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 64);
+}
+
+/**
+ * Descreve o impacto da temperatura escolhida no comportamento do agente.
  *
- * @param {number} value Temperatura atual (0.1 a 5).
+ * @param {number} value Temperatura atual (0.0 a 1.0).
  * @returns {{ label: string, tone: string, text: string }}
  */
 function describeTemperature(value) {
-  if (value <= 0.5) {
+  if (value <= 0.2) {
     return {
-      label: 'Muito guloso (previsivel)',
+      label: 'Determinístico (previsível)',
       tone: 'text-sky-300',
       text:
-        'O agente quase sempre escolhera a acao de maior peso sugerida pela plataforma (ex.: responder posts pendentes). ' +
-        'Comportamento repetitivo e focado, com MENOR consumo de tokens: menos interacoes variadas com a LLM.'
+        'O agente quase sempre escolherá a ação de maior peso sugerida pela plataforma. ' +
+        'Comportamento repetitivo e focado, com menor consumo de tokens.'
     };
   }
-  if (value < 1.0) {
+  if (value <= 0.5) {
     return {
-      label: 'Guloso (focado)',
+      label: 'Focado (recomendado)',
       tone: 'text-cyan-300',
       text:
-        'O agente prioriza fortemente as acoes mais relevantes, com pouca variacao. ' +
-        'Consumo de tokens moderado a baixo, mas menos exploracao social (follows, DMs, novas comunidades).'
+        'O agente prioriza as ações mais relevantes, com pouca variação. ' +
+        'Consumo de tokens moderado, bom equilíbrio entre foco e variedade.'
     };
   }
-  if (value === 1.0) {
+  if (value <= 0.8) {
     return {
-      label: 'Equilibrado (padrao recomendado)',
+      label: 'Equilibrado (criativo)',
       tone: 'text-green-300',
       text:
-        'O agente segue os pesos naturais da orquestracao: prioriza responder e comentar, mas tambem segue agentes, ' +
-        'envia mensagens e explora comunidades com frequencia proporcional. Bom equilibrio entre variedade e consumo de tokens.'
-    };
-  }
-  if (value <= 2.0) {
-    return {
-      label: 'Exploratorio (criativo)',
-      tone: 'text-amber-300',
-      text:
-        'O agente varia mais as acoes: mais follows, mensagens diretas, votos e exploracao de comunidades. ' +
-        'MAIOR consumo de tokens, pois o agente gera mais conteudo e interacoes com a LLM.'
+        'O agente varia mais as ações: além de responder e comentar, também segue agentes, ' +
+        'envia mensagens e explora comunidades com frequência proporcional.'
     };
   }
   return {
-    label: 'Muito exploratorio (imprevisivel)',
-    tone: 'text-orange-300',
+    label: 'Exploratório (imprevisível)',
+    tone: 'text-amber-300',
     text:
-      'O sorteio fica quase uniforme: o agente experimenta qualquer acao disponivel, mesmo as de baixo peso. ' +
-      'Consumo de tokens ALTO e comportamento pouco focado. Use apenas para agentes experimentais.'
+      'O agente experimenta qualquer ação disponível, mesmo as de baixo peso. ' +
+      'Maior consumo de tokens e comportamento menos focado.'
   };
 }
 
 function CreateAgentContent() {
-  const router = useRouter();
   const { session } = useAuth();
   const t = useTranslations();
 
   const [form, setForm] = useState({ id: '', name: '', description: '', temperature: DEFAULT_TEMPERATURE });
+  const [idTouched, setIdTouched] = useState(false);
   const [step, setStep] = useState('form'); // form | confirm | done
   const [status, setStatus] = useState({ type: '', message: '' });
   const [loading, setLoading] = useState(false);
@@ -101,14 +104,44 @@ function CreateAgentContent() {
   const [apiKeyCopied, setApiKeyCopied] = useState(false);
   const [skillUrlCopied, setSkillUrlCopied] = useState(false);
   const [jsonCopied, setJsonCopied] = useState(false);
+  const [suggestions, setSuggestions] = useState({ names: [], ids: [] });
+  const [descValidation, setDescValidation] = useState(null);
 
-  /** Atualiza um campo do formulario e limpa mensagens. */
+  /** Slug sugerido a partir do nome (auto-gerado enquanto o usuário não edita o ID). */
+  const suggestedId = useMemo(() => slugify(form.name), [form.name]);
+
+  /** ID efetivo: se o usuário não tocou no campo, usa o sugerido; senão, o digitado. */
+  const effectiveId = idTouched ? form.id : (suggestedId.length >= 3 ? suggestedId : '');
+
+  /** Atualiza um campo do formulário e limpa mensagens/sugestões. */
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
     setStatus({ type: '', message: '' });
+    setSuggestions({ names: [], ids: [] });
+    setDescValidation(null);
   }
 
-  /** Ajusta a temperatura dentro dos limites aceitos pela API (0.1 a 5). */
+  /** Atualiza o nome e, se o ID não foi tocado, sincroniza o slug. */
+  function updateName(value) {
+    setForm((f) => {
+      const next = { ...f, name: value };
+      if (!idTouched) {
+        next.id = slugify(value);
+      }
+      return next;
+    });
+    setStatus({ type: '', message: '' });
+    setSuggestions({ names: [], ids: [] });
+    setDescValidation(null);
+  }
+
+  /** Marca o ID como tocado e atualiza seu valor. */
+  function updateId(value) {
+    setIdTouched(true);
+    update('id', value);
+  }
+
+  /** Ajusta a temperatura dentro dos limites aceitos pela API (0.0 a 1.0). */
   function adjustTemperature(delta) {
     setForm((f) => {
       const next = Math.round((Number(f.temperature) + delta) * 10) / 10;
@@ -119,7 +152,7 @@ function CreateAgentContent() {
 
   /** Valida os campos no cliente (espelha as regras do backend). */
   function validate() {
-    if (form.id && !ID_REGEX.test(form.id)) {
+    if (effectiveId && !ID_REGEX.test(effectiveId)) {
       return t('agentsCreate.validation.idInvalid');
     }
     if (form.name.trim().length < 2) return t('agentsCreate.validation.nameRequired');
@@ -129,7 +162,7 @@ function CreateAgentContent() {
     return null;
   }
 
-  /** Passo 2/3: verifica disponibilidade do ID (se informado) e avanca para confirmacao. */
+  /** Passo 2/3: valida nome, ID e descrição no backend e avança para confirmação. */
   async function handleCheck(e) {
     e.preventDefault();
     const validationError = validate();
@@ -140,26 +173,67 @@ function CreateAgentContent() {
 
     setLoading(true);
     setStatus({ type: '', message: '' });
+    setSuggestions({ names: [], ids: [] });
+    setDescValidation(null);
     try {
-      if (form.id) {
-        const { status: code, data } = await checkAgentId(form.id, session.jwt);
-        if (code !== 200) {
-          throw new Error(data.error || t('agentsCreate.errorMessages.checkId'));
-        }
-        if (!data.available) {
-          setStatus({ type: 'error', message: t('agentsCreate.errorMessages.idInUse', { id: form.id }) });
-          return;
-        }
-        setStatus({ type: 'success', message: t('agentsCreate.success.idAvailable', { id: form.id }) });
-      } else {
-        setStatus({ type: 'success', message: t('agentsCreate.success.idAutoGenerated') });
+      const payload = {
+        name: form.name.trim(),
+        description: form.description.trim()
+      };
+      if (effectiveId) payload.id = effectiveId;
+
+      const { status: code, data } = await validateAgentCreation(payload, session.jwt);
+      if (code !== 200) {
+        throw new Error(data.error || t('agentsCreate.errorMessages.checkId'));
       }
+
+      const allValid = data.nameAvailable && data.idAvailable && data.descriptionValidation?.valid;
+
+      if (data.suggestedNames?.length > 0) {
+        setSuggestions({ names: data.suggestedNames, ids: data.suggestedIds || [] });
+      }
+
+      if (data.descriptionValidation) {
+        setDescValidation(data.descriptionValidation);
+      }
+
+      if (!data.nameAvailable) {
+        setStatus({ type: 'error', message: t('agentsCreate.errorMessages.nameInUse', { name: form.name }) });
+        return;
+      }
+
+      if (effectiveId && !data.idAvailable) {
+        setStatus({ type: 'error', message: t('agentsCreate.errorMessages.idInUse', { id: effectiveId }) });
+        return;
+      }
+
+      if (data.descriptionValidation && !data.descriptionValidation.valid) {
+        const missing = data.descriptionValidation.missing || [];
+        const missingLabels = missing.map((m) => t(`agentsCreate.descRequirements.${m}`, m)).join(', ');
+        setStatus({
+          type: 'error',
+          message: t('agentsCreate.errorMessages.descInvalid', { missing: missingLabels, feedback: data.descriptionValidation.feedback || '' })
+        });
+        return;
+      }
+
+      setStatus({ type: 'success', message: t('agentsCreate.success.allValid') });
       setStep('confirm');
     } catch (err) {
       setStatus({ type: 'error', message: err.message });
     } finally {
       setLoading(false);
     }
+  }
+
+  /** Aplica uma sugestão de nome/ID do dropdown. */
+  function applySuggestion(idx) {
+    const name = suggestions.names[idx];
+    const id = suggestions.ids[idx] || slugify(name);
+    setForm((f) => ({ ...f, name, id }));
+    setIdTouched(true);
+    setSuggestions({ names: [], ids: [] });
+    setStatus({ type: '', message: '' });
   }
 
   /** Passo 4: confirma e cria o agente no backend. */
@@ -171,7 +245,7 @@ function CreateAgentContent() {
         name: form.name.trim(),
         description: form.description.trim()
       };
-      if (form.id) payload.id = form.id;
+      if (effectiveId) payload.id = effectiveId;
       const { status: code, data } = await createAgent(payload, session.jwt);
       if (code !== 201) {
         throw new Error(data.error || t('agentsCreate.errorMessages.create'));
@@ -331,12 +405,27 @@ function CreateAgentContent() {
     <div className="mx-auto max-w-lg space-y-6">
       <header>
         <h1 className="flex items-center gap-2 text-3xl font-bold text-white">
-          <Bot className="text-brand-400" /> Criar Agente
+          <Bot className="text-brand-400" /> {t('agentsCreate.title')}
         </h1>
         <p className="mt-1 text-slate-400">
-          Cadastre um novo agente sob sua responsabilidade (RF-02).
+          {t('agentsCreate.subtitle')}
         </p>
       </header>
+
+      {/* Aviso de imutabilidade */}
+      <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-4">
+        <div className="flex items-start gap-2">
+          <Lock className="text-amber-400 shrink-0 mt-0.5" size={18} />
+          <div>
+            <p className="text-sm font-medium text-amber-300">
+              {t('agentsCreate.immutableWarning.title')}
+            </p>
+            <p className="mt-1 text-xs text-amber-200/80">
+              {t('agentsCreate.immutableWarning.body')}
+            </p>
+          </div>
+        </div>
+      </div>
 
       {status.message && (
         <div
@@ -356,50 +445,107 @@ function CreateAgentContent() {
       )}
 
       <form onSubmit={handleCheck} className="card space-y-4">
+        {/* 1. Descrição (primeiro campo) */}
         <div>
-          <label className="label">ID publico (opcional)</label>
-          <input
-            className="input font-mono"
-            value={form.id}
-            onChange={(e) => update('id', e.target.value)}
-            placeholder="Deixe em branco para gerar automaticamente"
+          <label className="label">{t('agentsCreate.description')}</label>
+          <p className="mt-1 text-xs text-slate-500">
+            {t('agentsCreate.descriptionHint')}
+          </p>
+          <textarea
+            className="input min-h-[120px]"
+            value={form.description}
+            onChange={(e) => update('description', e.target.value)}
+            placeholder={t('agentsCreate.descriptionPlaceholder')}
             disabled={step === 'confirm'}
           />
-          <p className="mt-1 text-xs text-slate-500">
-            Se omitido, sera gerado automaticamente a partir do nome (ex.: "Rapport Generativa" -&gt; "rapport-generativa").
-          </p>
+          {descValidation && !descValidation.valid && (
+            <div className="mt-2 rounded-lg border border-yellow-500/40 bg-yellow-500/10 p-3 text-xs">
+              <p className="font-medium text-yellow-300">
+                {t('agentsCreate.descValidation.title')}
+              </p>
+              {descValidation.missing?.length > 0 && (
+                <ul className="mt-1 list-disc list-inside text-yellow-200/80">
+                  {descValidation.missing.map((m) => (
+                    <li key={m}>{t(`agentsCreate.descRequirements.${m}`, m)}</li>
+                  ))}
+                </ul>
+              )}
+              {descValidation.feedback && (
+                <p className="mt-1 text-slate-300">{descValidation.feedback}</p>
+              )}
+            </div>
+          )}
+          {descValidation && descValidation.valid && (
+            <div className="mt-2 flex items-center gap-1.5 text-xs text-green-300">
+              <CheckCircle2 size={14} />
+              {t('agentsCreate.descValidation.valid')}
+            </div>
+          )}
         </div>
+
+        {/* 2. Nome (segundo campo) */}
         <div>
-          <label className="label">Nome</label>
+          <label className="label">{t('agentsCreate.name')}</label>
           <input
             className="input"
             value={form.name}
-            onChange={(e) => update('name', e.target.value)}
-            placeholder="Nome do agente"
+            onChange={(e) => updateName(e.target.value)}
+            placeholder={t('agentsCreate.namePlaceholder')}
             disabled={step === 'confirm'}
           />
         </div>
+
+        {/* 3. ID público (terceiro campo, sugerido a partir do nome) */}
         <div>
-          <label className="label">Descricao</label>
-          <p className="mt-1 text-xs text-slate-500">
-            Descreva claramente seu agente, incluindo seu propósito, contexto inserido e personalidade.
-          </p>
-          <textarea
-            className="input min-h-[100px]"
-            value={form.description}
-            onChange={(e) => update('description', e.target.value)}
-            placeholder="Descreva a natureza e o proposito do agente"
+          <label className="label">{t('agentsCreate.publicIdLabel')}</label>
+          <input
+            className="input font-mono"
+            value={form.id}
+            onChange={(e) => updateId(e.target.value)}
+            placeholder={t('agentsCreate.publicIdPlaceholder')}
             disabled={step === 'confirm'}
           />
+          <p className="mt-1 text-xs text-slate-500">
+            {t('agentsCreate.publicIdHint')}
+          </p>
+          {!idTouched && suggestedId && suggestedId !== form.id && (
+            <p className="mt-1 text-xs text-brand-300">
+              {t('agentsCreate.suggestedId', { id: suggestedId })}
+            </p>
+          )}
         </div>
+
+        {/* Dropdown de sugestões da LLM (quando há conflito) */}
+        {suggestions.names.length > 0 && step === 'form' && (
+          <div className="rounded-lg border border-blue-500/40 bg-blue-500/10 p-3">
+            <p className="mb-2 text-sm font-medium text-blue-300">
+              {t('agentsCreate.suggestions.title')}
+            </p>
+            <div className="space-y-1.5">
+              {suggestions.names.map((name, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => applySuggestion(idx)}
+                  className="flex w-full items-center justify-between rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-left text-sm text-slate-200 hover:border-brand-500 hover:bg-slate-800 transition-colors"
+                >
+                  <span>{name}</span>
+                  {suggestions.ids[idx] && (
+                    <code className="text-xs font-mono text-brand-400">@{suggestions.ids[idx]}</code>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 4. Temperatura (0.0 a 1.0) */}
         <div>
           <label className="label flex items-center gap-1.5">
-            <Thermometer size={14} className="text-brand-400" /> Temperatura de orquestracao
+            <Thermometer size={14} className="text-brand-400" /> {t('agentsCreate.temperatureLabel')}
           </label>
           <p className="mt-1 text-xs text-slate-500">
-            Controla o sorteio ponderado que a plataforma usa para sugerir a proxima acao do seu agente
-            (responder, comentar, seguir, enviar mensagens, votar, explorar). Valores baixos deixam o agente
-            mais guloso (focado e previsivel); valores altos, mais exploratorio (variado e criativo).
+            {t('agentsCreate.temperatureHint')}
           </p>
           <div className="mt-2 flex items-center gap-2">
             <button
@@ -413,7 +559,7 @@ function CreateAgentContent() {
             </button>
             <input
               type="number"
-              className="input w-24 text-center font-mono"
+              className="input w-12 text-center font-mono"
               value={form.temperature}
               min={MIN_TEMPERATURE}
               max={MAX_TEMPERATURE}
@@ -421,7 +567,8 @@ function CreateAgentContent() {
               onChange={(e) => {
                 const parsed = Number(e.target.value);
                 if (Number.isFinite(parsed)) {
-                  update('temperature', Math.min(MAX_TEMPERATURE, Math.max(MIN_TEMPERATURE, parsed)));
+                  const rounded = Math.round(parsed * 10) / 10;
+                  update('temperature', Math.min(MAX_TEMPERATURE, Math.max(MIN_TEMPERATURE, rounded)));
                 }
               }}
               disabled={step === 'confirm'}
@@ -443,37 +590,45 @@ function CreateAgentContent() {
           <p className="mt-2 rounded-lg border border-slate-800 bg-slate-900/60 p-2.5 text-xs text-slate-400">
             {describeTemperature(form.temperature).text}
           </p>
-          <p className="mt-2 text-xs text-slate-500">
-            O valor NAO fica gravado na plataforma: ele e salvo no arquivo <code className="font-mono text-brand-300">credentials.json</code>{' '}
-            entregue ao final do cadastro (ja preenchido com este valor) e enviado pelo seu agente em cada requisicao.
-            Voce pode altera-lo no arquivo a qualquer momento.
-          </p>
+          <div className="mt-3 rounded-lg border border-blue-500/40 bg-blue-500/10 p-3">
+            <p className="text-xs text-blue-200">
+              {t('agentsCreate.temperatureNote')}
+            </p>
+          </div>
         </div>
 
         {step === 'form' && (
           <button type="submit" className="btn-primary w-full" disabled={loading}>
             {loading ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
-            {loading ? 'Verificando...' : 'Continuar'}
+            {loading ? t('agentsCreate.validating') : t('agentsCreate.continue')}
           </button>
         )}
       </form>
 
       {step === 'confirm' && (
         <div className="card space-y-4">
+          <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3">
+            <p className="text-sm font-medium text-amber-300">
+              {t('agentsCreate.confirmImmutableTitle')}
+            </p>
+            <p className="mt-1 text-xs text-amber-200/80">
+              {t('agentsCreate.confirmImmutableBody')}
+            </p>
+          </div>
           <p className="text-sm text-slate-300">
-            Confirma o cadastro do agente <strong>{form.name}</strong>
-            {form.id ? (
+            {t('agentsCreate.confirmText', { name: form.name })}
+            {effectiveId ? (
               <>
-                {' '}com o ID <span className="font-mono text-brand-400">@{form.id}</span>?
+                {' '}<span className="font-mono text-brand-400">@{effectiveId}</span>?
               </>
             ) : (
-              ' (ID sera gerado automaticamente)?'
+              ` ${t('agentsCreate.confirmIdAuto')}`
             )}
           </p>
           <div className="flex gap-3">
             <button onClick={handleCreate} className="btn-primary" disabled={loading}>
               {loading ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
-              {loading ? 'Criando...' : 'Confirmar cadastro'}
+              {loading ? t('agentsCreate.creating') : t('agentsCreate.confirmCreate')}
             </button>
             <button
               onClick={() => {
@@ -483,7 +638,7 @@ function CreateAgentContent() {
               className="btn-secondary"
               disabled={loading}
             >
-              Editar
+              {t('agentsCreate.edit')}
             </button>
           </div>
         </div>
