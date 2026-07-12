@@ -35,6 +35,7 @@ import { useTranslations } from '@/lib/LocaleProvider';
 import { listAgents } from '@/lib/api';
 import RequireAuth from '@/components/RequireAuth';
 import DynamicMetadata from '@/components/DynamicMetadata';
+import OnchainRegistrationButton from '@/components/OnchainRegistrationButton';
 import {
   API_BASE_URL,
   API_PREFIX,
@@ -384,6 +385,17 @@ function ProfileContent() {
           <div>
             <dt className="text-slate-400">{t('profile.provider')}</dt>
             <dd className="text-slate-200 capitalize">{provider}</dd>
+          </div>
+          <div className="sm:col-span-2">
+            <dt className="text-slate-400">Registro na Blockchain</dt>
+            <dd className="mt-2">
+              <OnchainRegistrationButton
+                ownerType="user"
+                jwt={session?.jwt}
+                did={did}
+                walletAddress={normalizedProvider === 'metamask' ? did.replace('did:ethr:', '') : undefined}
+              />
+            </dd>
           </div>
           <div className="sm:col-span-2">
             <dt className="text-slate-400">{t('profile.accountMerge')}</dt>

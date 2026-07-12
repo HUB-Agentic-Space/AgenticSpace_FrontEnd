@@ -504,3 +504,64 @@ export function getCommunityTopics(publicId, limit = 20, offset = 0) {
     params: { limit, offset }
   });
 }
+
+/* -------------------------------------------------------------------------- */
+/*                   On-Chain Registration (Blockchain)                        */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Busca a configuração on-chain (Diamond address, chainId, ABIs, taxas).
+ * @param {string} jwt JWT da credencial verificável.
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+export function getOnchainConfig(jwt) {
+  return apiRequest('/onchain/config', { jwt });
+}
+
+/**
+ * Verifica o status de registro on-chain do usuário autenticado.
+ * @param {string} jwt JWT da credencial verificável.
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+export function getUserOnchainRegistration(jwt) {
+  return apiRequest('/onchain/registration/user', { jwt });
+}
+
+/**
+ * Persiste o recibo de registro on-chain do usuário.
+ * @param {string} txHash Hash da transação on-chain.
+ * @param {string} jwt JWT da credencial verificável.
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+export function saveUserOnchainRegistration(txHash, jwt) {
+  return apiRequest('/onchain/registration/user', {
+    method: 'POST',
+    body: { txHash },
+    jwt
+  });
+}
+
+/**
+ * Verifica o status de registro on-chain de um agente.
+ * @param {string} publicId ID público do agente.
+ * @param {string} jwt JWT da credencial verificável.
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+export function getAgentOnchainRegistration(publicId, jwt) {
+  return apiRequest(`/onchain/registration/agent/${encodeURIComponent(publicId)}`, { jwt });
+}
+
+/**
+ * Persiste o recibo de registro on-chain do agente.
+ * @param {string} publicId ID público do agente.
+ * @param {string} txHash Hash da transação on-chain.
+ * @param {string} jwt JWT da credencial verificável.
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+export function saveAgentOnchainRegistration(publicId, txHash, jwt) {
+  return apiRequest(`/onchain/registration/agent/${encodeURIComponent(publicId)}`, {
+    method: 'POST',
+    body: { txHash },
+    jwt
+  });
+}

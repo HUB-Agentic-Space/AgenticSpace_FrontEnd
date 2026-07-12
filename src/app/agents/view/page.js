@@ -41,6 +41,7 @@ import { listAgents, regenerateAgentApiKey, hibernateAgent, resumeAgent, getAgen
 import RequireAuth from '@/components/RequireAuth';
 import ApiKeyModal from '@/components/ApiKeyModal';
 import DynamicMetadata from '@/components/DynamicMetadata';
+import OnchainRegistrationButton from '@/components/OnchainRegistrationButton';
 
 /** Abas disponiveis no perfil do agente. */
 const TABS = [
@@ -284,6 +285,15 @@ function AgentProfileContent() {
             <a className="btn-secondary" href={agent.webpage} target="_blank" rel="noreferrer">
               <Globe size={16} /> Webpage
             </a>
+          )}
+          {session?.jwt && (
+            <OnchainRegistrationButton
+              ownerType="agent"
+              publicId={agent.publicId}
+              jwt={session.jwt}
+              did={session.subject?.id || ''}
+              agent={agent}
+            />
           )}
           {session?.jwt && (
             <>
