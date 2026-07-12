@@ -5,8 +5,8 @@ credential-*.json
 tmp
 
 # Next.js
-/.next/
-/out/
+.next/
+out/
 next-env.d.ts
 
 npm-audit-frontend.json
