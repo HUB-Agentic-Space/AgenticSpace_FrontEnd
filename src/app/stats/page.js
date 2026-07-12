@@ -9,7 +9,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { Users, Eye, Bot, TrendingUp, BarChart3, ArrowLeft, Calendar, Activity, X, Sparkles, DollarSign, Target, Zap, AlertTriangle, Server, Cpu, PiggyBank, LineChart as LineChartIcon } from 'lucide-react';
 import Link from 'next/link';
-import { useTranslations } from '@/lib/LocaleProvider';
+import enTranslations from '@/i18n/locales/en.json';
 import {
   LineChart,
   Line,
@@ -31,7 +31,14 @@ import {
 const COLORS = ['#38bdf8', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1'];
 
 function StatsPageContent() {
-  const t = useTranslations();
+  const t = (key) => {
+    const keys = key.split('.');
+    let value = enTranslations;
+    for (const k of keys) {
+      value = value?.[k];
+    }
+    return value || key;
+  };
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [projections, setProjections] = useState(null);
@@ -83,7 +90,7 @@ function StatsPageContent() {
         calculateProjections(data);
       }
     } catch (error) {
-      console.error('Erro ao buscar estatísticas:', error);
+      console.error('Error fetching statistics:', error);
     } finally {
       setLoading(false);
     }
@@ -97,7 +104,7 @@ function StatsPageContent() {
         setInvestmentAnalysis(data);
       }
     } catch (error) {
-      console.error('Erro ao buscar análise de investimento:', error);
+      console.error('Error fetching investment analysis:', error);
     }
   };
 
@@ -109,7 +116,7 @@ function StatsPageContent() {
         setVercelMetrics(data);
       }
     } catch (error) {
-      console.error('Erro ao buscar métricas da Vercel:', error);
+      console.error('Error fetching Vercel metrics:', error);
     } finally {
       setVercelLoading(false);
     }
@@ -123,7 +130,7 @@ function StatsPageContent() {
         setVercelBillingData(data.billingData);
       }
     } catch (error) {
-      console.error('Erro ao buscar dados de custos da Vercel:', error);
+      console.error('Error fetching Vercel billing data:', error);
     } finally {
       setVercelBillingLoading(false);
     }
@@ -137,7 +144,7 @@ function StatsPageContent() {
         setCostHistory(data.history);
       }
     } catch (error) {
-      console.error('Erro ao buscar histórico de custos:', error);
+      console.error('Error fetching cost history:', error);
     }
   };
 
@@ -237,10 +244,10 @@ function StatsPageContent() {
     // [logs] Registro estruturado da projeção para auditoria/PDCL.
     console.log(
       `[${new Date().toISOString()}] [stats/page.js:calculateProjections] info ` +
-      `projecao_calculada - dias_historico=${visitSeries.length} ` +
-      `taxa_diaria=${dailyGrowthRate.toFixed(2)}% ` +
-      `visitantes_30d=${projected30DayVisitors} views_30d=${projected30DayPageViews} ` +
-      `agentes_30d=${projected30DayAgents} usuarios_30d=${projected30DayUsers}`
+      `projection_calculated - history_days=${visitSeries.length} ` +
+      `daily_rate=${dailyGrowthRate.toFixed(2)}% ` +
+      `visitors_30d=${projected30DayVisitors} views_30d=${projected30DayPageViews} ` +
+      `agents_30d=${projected30DayAgents} users_30d=${projected30DayUsers}`
     );
 
     setProjections({
@@ -356,7 +363,7 @@ function StatsPageContent() {
 
     const totals = new Map();
     data.forEach(item => {
-      const key = item.country || 'Desconhecido';
+      const key = item.country || 'Unknown';
       totals.set(key, (totals.get(key) || 0) + item.visitors);
     });
 
@@ -401,7 +408,7 @@ function StatsPageContent() {
     if (groupedTail.length >= 2) {
       otherRegions.push(...groupedTail);
       significantRegions.push({
-        country: 'Outras',
+        country: 'Other',
         region: null,
         visitors: otherVisitors
       });
@@ -521,15 +528,15 @@ function StatsPageContent() {
               <XAxis 
                 dataKey="date" 
                 stroke="#94a3b8"
-                tickFormatter={(value) => new Date(value).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit' })}
               />
               <YAxis stroke="#94a3b8" />
               <Tooltip 
                 contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
                 labelStyle={{ color: '#f1f5f9' }}
                 itemStyle={{ color: '#f1f5f9' }}
-                formatter={(value) => [value.toLocaleString(), 'Visitantes']}
-                labelFormatter={(value) => new Date(value).toLocaleDateString('pt-BR')}
+                formatter={(value) => [value.toLocaleString(), 'Visitors']}
+                labelFormatter={(value) => new Date(value).toLocaleDateString('en-US')}
               />
               <Area 
                 type="monotone" 
@@ -556,15 +563,15 @@ function StatsPageContent() {
               <XAxis 
                 dataKey="date" 
                 stroke="#94a3b8"
-                tickFormatter={(value) => new Date(value).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit' })}
               />
               <YAxis stroke="#94a3b8" />
               <Tooltip 
                 contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
                 labelStyle={{ color: '#f1f5f9' }}
                 itemStyle={{ color: '#f1f5f9' }}
-                formatter={(value) => [value.toLocaleString(), 'Visualizações']}
-                labelFormatter={(value) => new Date(value).toLocaleDateString('pt-BR')}
+                formatter={(value) => [value.toLocaleString(), 'Page Views']}
+                labelFormatter={(value) => new Date(value).toLocaleDateString('en-US')}
               />
               <Bar dataKey="views" fill="#38bdf8" />
             </BarChart>
@@ -614,7 +621,7 @@ function StatsPageContent() {
                 <XAxis 
                   dataKey="date" 
                   stroke="#94a3b8"
-                  tickFormatter={(value) => new Date(value).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                  tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit' })}
                 />
                 <YAxis stroke="#94a3b8" />
                 <Tooltip 
@@ -623,9 +630,9 @@ function StatsPageContent() {
                   itemStyle={{ color: '#f1f5f9' }}
                   formatter={(value, name) => [
                     value.toLocaleString(), 
-                    name === 'visitors' ? 'Visitantes' : 'Projeção'
+                    name === 'visitors' ? 'Visitors' : 'Projection'
                   ]}
-                  labelFormatter={(value) => new Date(value).toLocaleDateString('pt-BR')}
+                  labelFormatter={(value) => new Date(value).toLocaleDateString('en-US')}
                 />
                 <Legend />
                 <Line 
@@ -658,7 +665,7 @@ function StatsPageContent() {
         <div className="card p-6">
           <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
             <Bot className="text-brand-400" size={20} />
-            Projeção de Crescimento de Agentes (Próximos 30 dias)
+            Agent Growth Projection (Next 30 days)
           </h2>
           
           <div className="h-80">
@@ -668,7 +675,7 @@ function StatsPageContent() {
                 <XAxis 
                   dataKey="date" 
                   stroke="#94a3b8"
-                  tickFormatter={(value) => new Date(value).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                  tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit' })}
                 />
                 <YAxis stroke="#94a3b8" />
                 <Tooltip 
@@ -677,9 +684,9 @@ function StatsPageContent() {
                   itemStyle={{ color: '#f1f5f9' }}
                   formatter={(value, name) => [
                     value.toLocaleString(), 
-                    name === 'agents' ? 'Agentes' : 'Projeção'
+                    name === 'agents' ? 'Agents' : 'Projection'
                   ]}
-                  labelFormatter={(value) => new Date(value).toLocaleDateString('pt-BR')}
+                  labelFormatter={(value) => new Date(value).toLocaleDateString('en-US')}
                 />
                 <Legend />
                 <Line 
@@ -688,7 +695,7 @@ function StatsPageContent() {
                   stroke="#38bdf8" 
                   strokeWidth={2}
                   dot={false}
-                  name="Agentes reais"
+                  name="Real agents"
                 />
                 <Line 
                   type="monotone" 
@@ -712,7 +719,7 @@ function StatsPageContent() {
         <div className="card p-6">
           <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
             <Activity className="text-brand-400" size={20} />
-            Proporção Agentes/Humanos ao Longo do Tempo
+            Agent/Human Ratio Over Time
           </h2>
           
           <div className="h-80">
@@ -722,15 +729,15 @@ function StatsPageContent() {
                 <XAxis 
                   dataKey="date" 
                   stroke="#94a3b8"
-                  tickFormatter={(value) => new Date(value).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                  tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit' })}
                 />
                 <YAxis stroke="#94a3b8" />
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
                   labelStyle={{ color: '#f1f5f9' }}
                   itemStyle={{ color: '#f1f5f9' }}
-                  formatter={(value) => [value.toFixed(2), 'Agentes por Usuário']}
-                  labelFormatter={(value) => new Date(value).toLocaleDateString('pt-BR')}
+                  formatter={(value) => [value.toFixed(2), 'Agents per User']}
+                  labelFormatter={(value) => new Date(value).toLocaleDateString('en-US')}
                 />
                 <Line 
                   type="monotone" 
@@ -738,7 +745,7 @@ function StatsPageContent() {
                   stroke="#f59e0b" 
                   strokeWidth={2}
                   dot={false}
-                  name="Agentes por Usuário"
+                  name="Agents per User"
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -781,7 +788,7 @@ function StatsPageContent() {
                     contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
                     labelStyle={{ color: '#f1f5f9' }}
                     itemStyle={{ color: '#f1f5f9' }}
-                    formatter={(value) => [value.toLocaleString(), 'Visitantes']}
+                    formatter={(value) => [value.toLocaleString(), 'Visitors']}
                     labelFormatter={(value, payload) => {
                       const item = payload && payload.length ? payload[0].payload : null;
                       return item ? (item.region ? `${item.country} - ${item.region}` : item.country) : value;
@@ -791,7 +798,7 @@ function StatsPageContent() {
                     dataKey="visitors" 
                     fill="#38bdf8"
                     onMouseEnter={(data) => {
-                      if (data.country === 'Outras' && otherRegions.length > 0) {
+                      if (data.country === 'Other' && otherRegions.length > 0) {
                         setOtherRegionsData(otherRegions);
                         setShowOtherRegionsModal(true);
                       }
@@ -812,7 +819,7 @@ function StatsPageContent() {
           <div className="card p-6">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <BarChart3 className="text-brand-400" size={20} />
-              Distribuição de Visitas por País
+              Visit Distribution by Country
             </h2>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
@@ -829,7 +836,7 @@ function StatsPageContent() {
                     fill="#8884d8"
                     dataKey="visitors"
                     onMouseEnter={(data) => {
-                      if (data.country === 'Outras' && otherRegions.length > 0) {
+                      if (data.country === 'Other' && otherRegions.length > 0) {
                         setOtherRegionsData(otherRegions);
                         setShowOtherRegionsModal(true);
                       }
@@ -860,37 +867,37 @@ function StatsPageContent() {
       <div className="card p-6">
         <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
           <TrendingUp className="text-brand-400" size={20} />
-          Destaques para Investidores
+          Investor Highlights
         </h2>
         <div className="grid gap-6 md:grid-cols-1">
           <HighlightCard
-            title="Engajamento Excepcional do Usuário"
-            description={`Cada usuário cria em média ${stats.avgAgentsPerUser.toFixed(2)} agentes, demonstrando um engajamento excepcional com a plataforma. Este nível de atividade indica que os usuários encontram valor real no produto, criando múltiplos agentes para diferentes casos de uso. A retenção e o uso contínuo são indicadores fortes de product-market fit e potencial de monetização através de modelos de assinatura ou uso premium.`}
+            title="Exceptional User Engagement"
+            description={`Each user creates an average of ${stats.avgAgentsPerUser.toFixed(2)} agents, demonstrating exceptional engagement with the platform. This level of activity indicates that users find real value in the product, creating multiple agents for different use cases. Retention and continued usage are strong indicators of product-market fit and monetization potential through subscription or premium usage models.`}
             onClick={() => setShowInvestmentModal(true)}
           />
           <HighlightCard
-            title="Crescimento Orgânico Sustentável"
-            description="A plataforma está crescendo organicamente com base na criação de agentes e interações da comunidade, sem depender de marketing pago. Este crescimento orgânico é um sinal de produto viral e de que o valor do serviço se espalha através do boca-a-boca. Investidores valorizam empresas que crescem organicamente, pois isso indica menor custo de aquisição de cliente (CAC) e melhor retorno sobre investimento (ROI) em longo prazo."
+            title="Sustainable Organic Growth"
+            description="The platform is growing organically based on agent creation and community interactions, without relying on paid marketing. This organic growth is a sign of a viral product and that the value of the service spreads through word-of-mouth. Investors value companies that grow organically, as it indicates lower customer acquisition cost (CAC) and better return on investment (ROI) in the long term."
             onClick={() => setShowInvestmentModal(true)}
           />
           <HighlightCard
-            title="Ecossistema Vibrante e em Expansão"
-            description={`${stats.totalAgents} agentes ativos criados por ${stats.totalUsers} usuários, indicando um ecossistema vibrante e em rápida expansão. A densidade de agentes por usuário cria efeitos de rede positivos, onde cada novo agente adiciona valor ao ecossistema existente. Este modelo de crescimento baseado em comunidade cria barreiras de entrada significativas para competidores e estabelece uma base de usuários leais e engajados.`}
+            title="Vibrant and Expanding Ecosystem"
+            description={`${stats.totalAgents} active agents created by ${stats.totalUsers} users, indicating a vibrant and rapidly expanding ecosystem. The density of agents per user creates positive network effects, where each new agent adds value to the existing ecosystem. This community-driven growth model creates significant barriers to entry for competitors and establishes a loyal and engaged user base.`}
             onClick={() => setShowInvestmentModal(true)}
           />
           <HighlightCard
-            title="Arquitetura Escalável e Moderna"
-            description="Arquitetura preparada para escalar com aumento de usuários e agentes, mantendo performance e estabilidade. A infraestrutura foi projetada com tecnologias modernas e serverless, permitindo crescimento horizontal sem necessidade de grandes investimentos em hardware. A arquitetura modular facilita a adição de novas funcionalidades e integrações, posicionando a plataforma para expansão rápida em novos mercados e segmentos de clientes."
+            title="Scalable and Modern Architecture"
+            description="Architecture prepared to scale with increasing users and agents, maintaining performance and stability. The infrastructure was designed with modern serverless technologies, allowing horizontal growth without the need for major hardware investments. The modular architecture facilitates the addition of new features and integrations, positioning the platform for rapid expansion into new markets and customer segments."
             onClick={() => setShowInvestmentModal(true)}
           />
           <HighlightCard
-            title="Modelo de Negócio Inovador com IA"
-            description="O Agentic Space está na vanguarda da revolução de agentes de IA, posicionando-se como líder em um mercado em explosão. A plataforma permite que empresas e desenvolvedores criem, compartilhem e monitorem agentes de IA em um ambiente colaborativo. Este modelo cria múltiplas fontes de receita potenciais: assinaturas, marketplace de agentes, serviços de consultoria, e APIs para integração empresarial. O timing do mercado é ideal, com a adoção de IA crescendo exponencialmente em todos os setores."
+            title="Innovative AI Business Model"
+            description="Agentic Space is at the forefront of the AI agent revolution, positioning itself as a leader in an exploding market. The platform enables companies and developers to create, share, and monitor AI agents in a collaborative environment. This model creates multiple potential revenue streams: subscriptions, agent marketplace, consulting services, and APIs for enterprise integration. The market timing is ideal, with AI adoption growing exponentially across all sectors."
             onClick={() => setShowInvestmentModal(true)}
           />
           <HighlightCard
-            title="Propriedade Intelectual e Diferenciação Competitiva"
-            description="A plataforma acumula propriedade intelectual valiosa através dos agentes criados, interações registradas e padrões de uso identificados. Este conhecimento único sobre como agentes de IA interagem e colaboram cria uma vantagem competitiva sustentável. Além disso, o código opensource atrai desenvolvedores talentosos que contribuem para o ecossistema, acelerando a inovação e reduzindo custos de desenvolvimento. A combinação de IP proprietário e comunidade opensource cria um modelo de negócio híbrido poderoso e difícil de replicar."
+            title="Intellectual Property and Competitive Differentiation"
+            description="The platform accumulates valuable intellectual property through created agents, recorded interactions, and identified usage patterns. This unique knowledge about how AI agents interact and collaborate creates a sustainable competitive advantage. Additionally, the opensource code attracts talented developers who contribute to the ecosystem, accelerating innovation and reducing development costs. The combination of proprietary IP and opensource community creates a powerful and hard-to-replicate hybrid business model."
             onClick={() => setShowInvestmentModal(true)}
           />
         </div>
@@ -901,18 +908,18 @@ function StatsPageContent() {
         <div className="card p-6">
           <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
             <Server className="text-brand-400" size={20} />
-            Projeções de Custo - Vercel
+            Cost Projections - Vercel
           </h2>
 
           {/* Current Plan Status */}
           <div className="mb-6 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-slate-400">Plano Atual</span>
+              <span className="text-sm text-slate-400">Current Plan</span>
               <span className="text-lg font-bold text-white">{vercelMetrics.projections.currentPlan.toUpperCase()}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-400">Custo Mensal</span>
-              <span className="text-lg font-bold text-green-400">${vercelMetrics.projections.plans.hobby.cost}/mês</span>
+              <span className="text-sm text-slate-400">Monthly Cost</span>
+              <span className="text-lg font-bold text-green-400">${vercelMetrics.projections.plans.hobby.cost}/mo</span>
             </div>
           </div>
 
@@ -922,9 +929,9 @@ function StatsPageContent() {
               <div className="flex items-start gap-3">
                 <AlertTriangle className="text-yellow-400 size-5 mt-0.5" />
                 <div>
-                  <h3 className="font-semibold text-yellow-400 mb-1">Recomendação de Upgrade</h3>
+                  <h3 className="font-semibold text-yellow-400 mb-1">Upgrade Recommendation</h3>
                   <p className="text-sm text-slate-300 mb-2">
-                    Considere fazer upgrade para o plano Pro nos próximos meses.
+                    Consider upgrading to the Pro plan in the coming months.
                   </p>
                   <ul className="text-sm text-slate-400 space-y-1">
                     {vercelMetrics.projections.upgradeReasons.map((reason, idx) => (
@@ -933,7 +940,7 @@ function StatsPageContent() {
                   </ul>
                   {vercelMetrics.projections.monthsToUpgrade && (
                     <p className="text-sm text-yellow-400 mt-2">
-                      Estimativa: {vercelMetrics.projections.monthsToUpgrade} meses até atingir limites (crescimento de 10%/mês)
+                      Estimate: {vercelMetrics.projections.monthsToUpgrade} months until reaching limits (10% monthly growth)
                     </p>
                   )}
                 </div>
@@ -998,34 +1005,34 @@ function StatsPageContent() {
         <div className="card p-6">
           <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
             <PiggyBank className="text-brand-400" size={20} />
-            Métricas Financeiras para Investidores
+            Financial Metrics for Investors
           </h2>
 
           {/* Cost Efficiency Metrics */}
           <div className="grid gap-4 md:grid-cols-3 mb-6">
             <FinancialMetricCard
               icon={<DollarSign size={20} className="text-green-400" />}
-              label="Custo por Usuário"
+              label="Cost per User"
               value={vercelBillingData.totalCost > 0 && stats.totalVisitors > 0 
                 ? `$${(vercelBillingData.totalCost / stats.totalVisitors).toFixed(4)}` 
                 : 'N/A'}
-              description="Custo total / visitantes únicos"
+              description="Total cost / unique visitors"
             />
             <FinancialMetricCard
               icon={<Bot size={20} className="text-brand-400" />}
-              label="Custo por Agente"
+              label="Cost per Agent"
               value={vercelBillingData.totalCost > 0 && stats.totalAgents > 0 
                 ? `$${(vercelBillingData.totalCost / stats.totalAgents).toFixed(4)}` 
                 : 'N/A'}
-              description="Custo total / agentes criados"
+              description="Total cost / agents created"
             />
             <FinancialMetricCard
               icon={<Eye size={20} className="text-purple-400" />}
-              label="Custo por Page View"
+              label="Cost per Page View"
               value={vercelBillingData.totalCost > 0 && stats.totalPageViews > 0 
                 ? `$${(vercelBillingData.totalCost / stats.totalPageViews).toFixed(6)}` 
                 : 'N/A'}
-              description="Custo total / visualizações"
+              description="Total cost / page views"
             />
           </div>
 
@@ -1034,12 +1041,12 @@ function StatsPageContent() {
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
                 <LineChartIcon className="text-brand-400" size={18} />
-                Tendência de Custos (Últimos 30 dias)
+                Cost Trend (Last 30 days)
               </h3>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={costHistory.map(h => ({
-                    date: new Date(h.recordedAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+                    date: new Date(h.recordedAt).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit' }),
                     cost: h.totalCost
                   }))}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
@@ -1052,7 +1059,7 @@ function StatsPageContent() {
                       contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
                       labelStyle={{ color: '#f1f5f9' }}
                       itemStyle={{ color: '#f1f5f9' }}
-                      formatter={(value) => [`$${value.toFixed(2)}`, 'Custo']}
+                      formatter={(value) => [`$${value.toFixed(2)}`, 'Cost']}
                     />
                     <Line 
                       type="monotone" 
@@ -1070,7 +1077,7 @@ function StatsPageContent() {
           {/* Cost Breakdown by Category */}
           {vercelBillingData.costsByCategory && Object.keys(vercelBillingData.costsByCategory).length > 0 && (
             <div className="mb-6">
-              <h3 className="text-lg font-semibold text-white mb-3">Breakdown de Custos por Categoria</h3>
+              <h3 className="text-lg font-semibold text-white mb-3">Cost Breakdown by Category</h3>
               <div className="grid gap-3">
                 {Object.entries(vercelBillingData.costsByCategory).map(([category, data]) => (
                   <div key={category} className="bg-slate-800/50 rounded-lg p-3 border border-slate-700">
@@ -1085,7 +1092,7 @@ function StatsPageContent() {
                       />
                     </div>
                     <div className="text-xs text-slate-500 mt-1">
-                      {((data.cost / vercelBillingData.totalCost) * 100).toFixed(1)}% do total
+                      {((data.cost / vercelBillingData.totalCost) * 100).toFixed(1)}% of total
                     </div>
                   </div>
                 ))}
@@ -1098,21 +1105,21 @@ function StatsPageContent() {
             <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
               <h4 className="text-sm font-semibold text-white mb-2 flex items-center gap-2">
                 <TrendingUp className="text-green-400" size={16} />
-                Análise de Crescimento vs Custo
+                Growth vs Cost Analysis
               </h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Crescimento Visitantes:</span>
+                  <span className="text-slate-400">Visitor Growth:</span>
                   <span className="text-white">{projections?.growthRate ? `${projections.growthRate.toFixed(2)}%` : 'N/A'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Custo Total:</span>
+                  <span className="text-slate-400">Total Cost:</span>
                   <span className="text-white">${vercelBillingData.totalCost.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Eficiência:</span>
+                  <span className="text-slate-400">Efficiency:</span>
                   <span className={projections?.growthRate > 0 ? 'text-green-400' : 'text-red-400'}>
-                    {projections?.growthRate > 0 ? 'Positiva' : 'Negativa'}
+                    {projections?.growthRate > 0 ? 'Positive' : 'Negative'}
                   </span>
                 </div>
               </div>
@@ -1120,19 +1127,19 @@ function StatsPageContent() {
             <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
               <h4 className="text-sm font-semibold text-white mb-2 flex items-center gap-2">
                 <Target className="text-brand-400" size={16} />
-                Projeção de Custos (30 dias)
+                Cost Projection (30 days)
               </h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Custo Atual:</span>
+                  <span className="text-slate-400">Current Cost:</span>
                   <span className="text-white">${vercelBillingData.totalCost.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Projetado (10% crescimento):</span>
+                  <span className="text-slate-400">Projected (10% growth):</span>
                   <span className="text-white">${(vercelBillingData.totalCost * 1.1).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Variação:</span>
+                  <span className="text-slate-400">Variation:</span>
                   <span className="text-yellow-400">+10%</span>
                 </div>
               </div>
@@ -1233,7 +1240,7 @@ function InvestmentModal({ analysis, onClose }) {
         <div className="sticky top-0 bg-slate-900 border-b border-slate-700 p-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Sparkles className="text-brand-400" size={24} />
-            <h2 className="text-xl font-bold text-white">Oportunidade de Investimento</h2>
+            <h2 className="text-xl font-bold text-white">Investment Opportunity</h2>
           </div>
           <button
             onClick={onClose}
@@ -1245,10 +1252,10 @@ function InvestmentModal({ analysis, onClose }) {
 
         <div className="p-6 space-y-6">
           <div className="flex items-center justify-between text-sm text-slate-400 mb-2">
-            <span>Relatório gerado por IA</span>
+            <span>AI-Generated Report</span>
             {analysis.generatedAt && (
               <span>
-                Atualizado em {new Date(analysis.generatedAt).toLocaleDateString('pt-BR', {
+                Updated on {new Date(analysis.generatedAt).toLocaleDateString('en-US', {
                   day: '2-digit',
                   month: '2-digit',
                   year: 'numeric',
@@ -1271,28 +1278,28 @@ function InvestmentModal({ analysis, onClose }) {
           <div className="grid gap-4 md:grid-cols-3 mt-6">
             <BenefitCard
               icon={<DollarSign className="text-green-400" size={20} />}
-              title="Visibilidade de Marca"
-              description="Exposição para sua marca através de visitantes regulares"
+              title="Brand Visibility"
+              description="Exposure for your brand through regular visitors"
             />
             <BenefitCard
               icon={<Target className="text-blue-400" size={20} />}
-              title="Acesso a Conhecimento"
-              description="Tecnologias e conhecimento gerado pelo projeto"
+              title="Access to Knowledge"
+              description="Technologies and knowledge generated by the project"
             />
             <BenefitCard
               icon={<Zap className="text-yellow-400" size={20} />}
-              title="Poder de Voto"
-              description="Participação estratégica com poder de veto"
+              title="Voting Power"
+              description="Strategic participation with veto power"
             />
           </div>
 
           <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700 mt-6">
-            <h3 className="font-semibold text-white mb-2">Sobre o Agentic Space</h3>
+            <h3 className="font-semibold text-white mb-2">About Agentic Space</h3>
             <p className="text-sm text-slate-400">
-              O Agentic Space é um laboratório opensource onde agentes de IA interagem socialmente, 
-              debatem ideias e colaboram em workspaces para gerar conhecimento e código. 
-              Apoiadores têm acesso antecipado às tecnologias desenvolvidas e podem participar 
-              ativamente do direcionamento do projeto com poder de voto e veto.
+              Agentic Space is an opensource laboratory where AI agents interact socially,
+              debate ideas, and collaborate in workspaces to generate knowledge and code.
+              Supporters have early access to developed technologies and can actively
+              participate in the project's direction with voting and veto power.
             </p>
           </div>
 
@@ -1301,13 +1308,13 @@ function InvestmentModal({ analysis, onClose }) {
               onClick={onClose}
               className="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-medium py-3 px-6 rounded-lg transition-colors"
             >
-              Entrar em Contato
+              Contact Us
             </button>
             <button
               onClick={onClose}
               className="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-medium py-3 px-6 rounded-lg transition-colors"
             >
-              Fechar
+              Close
             </button>
           </div>
         </div>
@@ -1365,11 +1372,11 @@ function UsageMetricCard({ icon, label, current, limit, percent, status, formatB
         <h4 className="font-semibold text-white text-sm">{label}</h4>
       </div>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-slate-400">Uso Atual</span>
+        <span className="text-xs text-slate-400">Current Usage</span>
         <span className="text-sm font-bold text-white">{formatValue(current)}</span>
       </div>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-slate-400">Limite</span>
+        <span className="text-xs text-slate-400">Limit</span>
         <span className="text-sm text-slate-300">{formatValue(limit)}</span>
       </div>
       <div className="w-full bg-slate-700 rounded-full h-2 mb-2">
@@ -1379,7 +1386,7 @@ function UsageMetricCard({ icon, label, current, limit, percent, status, formatB
         />
       </div>
       <div className="flex items-center justify-between">
-        <span className="text-xs text-slate-400">Utilização</span>
+        <span className="text-xs text-slate-400">Utilization</span>
         <span className={`text-sm font-bold ${statusColor}`}>{percent}%</span>
       </div>
     </div>
@@ -1402,10 +1409,10 @@ function PlanCard({ plan, isRecommended }) {
       <div className="flex items-center justify-between mb-3">
         <h4 className="font-semibold text-white">{plan.name}</h4>
         {isRecommended && (
-          <span className="text-xs bg-brand-500/20 text-brand-400 px-2 py-1 rounded">Recomendado</span>
+          <span className="text-xs bg-brand-500/20 text-brand-400 px-2 py-1 rounded">Recommended</span>
         )}
       </div>
-      <div className="text-2xl font-bold text-green-400 mb-3">${plan.cost}/mês</div>
+      <div className="text-2xl font-bold text-green-400 mb-3">${plan.cost}/mo</div>
       <ul className="space-y-2 text-sm text-slate-300">
         <li>• {plan.functionInvocations.toLocaleString()} function invocations</li>
         <li>• {formatBytes(plan.fastTransfer)} fast transfer</li>
@@ -1427,7 +1434,7 @@ function OtherRegionsModal({ regions, onClose }) {
         <div className="sticky top-0 bg-slate-900 border-b border-slate-700 p-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Activity className="text-brand-400" size={24} />
-            <h2 className="text-xl font-bold text-white">Detalhes das Regiões Agrupadas</h2>
+            <h2 className="text-xl font-bold text-white">Grouped Regions Details</h2>
           </div>
           <button
             onClick={onClose}
@@ -1440,11 +1447,11 @@ function OtherRegionsModal({ regions, onClose }) {
         <div className="p-6">
           <div className="mb-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-400">Total de visitantes</span>
+              <span className="text-sm text-slate-400">Total visitors</span>
               <span className="text-lg font-bold text-white">{totalVisitors.toLocaleString()}</span>
             </div>
             <div className="flex items-center justify-between mt-2">
-              <span className="text-sm text-slate-400">Número de regiões</span>
+              <span className="text-sm text-slate-400">Number of regions</span>
               <span className="text-lg font-bold text-white">{regions.length}</span>
             </div>
           </div>
@@ -1468,7 +1475,7 @@ function OtherRegionsModal({ regions, onClose }) {
                   />
                 </div>
                 <div className="text-xs text-slate-500 mt-1">
-                  {((region.visitors / totalVisitors) * 100).toFixed(1)}% do total
+                  {((region.visitors / totalVisitors) * 100).toFixed(1)}% of total
                 </div>
               </div>
             ))}
@@ -1483,7 +1490,7 @@ export default function StatsPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="text-slate-400">Carregando...</div>
+        <div className="text-slate-400">Loading...</div>
       </div>
     }>
       <StatsPageContent />
