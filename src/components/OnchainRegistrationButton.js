@@ -37,6 +37,24 @@ import {
 
 const METAMASK_MESSAGE = 'Register on Agentic Space Diamond';
 
+const MIN_PRIORITY_FEE = 25_000_000_000n;
+
+async function getGasOverrides(provider) {
+  const feeData = await provider.getFeeData();
+  let maxPriorityFeePerGas = feeData.maxPriorityFeePerGas ?? 0n;
+  if (maxPriorityFeePerGas < MIN_PRIORITY_FEE) {
+    maxPriorityFeePerGas = MIN_PRIORITY_FEE;
+  }
+  const baseFee = feeData.maxFeePerGas
+    ? feeData.maxFeePerGas - (feeData.maxPriorityFeePerGas ?? 0n)
+    : 0n;
+  const maxFeePerGas = baseFee + maxPriorityFeePerGas * 2n;
+  if (feeData.maxFeePerGas && feeData.maxFeePerGas > maxFeePerGas) {
+    return { maxFeePerGas: feeData.maxFeePerGas, maxPriorityFeePerGas };
+  }
+  return { maxFeePerGas, maxPriorityFeePerGas };
+}
+
 /**
  * @param {{ ownerType: 'user'|'agent', publicId?: string, jwt: string, walletAddress?: string, did: string, agent?: Object|null }} props
  */
@@ -112,6 +130,8 @@ export default function OnchainRegistrationButton({
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
 
+      const gasOverrides = await getGasOverrides(provider);
+
       // Verificar chain ID
       const network = await provider.getNetwork();
       if (config.chainId && Number(network.chainId) !== config.chainId) {
@@ -142,7 +162,7 @@ export default function OnchainRegistrationButton({
         // Verifica allowance atual
         const currentAllowance = await casContract.allowance(account, diamondAddress);
         if (currentAllowance < registrationFee) {
-          const approveTx = await casContract.approve(diamondAddress, registrationFee);
+          const approveTx = await casContract.approve(diamondAddress, registrationFee, gasOverrides);
           await approveTx.wait();
         }
       }
@@ -159,7 +179,7 @@ export default function OnchainRegistrationButton({
         );
         const didHash = ethers.keccak256(ethers.toUtf8Bytes(did));
         const publicIdHash = ethers.keccak256(ethers.toUtf8Bytes(did));
-        tx = await userRegistry.registerUser(didHash, publicIdHash);
+        tx = await userRegistry.registerUser(didHash, publicIdHash, gasOverrides);
       } else {
         const agentRegistry = new ethers.Contract(
           diamondAddress,
@@ -178,7 +198,8 @@ export default function OnchainRegistrationButton({
           agent.description || '',
           agent.parentPublicId || '',
           merkleRoot,
-          0
+          0,
+          gasOverrides
         );
       }
 
