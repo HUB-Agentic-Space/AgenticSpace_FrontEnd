@@ -542,6 +542,30 @@ export function saveUserOnchainRegistration(txHash, jwt) {
 }
 
 /**
+ * Invalida o registro on-chain do usuário após desativar na blockchain.
+ * @param {string} txHash Hash da transação de deactivateUser on-chain.
+ * @param {string} [reason] Motivo da invalidação.
+ * @param {string} jwt JWT da credencial verificável.
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+export function invalidateUserOnchainRegistration(txHash, reason, jwt) {
+  return apiRequest('/onchain/registration/user/invalidate', {
+    method: 'POST',
+    body: { txHash, reason },
+    jwt
+  });
+}
+
+/**
+ * Verifica o status de atividade do registro on-chain do usuário.
+ * @param {string} jwt JWT da credencial verificável.
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+export function getUserOnchainRegistrationStatus(jwt) {
+  return apiRequest('/onchain/registration/user/status', { jwt });
+}
+
+/**
  * Verifica o status de registro on-chain de um agente.
  * @param {string} publicId ID público do agente.
  * @param {string} jwt JWT da credencial verificável.

@@ -24,7 +24,10 @@ import {
   Fuel,
   Hash,
   Calendar,
-  ArrowRight
+  ArrowRight,
+  Download,
+  ShieldAlert,
+  Info
 } from 'lucide-react';
 import Spinner from '@/components/Spinner';
 import {
@@ -71,6 +74,7 @@ export default function OnchainRegistrationButton({
   const [loading, setLoading] = useState(true);
   const [registering, setRegistering] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [error, setError] = useState('');
   const [step, setStep] = useState('');
 
@@ -302,7 +306,7 @@ export default function OnchainRegistrationButton({
   return (
     <>
       <button
-        onClick={handleRegister}
+        onClick={() => setShowConfirmModal(true)}
         className="btn-primary"
         disabled={registering}
         title="Registrar perfil na blockchain via MetaMask"
@@ -322,6 +326,16 @@ export default function OnchainRegistrationButton({
         </div>
       )}
 
+      {showConfirmModal && (
+        <RegistrationConfirmModal
+          onConfirm={() => {
+            setShowConfirmModal(false);
+            handleRegister();
+          }}
+          onCancel={() => setShowConfirmModal(false)}
+        />
+      )}
+
       {showModal && registration?.receipt && (
         <RegistrationDetailsModal
           receipt={registration.receipt}
@@ -332,6 +346,71 @@ export default function OnchainRegistrationButton({
         />
       )}
     </>
+  );
+}
+
+/**
+ * Modal de confirmação antes de iniciar o registro on-chain.
+ * Alerta que a ligação entre conta de login e address não poderá ser alterada
+ * após o registro. Se alterada, o registro é invalidado on-chain e o usuário
+ * precisará repetir todo o processo.
+ */
+function RegistrationConfirmModal({ onConfirm, onCancel }) {
+  return (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-4"
+      onClick={onCancel}
+    >
+      <div
+        className="card max-w-md space-y-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
+            <ShieldAlert size={20} className="text-amber-400" />
+            Aviso Importante
+          </h2>
+          <button onClick={onCancel} className="text-slate-400 hover:text-white">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="space-y-3 text-sm text-slate-300">
+          <p>
+            Ao efetuar o registro on-chain, a ligação entre sua conta de login
+            e o endereço da carteira (wallet address) será registrada na blockchain
+            de forma <strong className="text-white">permanente</strong>.
+          </p>
+          <p>
+            <strong className="text-amber-300">Não será possível trocar essa ligação
+            após o registro.</strong> Se você alterar a vinculação da conta de login
+            com o endereço da carteira, o registro será invalidado.
+          </p>
+          <p>
+            Em caso de invalidação, será feito um cadastro na blockchain de
+            invalidação do registro, e você precisará repetir todo o processo
+            de registro novamente.
+          </p>
+          <div className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3">
+            <Info size={16} className="mt-0.5 shrink-0 text-amber-400" />
+            <span className="text-amber-100">
+              Certifique-se de que a conta MetaMask conectada é a correta antes
+              de prosseguir.
+            </span>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3">
+          <button onClick={onCancel} className="btn-secondary">
+            Cancelar
+          </button>
+          <button onClick={onConfirm} className="btn-primary">
+            <Link2 size={16} />
+            Entendi, registrar
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -347,9 +426,40 @@ function RegistrationDetailsModal({
 }) {
   if (!receipt) return null;
 
+  function handleSaveJson() {
+    const jsonData = {
+      title: 'Registro On-Chain - Agentic Space',
+      description: 'Recibo de registro na blockchain. Guarde este arquivo com segurança.',
+      warning: 'Estes dados são de responsabilidade do usuário. A perda destas informações pode impedir a recuperação do registro.',
+      savedAt: new Date().toISOString(),
+      receipt: {
+        txHash: receipt.txHash,
+        blockNumber: receipt.blockNumber,
+        fromAddress: receipt.fromAddress,
+        gasUsed: receipt.gasUsed,
+        gasPrice: receipt.gasPrice,
+        totalGasCost: receipt.totalGasCost,
+        txTimestamp: receipt.txTimestamp,
+        explorerUrl: receipt.explorerUrl,
+        metadata: receipt.metadata,
+        createdAt: receipt.createdAt,
+      },
+    };
+
+    const blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `onchain-registration-${receipt.txHash?.slice(0, 10) || 'receipt'}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-4"
       onClick={onClose}
     >
       <div
@@ -457,6 +567,26 @@ function RegistrationDetailsModal({
               </div>
             </div>
           )}
+
+          {/* Save JSON Warning */}
+          <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3">
+            <div className="flex items-start gap-2">
+              <Info size={16} className="mt-0.5 shrink-0 text-amber-400" />
+              <div className="space-y-2">
+                <p className="text-xs text-amber-100">
+                  <strong>Atenção:</strong> Estes dados são de responsabilidade do usuário.
+                  A perda destas informações pode impedir a recuperação do registro.
+                </p>
+                <button
+                  onClick={handleSaveJson}
+                  className="btn-secondary w-full justify-center text-sm"
+                >
+                  <Download size={16} />
+                  Salvar dados do registro (JSON)
+                </button>
+              </div>
+            </div>
+          </div>
 
           {/* Explorer Link */}
           {receipt.explorerUrl && (
