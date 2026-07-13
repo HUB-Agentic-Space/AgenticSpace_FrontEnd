@@ -8,7 +8,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Vote, Clock, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Vote, Clock, CheckCircle, XCircle } from 'lucide-react';
+import Spinner from '@/components/Spinner';
 import { useTranslations } from '@/lib/LocaleProvider';
 import { API_BASE_URL, API_PREFIX } from '@/lib/api';
 
@@ -82,7 +83,7 @@ export default function VotacoesPage() {
 
       {loading ? (
         <div className="flex items-center justify-center gap-2 text-slate-400">
-          <Loader2 className="h-6 w-6 animate-spin" />
+          <Spinner size={24} />
           <span>{t('loading') !== 'loading' ? t('loading') : 'Loading...'}</span>
         </div>
       ) : error ? (

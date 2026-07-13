@@ -17,7 +17,6 @@ import { ethers } from 'ethers';
 import {
   Link2,
   ExternalLink,
-  Loader2,
   AlertCircle,
   CheckCircle2,
   X,
@@ -27,6 +26,7 @@ import {
   Calendar,
   ArrowRight
 } from 'lucide-react';
+import Spinner from '@/components/Spinner';
 import {
   getOnchainConfig,
   getUserOnchainRegistration,
@@ -233,7 +233,7 @@ export default function OnchainRegistrationButton({
   if (loading) {
     return (
       <button className="btn-secondary" disabled>
-        <Loader2 size={16} className="animate-spin" />
+        <Spinner size={16} />
       </button>
     );
   }
@@ -287,7 +287,7 @@ export default function OnchainRegistrationButton({
         title="Registrar perfil na blockchain via MetaMask"
       >
         {registering ? (
-          <Loader2 size={16} className="animate-spin" />
+          <Spinner size={16} />
         ) : (
           <Link2 size={16} />
         )}

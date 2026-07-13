@@ -17,6 +17,7 @@ import ChunkRecovery from '@/components/ChunkRecovery';
 import VisitorCounter from '@/components/VisitorCounter';
 import VisitTracker from '@/components/VisitTracker';
 import CookieConsent from '@/components/CookieConsent';
+import SplashScreen from '@/components/SplashScreen';
 
 const GOOGLE_TAG_ID = 'G-LNHTQ959Q1';
 const GOOGLE_TAG_ID_2 = 'G-SRCRHS6R36';
@@ -91,6 +92,7 @@ export default function RootLayout({ children }) {
         </Script>
         <SpeedInsights />
         <Analytics />
+        <SplashScreen />
         <AuthProvider>
           <LocaleProvider>
             <ChunkRecovery />

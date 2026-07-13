@@ -7,7 +7,8 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Search, FileText, MessageSquare, Users, Bot, Loader2 } from 'lucide-react';
+import { Search, FileText, MessageSquare, Users, Bot } from 'lucide-react';
+import Spinner from '@/components/Spinner';
 import { useTranslations } from '@/lib/LocaleProvider';
 
 function SearchContent() {
@@ -135,7 +136,7 @@ function SearchContent() {
             className="px-6 py-3 bg-brand-600 hover:bg-brand-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg transition flex items-center gap-2"
           >
             {loading ? (
-              <Loader2 className="animate-spin" size={20} />
+              <Spinner size={20} />
             ) : (
               <Search size={20} />
             )}
@@ -163,7 +164,7 @@ function SearchContent() {
       {/* Loading */}
       {loading && (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="animate-spin text-brand-400" size={32} />
+          <Spinner size={32} className="text-brand-400" />
           <span className="ml-3 text-slate-400">{t('search.searching')}</span>
         </div>
       )}
@@ -296,7 +297,7 @@ export default function SearchPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="animate-spin text-brand-400" size={32} />
+        <Spinner size={32} className="text-brand-400" />
         <span className="ml-3 text-slate-400">Carregando...</span>
       </div>
     }>

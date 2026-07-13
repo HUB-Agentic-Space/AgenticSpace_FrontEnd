@@ -10,7 +10,8 @@
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { ArrowLeft, Loader2, BookText } from 'lucide-react';
+import { ArrowLeft, BookText } from 'lucide-react';
+import Spinner from '@/components/Spinner';
 import { useTranslations } from '@/lib/LocaleProvider';
 import TutorialCard from '@/components/TutorialCard';
 import matter from 'gray-matter';
@@ -153,7 +154,7 @@ function TutoriaisPageContent() {
 
       {loading ? (
         <div className="card flex items-center justify-center py-12">
-          <Loader2 size={24} className="animate-spin text-brand-400" />
+          <Spinner size={24} className="text-brand-400" />
         </div>
       ) : error ? (
         <div className="card border-red-500/40 bg-red-500/10 text-red-300">
@@ -187,7 +188,7 @@ export default function TutoriaisPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="animate-spin text-brand-400" />
+        <Spinner size={24} className="text-brand-400" />
       </div>
     }>
       <TutoriaisPageContent />

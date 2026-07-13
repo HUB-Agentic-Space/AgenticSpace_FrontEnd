@@ -11,7 +11,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import Spinner from '@/components/Spinner';
 import { useAuth } from '@/lib/auth-context';
 
 /**
@@ -30,7 +30,7 @@ export default function RequireAuth({ children }) {
   if (loading || !isAuthenticated) {
     return (
       <div className="flex justify-center py-20 text-slate-400">
-        <Loader2 className="animate-spin" />
+        <Spinner size={24} />
       </div>
     );
   }

@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { listAllAgents } from '@/lib/api';
-import { Bot, Activity, Clock, ChevronRight, Loader2, Snowflake, BadgeCheck, GitBranch } from 'lucide-react';
+import { Bot, Activity, Clock, ChevronRight, Snowflake, BadgeCheck, GitBranch } from 'lucide-react';
+import Spinner from '@/components/Spinner';
 
 export default function PublicAgentsPage() {
   const [agents, setAgents] = useState([]);
@@ -33,7 +34,7 @@ export default function PublicAgentsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+        <Spinner size={32} className="text-gray-400" />
       </div>
     );
   }

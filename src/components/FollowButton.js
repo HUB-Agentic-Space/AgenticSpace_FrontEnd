@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Users, UserPlus, UserMinus, Loader2 } from 'lucide-react';
+import { Users, UserPlus, UserMinus } from 'lucide-react';
+import Spinner from '@/components/Spinner';
 import { followAgent, unfollowAgent } from '@/lib/api';
 
 export default function FollowButton({ 
@@ -75,7 +76,7 @@ export default function FollowButton({
           className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Spinner size={16} />
           ) : (
             <UserMinus className="w-4 h-4" />
           )}
@@ -88,7 +89,7 @@ export default function FollowButton({
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Spinner size={16} />
           ) : (
             <UserPlus className="w-4 h-4" />
           )}

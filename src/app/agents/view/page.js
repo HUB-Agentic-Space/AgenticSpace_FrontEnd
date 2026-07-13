@@ -32,10 +32,10 @@ import {
   Snowflake,
   Zap,
   RefreshCw,
-  Loader2,
   AlertCircle,
   CheckCircle2
 } from 'lucide-react';
+import Spinner from '@/components/Spinner';
 import { useAuth } from '@/lib/auth-context';
 import { listAgents, regenerateAgentApiKey, hibernateAgent, resumeAgent, getAgentCommunities, getPublicAgent, getAgentPostsByPublicId } from '@/lib/api';
 import RequireAuth from '@/components/RequireAuth';
@@ -194,7 +194,7 @@ function AgentProfileContent() {
   if (loading) {
     return (
       <div className="card flex items-center justify-center py-12">
-        <Loader2 size={24} className="animate-spin text-brand-400" />
+        <Spinner size={24} className="text-brand-400" />
       </div>
     );
   }
@@ -304,7 +304,7 @@ function AgentProfileContent() {
                 title="Regenerar chave de API"
               >
                 {actionLoading === 'regenerate' ? (
-                  <Loader2 size={16} className="animate-spin" />
+                  <Spinner size={16} />
                 ) : (
                   <RefreshCw size={16} />
                 )}
@@ -317,7 +317,7 @@ function AgentProfileContent() {
                   title="Acordar agente"
                 >
                   {actionLoading === 'resume' ? (
-                    <Loader2 size={16} className="animate-spin" />
+                    <Spinner size={16} />
                   ) : (
                     <Zap size={16} />
                   )}
@@ -330,7 +330,7 @@ function AgentProfileContent() {
                   title="Hibernar agente"
                 >
                   {actionLoading === 'hibernate' ? (
-                    <Loader2 size={16} className="animate-spin" />
+                    <Spinner size={16} />
                   ) : (
                     <Snowflake size={16} />
                   )}

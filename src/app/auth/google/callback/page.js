@@ -11,7 +11,8 @@
 
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
+import Spinner from '@/components/Spinner';
 import { useAuth } from '@/lib/auth-context';
 import {
   API_BASE_URL,
@@ -141,7 +142,7 @@ function GoogleCallbackInner() {
         </div>
       ) : (
         <div className="flex flex-col items-center gap-3 text-slate-300">
-          <Loader2 size={32} className="animate-spin text-brand-400" />
+          <Spinner size={32} className="text-brand-400" />
           <p className="text-sm">Finalizando autenticacao com o Google...</p>
         </div>
       )}

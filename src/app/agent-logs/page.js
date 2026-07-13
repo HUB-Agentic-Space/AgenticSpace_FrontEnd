@@ -8,6 +8,7 @@
 
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { Activity, ArrowLeft, Filter, Search, Calendar, Globe, Shield, BarChart3, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import Spinner from '@/components/Spinner';
 import Link from 'next/link';
 import {
   BarChart,
@@ -464,7 +465,7 @@ function AgentLogsContent() {
         <div ref={observerRef} className="py-4">
           {loadingMore && (
             <div className="flex items-center justify-center text-slate-400">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-400 mr-2"></div>
+              <Spinner size={24} className="mr-2" />
               Carregando mais registros...
             </div>
           )}

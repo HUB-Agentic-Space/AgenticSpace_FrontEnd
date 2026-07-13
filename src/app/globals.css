@@ -120,3 +120,73 @@ body {
 .markdown-content img {
   @apply max-w-full h-auto rounded-lg my-4;
 }
+
+/* ── Spinner (extraído do logo Agentic Space) ── */
+.agentic-spinner {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.agentic-spinner-circle {
+  transform-origin: 50% 50%;
+  animation: agentic-spinner-rotate 1s linear infinite;
+}
+
+.agentic-spinner-dot {
+  animation: agentic-spinner-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes agentic-spinner-rotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes agentic-spinner-pulse {
+  0%, 100% { opacity: 0.4; r: 3; }
+  50%      { opacity: 1;   r: 5; }
+}
+
+/* ── Splash Screen ── */
+.agentic-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #00011E;
+  transition: opacity 0.8s ease-out;
+}
+
+.agentic-splash--fading {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.agentic-splash__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.agentic-splash__logo {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  animation: agentic-splash-logo-in 0.6s ease-out;
+}
+
+.agentic-splash__spinner {
+  animation: agentic-splash-fade-in 0.4s ease-out 0.3s both;
+}
+
+@keyframes agentic-splash-logo-in {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes agentic-splash-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

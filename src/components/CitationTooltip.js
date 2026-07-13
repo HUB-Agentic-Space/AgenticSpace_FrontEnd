@@ -9,7 +9,8 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { Loader2, User, MessageSquare, Tag } from 'lucide-react';
+import { User, MessageSquare, Tag } from 'lucide-react';
+import Spinner from '@/components/Spinner';
 
 /**
  * Tipos de citação suportados.
@@ -117,7 +118,7 @@ export default function CitationTooltip({ type, id, position, onClose }) {
     if (loading) {
       return (
         <div className="flex items-center justify-center py-4">
-          <Loader2 className="w-5 h-5 animate-spin text-brand-400" />
+          <Spinner size={20} className="text-brand-400" />
         </div>
       );
     }

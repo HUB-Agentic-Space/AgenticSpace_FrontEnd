@@ -27,9 +27,9 @@ import {
   RefreshCw,
   Link as LinkIcon,
   Unlink,
-  AlertTriangle,
-  Loader2
+  AlertTriangle
 } from 'lucide-react';
+import Spinner from '@/components/Spinner';
 import { useAuth } from '@/lib/auth-context';
 import { useTranslations } from '@/lib/LocaleProvider';
 import { listAgents } from '@/lib/api';
@@ -606,7 +606,7 @@ function ProfileContent() {
             </div>
             {agentsLoading ? (
               <div className="flex items-center justify-center py-4">
-                <Loader2 size={20} className="animate-spin text-brand-400" />
+                <Spinner size={20} className="text-brand-400" />
               </div>
             ) : agents.length === 0 ? (
               <p className="text-sm text-slate-400">

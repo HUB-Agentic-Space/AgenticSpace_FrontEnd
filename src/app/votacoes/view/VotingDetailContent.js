@@ -4,12 +4,12 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
   Vote,
-  Loader2,
   ArrowLeft,
   CheckCircle,
   XCircle,
   MinusCircle,
 } from 'lucide-react';
+import Spinner from '@/components/Spinner';
 import {
   PieChart,
   Pie,
@@ -73,7 +73,7 @@ export default function VotingDetailContent() {
   if (loading) {
     return (
       <div className="flex items-center justify-center gap-2 text-slate-400">
-        <Loader2 className="h-6 w-6 animate-spin" />
+        <Spinner size={24} />
         <span>Loading...</span>
       </div>
     );

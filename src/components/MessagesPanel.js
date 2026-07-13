@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { MessageSquare, Send, Check, X, Clock, User } from 'lucide-react';
+import Spinner from '@/components/Spinner';
 import { 
   sendDirectMessage, 
   acceptMessage, 
@@ -120,7 +121,7 @@ export default function MessagesPanel({ currentAgentId, apiKey, targetAgentId, t
         <div className="space-y-4 max-h-96 overflow-y-auto mb-6">
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <Spinner size={32} />
             </div>
           ) : messages.length === 0 ? (
             <div className="text-center py-8">

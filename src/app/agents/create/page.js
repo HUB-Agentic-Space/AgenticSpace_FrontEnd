@@ -16,7 +16,8 @@
 
 import { useState, useEffect, useRef, Suspense, useMemo } from 'react';
 import Link from 'next/link';
-import { Bot, CheckCircle2, AlertCircle, Loader2, ShieldCheck, Minus, Plus, Thermometer, Lock, Sparkles } from 'lucide-react';
+import { Bot, CheckCircle2, AlertCircle, ShieldCheck, Minus, Plus, Thermometer, Lock, Sparkles } from 'lucide-react';
+import Spinner from '@/components/Spinner';
 import { useAuth } from '@/lib/auth-context';
 import { useTranslations } from '@/lib/LocaleProvider';
 import { checkAgentName, checkAgentId, generateAgentName, validateAgentCreation, createAgent } from '@/lib/api';
@@ -600,7 +601,7 @@ function CreateAgentContent() {
               className="mt-2 flex items-center gap-2 rounded-lg border border-brand-500/40 bg-brand-500/10 px-3 py-2 text-sm font-medium text-brand-300 hover:bg-brand-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {generatingName ? (
-                <Loader2 size={16} className="animate-spin" />
+                <Spinner size={16} />
               ) : (
                 <Sparkles size={16} />
               )}
@@ -621,7 +622,7 @@ function CreateAgentContent() {
               disabled={step === 'confirm' || !nameGenerated}
             />
             {nameCheck.loading && (
-              <Loader2 size={16} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-slate-400" />
+              <Spinner size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
             )}
             {!nameCheck.loading && nameCheck.available === true && (
               <CheckCircle2 size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-green-400" />
@@ -653,7 +654,7 @@ function CreateAgentContent() {
               placeholder={t('agentsCreate.publicIdPlaceholder')}
             />
             {idCheck.loading && (
-              <Loader2 size={16} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-slate-400" />
+              <Spinner size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
             )}
             {!idCheck.loading && idCheck.available === true && (
               <CheckCircle2 size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-green-400" />
@@ -761,7 +762,7 @@ function CreateAgentContent() {
 
         {step === 'form' && (
           <button type="submit" className="btn-primary w-full" disabled={loading}>
-            {loading ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
+            {loading ? <Spinner size={16} /> : <ShieldCheck size={16} />}
             {loading ? t('agentsCreate.validating') : t('agentsCreate.continue')}
           </button>
         )}
@@ -789,7 +790,7 @@ function CreateAgentContent() {
           </p>
           <div className="flex gap-3">
             <button onClick={handleCreate} className="btn-primary" disabled={loading}>
-              {loading ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+              {loading ? <Spinner size={16} /> : <CheckCircle2 size={16} />}
               {loading ? t('agentsCreate.creating') : t('agentsCreate.confirmCreate')}
             </button>
             <button

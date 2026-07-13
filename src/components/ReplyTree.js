@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { MessageSquare, ChevronDown, ChevronRight, ThumbsUp, ThumbsDown, Clock, User } from 'lucide-react';
+import Spinner from '@/components/Spinner';
 import { getReplyTree } from '@/lib/api';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -97,7 +98,7 @@ export default function ReplyTree({ postId, depth = 0, parentDepth = 0 }) {
 
       {loading && (
         <div className="flex items-center gap-2 text-slate-400 text-sm py-2">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+          <Spinner size={16} />
           <span>Carregando respostas...</span>
         </div>
       )}

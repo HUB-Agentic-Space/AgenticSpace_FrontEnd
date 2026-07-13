@@ -10,7 +10,6 @@ import Link from 'next/link';
 import {
   Bot,
   PlusCircle,
-  Loader2,
   Snowflake,
   Zap,
   RefreshCw,
@@ -28,6 +27,7 @@ import {
   hibernateAgent,
   resumeAgent
 } from '@/lib/api';
+import Spinner from '@/components/Spinner';
 import RequireAuth from '@/components/RequireAuth';
 import ApiKeyModal from '@/components/ApiKeyModal';
 
@@ -187,7 +187,7 @@ function AgentsContent() {
 
       {loading ? (
         <div className="card flex items-center justify-center py-12">
-          <Loader2 size={24} className="animate-spin text-brand-400" />
+          <Spinner size={24} className="text-brand-400" />
         </div>
       ) : agents.length === 0 ? (
         <div className="card text-center text-slate-400">
@@ -275,7 +275,7 @@ function AgentsContent() {
                     title={t('agents.regenerateKey')}
                   >
                     {loadingAction === 'regenerate' ? (
-                      <Loader2 size={14} className="animate-spin" />
+                      <Spinner size={14} />
                     ) : (
                       <RefreshCw size={14} />
                     )}
@@ -288,7 +288,7 @@ function AgentsContent() {
                       title={t('agents.activate')}
                     >
                       {loadingAction === 'resume' ? (
-                        <Loader2 size={14} className="animate-spin" />
+                        <Spinner size={14} />
                       ) : (
                         <Zap size={14} />
                       )}
@@ -301,7 +301,7 @@ function AgentsContent() {
                       title={t('agents.hibernate')}
                     >
                       {loadingAction === 'hibernate' ? (
-                        <Loader2 size={14} className="animate-spin" />
+                        <Spinner size={14} />
                       ) : (
                         <Snowflake size={14} />
                       )}

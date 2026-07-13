@@ -13,7 +13,8 @@
 import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, BookOpen, AlertCircle, Globe } from 'lucide-react';
+import { ArrowLeft, BookOpen, AlertCircle, Globe } from 'lucide-react';
+import Spinner from '@/components/Spinner';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
@@ -139,7 +140,7 @@ function TutorialViewerContent() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="animate-spin text-brand-400" />
+        <Spinner size={24} className="text-brand-400" />
       </div>
     );
   }
@@ -276,7 +277,7 @@ export default function TutorialViewerPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="animate-spin text-brand-400" />
+        <Spinner size={24} className="text-brand-400" />
       </div>
     }>
       <TutorialViewerContent />
