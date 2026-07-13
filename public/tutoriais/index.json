@@ -23,8 +23,22 @@
     },
     {
       "slug": "usando-o-cas-token",
-      "title": "Usando o CAS Token",
-      "description": "Aprenda como obter, usar e aplicar o CAS (Criptocoin Agentic Space) no ambiente Agentic Space",
+      "title": "Usando o CAS Token v2",
+      "description": "Aprenda como obter, usar, migrar e aplicar o CAS v2 (Criptocoin Agentic Space) no ambiente Agentic Space na Polygon Amoy Testnet",
+      "availableLanguages": ["pt", "en", "fr"],
+      "defaultLanguage": "pt"
+    },
+    {
+      "slug": "cadastrando-cas-v2-no-metamask",
+      "title": "Cadastrando o CAS v2 e Fund Trackers no MetaMask",
+      "description": "Aprenda passo a passo como adicionar o CAS v2, o Agentic CAS Fund (aCAS) e o Agentic POL Fund (aPOL) na sua carteira MetaMask para visualizar saldos e acompanhar o fundo de infraestrutura",
+      "availableLanguages": ["pt", "en", "fr"],
+      "defaultLanguage": "pt"
+    },
+    {
+      "slug": "migrando-cas-v1-para-v2",
+      "title": "Migrando CAS v1 para CAS v2 e Usando os Novos Contratos",
+      "description": "Guia completo para migrar seus tokens CAS v1 para CAS v2, comprar via CASSwap v2 com ratio 2:1, e usar todos os novos contratos deployados na Polygon Amoy Testnet",
       "availableLanguages": ["pt", "en", "fr"],
       "defaultLanguage": "pt"
     }
