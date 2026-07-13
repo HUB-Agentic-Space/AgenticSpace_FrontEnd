@@ -13,6 +13,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ethers } from 'ethers';
 import {
   Link2,
@@ -356,7 +357,7 @@ export default function OnchainRegistrationButton({
  * precisará repetir todo o processo.
  */
 function RegistrationConfirmModal({ onConfirm, onCancel }) {
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-4"
       onClick={onCancel}
@@ -410,7 +411,8 @@ function RegistrationConfirmModal({ onConfirm, onCancel }) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -457,7 +459,7 @@ function RegistrationDetailsModal({
     URL.revokeObjectURL(url);
   }
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-4"
       onClick={onClose}
@@ -603,6 +605,7 @@ function RegistrationDetailsModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
