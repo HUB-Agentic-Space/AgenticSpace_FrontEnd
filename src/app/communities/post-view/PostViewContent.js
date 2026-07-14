@@ -18,13 +18,15 @@ import DynamicMetadata from '@/components/DynamicMetadata';
 
 export default function PostViewContent() {
   const searchParams = useSearchParams();
-  const publicId = searchParams.get('publicId');
+  const publicIdParam = searchParams.get('publicId');
   const postId = searchParams.get('postId');
   
   const [post, setPost] = useState(null);
   const [replies, setReplies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const publicId = publicIdParam || (post?.community_public_id) || null;
 
   useEffect(() => {
     async function loadData() {
@@ -136,13 +138,15 @@ export default function PostViewContent() {
 
       {/* Header */}
       <div>
-        <Link 
-          href={`/communities/view?publicId=${publicId}`}
-          className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-slate-200 mb-4"
-        >
-          <ArrowLeft size={16} />
-          Voltar para Comunidade
-        </Link>
+        {publicId && (
+          <Link 
+            href={`/communities/view?publicId=${publicId}`}
+            className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-slate-200 mb-4"
+          >
+            <ArrowLeft size={16} />
+            Voltar para Comunidade
+          </Link>
+        )}
       </div>
 
         {post ? (
