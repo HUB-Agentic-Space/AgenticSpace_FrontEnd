@@ -13,6 +13,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import {
   Github,
@@ -27,7 +28,10 @@ import {
   RefreshCw,
   Link as LinkIcon,
   Unlink,
-  AlertTriangle
+  AlertTriangle,
+  X,
+  Info,
+  MailCheck
 } from 'lucide-react';
 import Spinner from '@/components/Spinner';
 import { useAuth } from '@/lib/auth-context';
@@ -60,7 +64,8 @@ const EMPTY_PROFILE = {
   email: '',
   github: '',
   linkedin: '',
-  blog: ''
+  blog: '',
+  newsletterOptIn: false
 };
 
 const METAMASK_MESSAGE = 'Login authentication for Agentic Space';
@@ -93,6 +98,7 @@ function ProfileContent() {
   const [pendingLink, setPendingLink] = useState(null);
   const [linkedAccounts, setLinkedAccounts] = useState([]);
   const [accountsLoading, setAccountsLoading] = useState(true);
+  const [showNewsletterModal, setShowNewsletterModal] = useState(false);
 
   const did = session?.subject?.id || '';
   const provider = session?.subject?.authenticationMethod || session?.subject?.provider || '—';
@@ -180,6 +186,14 @@ function ProfileContent() {
     setProfile((p) => ({ ...p, [field]: value }));
     setSaved(false);
     setProfileMessage('');
+  }
+
+  /** Alterna o opt-in de newsletter e exibe o modal ao marcar. */
+  function handleNewsletterToggle(checked) {
+    update('newsletterOptIn', checked);
+    if (checked) {
+      setShowNewsletterModal(true);
+    }
   }
 
   /** Persiste o perfil no backend, que valida a unicidade global. */
@@ -558,6 +572,19 @@ function ProfileContent() {
             </div>
           </div>
 
+          <div className="flex items-start gap-3 rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+            <input
+              type="checkbox"
+              id="newsletterOptIn"
+              className="mt-1 h-4 w-4 rounded border-slate-600 bg-slate-900 text-brand-500 focus:ring-brand-500"
+              checked={profile.newsletterOptIn === true}
+              onChange={(e) => handleNewsletterToggle(e.target.checked)}
+            />
+            <label htmlFor="newsletterOptIn" className="text-sm text-slate-300 cursor-pointer">
+              Desejo receber por e-mail novidades e atualizações sobre o que está acontecendo no site.
+            </label>
+          </div>
+
           <div className="flex items-center gap-3">
             <button type="submit" className="btn-primary" disabled={profileBusy}>
               <Save size={16} /> {profileBusy ? 'Salvando...' : 'Salvar perfil'}
@@ -638,6 +665,69 @@ function ProfileContent() {
           </section>
         </div>
       </div>
+
+      {showNewsletterModal && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-4"
+          onClick={() => setShowNewsletterModal(false)}
+        >
+          <div
+            className="card max-w-md space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
+                <MailCheck size={20} className="text-brand-400" />
+                Inscrição na Newsletter
+              </h2>
+              <button
+                onClick={() => setShowNewsletterModal(false)}
+                className="text-slate-400 hover:text-white"
+                aria-label="Fechar"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-sm text-slate-300">
+              <p>
+                Você marcou a opção para receber novidades e atualizações por e-mail
+                sobre o que está acontecendo no site.
+              </p>
+              <div className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3">
+                <Info size={16} className="mt-0.5 shrink-0 text-amber-400" />
+                <div className="space-y-2 text-amber-100">
+                  <p>
+                    <strong className="text-white">Importante:</strong> nosso sistema
+                    não é integrado ao sistema de newsletter. Para parar de receber
+                    os e-mails, você deverá clicar no link{' '}
+                    <strong className="text-white">unsubscribe</strong> presente em
+                    um dos e-mails que receber da newsletter.
+                  </p>
+                  <p>
+                    Você pode desmarcar este campo a qualquer momento para não ser
+                    readicionado à lista, mas isso{' '}
+                    <strong className="text-white">não cancela</strong> o envio dos
+                    e-mails. O cancelamento só é efetivado ao clicar em{' '}
+                    <strong className="text-white">unsubscribe</strong> nos e-mails
+                    da newsletter.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowNewsletterModal(false)}
+                className="btn-primary"
+              >
+                Entendi
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
