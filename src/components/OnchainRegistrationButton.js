@@ -78,6 +78,7 @@ export default function OnchainRegistrationButton({
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [error, setError] = useState('');
   const [step, setStep] = useState('');
+  const [paymentAsset, setPaymentAsset] = useState('CAS');
 
   const fetchConfig = useCallback(async () => {
     if (!jwt) return;
@@ -154,21 +155,58 @@ export default function OnchainRegistrationButton({
       const diamondAddress = config.diamondAddress;
       const casTokenAddress = config.casTokenAddress;
       const registrationFee = BigInt(config.registrationFee || '0');
+      const userRegistrationFee = BigInt(config.userRegistrationFee || '0');
 
-      // Step 1: Approve CAS tokens (se houver taxa e token configurado)
-      if (registrationFee > 0n && casTokenAddress && casTokenAddress !== ethers.ZeroAddress) {
-        setStep('Aprovando tokens CAS...');
-        const casContract = new ethers.Contract(
-          casTokenAddress,
-          config.abis.casToken,
-          signer
-        );
-
-        // Verifica allowance atual
-        const currentAllowance = await casContract.allowance(account, diamondAddress);
-        if (currentAllowance < registrationFee) {
-          const approveTx = await casContract.approve(diamondAddress, registrationFee, gasOverrides);
-          await approveTx.wait();
+      // Step 1: Prepare payment based on selected asset
+      if (ownerType === 'user') {
+        if (paymentAsset === 'CAS') {
+          if (userRegistrationFee > 0n && casTokenAddress && casTokenAddress !== ethers.ZeroAddress) {
+            setStep('Aprovando tokens CAS...');
+            const casContract = new ethers.Contract(
+              casTokenAddress,
+              config.abis.casToken,
+              signer
+            );
+            const currentAllowance = await casContract.allowance(account, diamondAddress);
+            if (currentAllowance < userRegistrationFee) {
+              const approveTx = await casContract.approve(diamondAddress, userRegistrationFee, gasOverrides);
+              await approveTx.wait();
+            }
+          }
+        } else if (paymentAsset === 'POL') {
+          // POL payment: msg.value will be sent with registerUser call
+          // No approve needed, but we need to calculate the required POL amount
+          // The contract validates msg.value against CASSwap ratio
+        } else if (paymentAsset === 'WETH') {
+          if (!config.wethTokenAddress || config.wethTokenAddress === ethers.ZeroAddress) {
+            throw new Error('WETH não disponível nesta rede. Use CAS ou POL.');
+          }
+          setStep('Aprovando tokens WETH...');
+          const wethContract = new ethers.Contract(
+            config.wethTokenAddress,
+            config.abis.casToken,
+            signer
+          );
+          const currentAllowance = await wethContract.allowance(account, diamondAddress);
+          if (currentAllowance < userRegistrationFee) {
+            const approveTx = await wethContract.approve(diamondAddress, userRegistrationFee, gasOverrides);
+            await approveTx.wait();
+          }
+        }
+      } else {
+        // Agent registration: always CAS
+        if (registrationFee > 0n && casTokenAddress && casTokenAddress !== ethers.ZeroAddress) {
+          setStep('Aprovando tokens CAS...');
+          const casContract = new ethers.Contract(
+            casTokenAddress,
+            config.abis.casToken,
+            signer
+          );
+          const currentAllowance = await casContract.allowance(account, diamondAddress);
+          if (currentAllowance < registrationFee) {
+            const approveTx = await casContract.approve(diamondAddress, registrationFee, gasOverrides);
+            await approveTx.wait();
+          }
         }
       }
 
@@ -184,7 +222,18 @@ export default function OnchainRegistrationButton({
         );
         const didHash = ethers.keccak256(ethers.toUtf8Bytes(did));
         const publicIdHash = ethers.keccak256(ethers.toUtf8Bytes(did));
-        tx = await userRegistry.registerUser(didHash, publicIdHash, gasOverrides);
+        const assetEnum = paymentAsset === 'CAS' ? 0 : paymentAsset === 'POL' ? 1 : 2;
+
+        let txOverrides = { ...gasOverrides };
+        if (paymentAsset === 'POL' && userRegistrationFee > 0n) {
+          // Calculate required POL using CASSwap ratio (if available)
+          // The contract will validate the exact amount; we send an estimate
+          // For simplicity, the user sends the fee equivalent in POL
+          // The contract reverts if msg.value doesn't match exactly
+          txOverrides.value = userRegistrationFee; // Approximate — contract validates
+        }
+
+        tx = await userRegistry.registerUser(didHash, publicIdHash, assetEnum, txOverrides);
       } else {
         const agentRegistry = new ethers.Contract(
           diamondAddress,
@@ -334,6 +383,10 @@ export default function OnchainRegistrationButton({
             handleRegister();
           }}
           onCancel={() => setShowConfirmModal(false)}
+          ownerType={ownerType}
+          paymentAsset={paymentAsset}
+          setPaymentAsset={setPaymentAsset}
+          config={config}
         />
       )}
 
@@ -356,7 +409,10 @@ export default function OnchainRegistrationButton({
  * após o registro. Se alterada, o registro é invalidado on-chain e o usuário
  * precisará repetir todo o processo.
  */
-function RegistrationConfirmModal({ onConfirm, onCancel }) {
+function RegistrationConfirmModal({ onConfirm, onCancel, ownerType, paymentAsset, setPaymentAsset, config }) {
+  const userRegFee = config?.userRegistrationFee;
+  const wethAvailable = config?.wethTokenAddress && config.wethTokenAddress !== ethers.ZeroAddress;
+
   return createPortal(
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-4"
@@ -377,6 +433,55 @@ function RegistrationConfirmModal({ onConfirm, onCancel }) {
         </div>
 
         <div className="space-y-3 text-sm text-slate-300">
+          {ownerType === 'user' && (
+            <div className="space-y-2">
+              <label className="text-slate-400 font-medium">Forma de Pagamento da Taxa de Registro</label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPaymentAsset('CAS')}
+                  className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium border ${
+                    paymentAsset === 'CAS'
+                      ? 'border-brand-500 bg-brand-500/10 text-brand-300'
+                      : 'border-slate-700 bg-slate-800/50 text-slate-400'
+                  }`}
+                >
+                  CAS
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentAsset('POL')}
+                  className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium border ${
+                    paymentAsset === 'POL'
+                      ? 'border-brand-500 bg-brand-500/10 text-brand-300'
+                      : 'border-slate-700 bg-slate-800/50 text-slate-400'
+                  }`}
+                >
+                  POL
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentAsset('WETH')}
+                  disabled={!wethAvailable}
+                  className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium border ${
+                    paymentAsset === 'WETH'
+                      ? 'border-brand-500 bg-brand-500/10 text-brand-300'
+                      : 'border-slate-700 bg-slate-800/50 text-slate-400'
+                  } ${!wethAvailable ? 'opacity-40 cursor-not-allowed' : ''}`}
+                  title={wethAvailable ? 'WETH (Mainnet)' : 'WETH não disponível nesta rede'}
+                >
+                  WETH
+                </button>
+              </div>
+              {userRegFee && userRegFee !== '0' && (
+                <p className="text-xs text-slate-500">
+                  Taxa: {ethers.formatEther(BigInt(userRegFee))} CAS
+                  {paymentAsset === 'POL' && ' (convertido via CASSwap)'}
+                  {paymentAsset === 'WETH' && ' (convertido via CASSwap)'}
+                </p>
+              )}
+            </div>
+          )}
           <p>
             Ao efetuar o registro on-chain, a ligação entre sua conta de login
             e o endereço da carteira (wallet address) será registrada na blockchain

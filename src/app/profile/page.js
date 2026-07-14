@@ -31,7 +31,8 @@ import {
   AlertTriangle,
   X,
   Info,
-  MailCheck
+  MailCheck,
+  ArrowUpDown
 } from 'lucide-react';
 import Spinner from '@/components/Spinner';
 import { useAuth } from '@/lib/auth-context';
@@ -40,6 +41,8 @@ import { listAgents } from '@/lib/api';
 import RequireAuth from '@/components/RequireAuth';
 import DynamicMetadata from '@/components/DynamicMetadata';
 import OnchainRegistrationButton from '@/components/OnchainRegistrationButton';
+import CASSwapModal from '@/components/CASSwapModal';
+import { getOnchainConfig } from '@/lib/api';
 import {
   API_BASE_URL,
   API_PREFIX,
@@ -99,6 +102,8 @@ function ProfileContent() {
   const [linkedAccounts, setLinkedAccounts] = useState([]);
   const [accountsLoading, setAccountsLoading] = useState(true);
   const [showNewsletterModal, setShowNewsletterModal] = useState(false);
+  const [onchainConfig, setOnchainConfig] = useState(null);
+  const [showSwapModal, setShowSwapModal] = useState(false);
 
   const did = session?.subject?.id || '';
   const provider = session?.subject?.authenticationMethod || session?.subject?.provider || '—';
@@ -156,6 +161,11 @@ function ProfileContent() {
       }
     }
     loadProfile();
+    if (session?.jwt) {
+      getOnchainConfig(session.jwt).then(({ status, data }) => {
+        if (status < 400) setOnchainConfig(data);
+      }).catch(() => {});
+    }
     loadAgents();
     return () => {
       cancelled = true;
@@ -402,13 +412,24 @@ function ProfileContent() {
           </div>
           <div className="sm:col-span-2">
             <dt className="text-slate-400">Registro na Blockchain</dt>
-            <dd className="mt-2">
+            <dd className="mt-2 flex flex-wrap items-center gap-3">
               <OnchainRegistrationButton
                 ownerType="user"
                 jwt={session?.jwt}
                 did={did}
                 walletAddress={normalizedProvider === 'metamask' ? did.replace('did:ethr:', '') : undefined}
               />
+              {onchainConfig?.enabled && onchainConfig?.casSwapAddress && (
+                <button
+                  type="button"
+                  onClick={() => setShowSwapModal(true)}
+                  className="btn-secondary"
+                  title="Comprar CAS via CASSwap"
+                >
+                  <ArrowUpDown size={16} />
+                  Comprar CAS
+                </button>
+              )}
             </dd>
           </div>
           <div className="sm:col-span-2">
@@ -728,6 +749,14 @@ function ProfileContent() {
         </div>,
         document.body
       )}
+
+      <CASSwapModal
+        open={showSwapModal}
+        onClose={() => setShowSwapModal(false)}
+        casSwapAddress={onchainConfig?.casSwapAddress || null}
+        casTokenAddress={onchainConfig?.casTokenAddress || null}
+        explorerUrl={onchainConfig?.explorerUrl}
+      />
     </div>
   );
 }

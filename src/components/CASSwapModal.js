@@ -1,0 +1,334 @@
+'use client';
+
+/**
+ * @file CASSwapModal.js
+ * @description Reusable modal for buying/selling CAS via CASSwap contract
+ *              using MetaMask. Used in the main frontend for user profile.
+ *              Supports i18n via simple translation object.
+ */
+
+import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+import { ethers } from 'ethers';
+import {
+  X,
+  Loader2,
+  AlertCircle,
+  CheckCircle,
+  ArrowUpDown,
+} from 'lucide-react';
+import Spinner from '@/components/Spinner';
+
+const CASSWAP_ABI = [
+  'function buyCAS() external payable returns (uint256)',
+  'function sellCAS(uint256 casAmount) external returns (uint256)',
+  'function getRatio() external view returns (uint256 numerator, uint256 denominator)',
+  'function swapFeeBps() external view returns (uint256)',
+  'function casToken() external view returns (address)',
+  'function getCasBalance() external view returns (uint256)',
+  'function getPolBalance() external view returns (uint256)',
+];
+
+const CAS_TOKEN_ABI = [
+  'function balanceOf(address) external view returns (uint256)',
+  'function approve(address spender, uint256 amount) external returns (bool)',
+  'function allowance(address owner, address spender) external view returns (uint256)',
+  'function decimals() external view returns (uint8)',
+  'function symbol() external view returns (string)',
+];
+
+const BPS_DENOMINATOR = 10000;
+
+const DEFAULT_I18N = {
+  title: 'CAS Swap',
+  buy: 'Buy CAS',
+  sell: 'Sell CAS',
+  buyLabel: 'POL → CAS',
+  sellLabel: 'CAS → POL',
+  polAmount: 'POL Amount',
+  casAmount: 'CAS Amount',
+  ratio: 'Ratio',
+  swapFee: 'Swap Fee',
+  youReceive: 'You receive',
+  connect: 'Connect MetaMask',
+  connected: 'Connected',
+  casBalance: 'CAS',
+  swapping: 'Swapping...',
+  swapSuccess: 'Swap successful!',
+  viewExplorer: 'View on explorer →',
+  metamaskNotFound: 'MetaMask not found. Please install MetaMask.',
+  noCasSwap: 'CASSwap contract not configured.',
+};
+
+export default function CASSwapModal({
+  open,
+  onClose,
+  casSwapAddress,
+  casTokenAddress,
+  explorerUrl,
+  i18n = DEFAULT_I18N,
+}) {
+  const [mode, setMode] = useState('buy');
+  const [amount, setAmount] = useState('');
+  const [ratio, setRatio] = useState({ numerator: '1', denominator: '1' });
+  const [swapFeeBps, setSwapFeeBps] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [txHash, setTxHash] = useState(null);
+  const [error, setError] = useState('');
+  const [account, setAccount] = useState(null);
+  const [casBalance, setCasBalance] = useState(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const t = { ...DEFAULT_I18N, ...i18n };
+  const explorer = explorerUrl || 'https://amoy.polygonscan.com';
+
+  const connectWallet = useCallback(async () => {
+    if (typeof window === 'undefined' || !window.ethereum) {
+      setError(t.metamaskNotFound);
+      return;
+    }
+    try {
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      setAccount(accounts[0]);
+    } catch (err) {
+      setError(`Failed to connect wallet: ${err.message}`);
+    }
+  }, [t.metamaskNotFound]);
+
+  const loadSwapInfo = useCallback(async () => {
+    if (!casSwapAddress || typeof window === 'undefined' || !window.ethereum) return;
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const swap = new ethers.Contract(casSwapAddress, CASSWAP_ABI, provider);
+      const [num, den] = await swap.getRatio();
+      setRatio({ numerator: num.toString(), denominator: den.toString() });
+      const fee = await swap.swapFeeBps();
+      setSwapFeeBps(Number(fee));
+    } catch (err) {
+      console.error('[CASSwapModal] loadSwapInfo:', err.message);
+    }
+  }, [casSwapAddress]);
+
+  const loadCasBalance = useCallback(async () => {
+    if (!casTokenAddress || !account || typeof window === 'undefined' || !window.ethereum) return;
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const cas = new ethers.Contract(casTokenAddress, CAS_TOKEN_ABI, provider);
+      const bal = await cas.balanceOf(account);
+      setCasBalance(bal.toString());
+    } catch (err) {
+      console.error('[CASSwapModal] loadCasBalance:', err.message);
+    }
+  }, [casTokenAddress, account]);
+
+  useEffect(() => {
+    if (open && casSwapAddress) {
+      loadSwapInfo();
+    }
+  }, [open, casSwapAddress, loadSwapInfo]);
+
+  useEffect(() => {
+    if (open && account) {
+      loadCasBalance();
+    }
+  }, [open, account, loadCasBalance]);
+
+  if (!mounted || !open) return null;
+
+  const ratioNum = Number(ratio.numerator) / Number(ratio.denominator);
+  const feePercent = (swapFeeBps / BPS_DENOMINATOR) * 100;
+
+  let preview = '0';
+  if (amount) {
+    try {
+      const amt = parseFloat(amount);
+      if (mode === 'buy') {
+        const casReceived = amt * ratioNum;
+        const fee = (casReceived * swapFeeBps) / BPS_DENOMINATOR;
+        preview = (casReceived - fee).toFixed(6);
+      } else {
+        const polReceived = amt / ratioNum;
+        const fee = (polReceived * swapFeeBps) / BPS_DENOMINATOR;
+        preview = (polReceived - fee).toFixed(6);
+      }
+    } catch {
+      preview = '0';
+    }
+  }
+
+  async function handleSwap() {
+    setError('');
+    setTxHash(null);
+    setLoading(true);
+
+    try {
+      if (!account) {
+        await connectWallet();
+        setLoading(false);
+        return;
+      }
+
+      if (!casSwapAddress) {
+        setError(t.noCasSwap);
+        setLoading(false);
+        return;
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const swap = new ethers.Contract(casSwapAddress, CASSWAP_ABI, signer);
+
+      if (mode === 'buy') {
+        const polAmount = ethers.parseEther(amount);
+        const tx = await swap.buyCAS({ value: polAmount });
+        await tx.wait();
+        setTxHash(tx.hash);
+      } else {
+        const casAmount = ethers.parseEther(amount);
+        const cas = new ethers.Contract(casTokenAddress, CAS_TOKEN_ABI, signer);
+        const allowance = await cas.allowance(account, casSwapAddress);
+        if (allowance < casAmount) {
+          const approveTx = await cas.approve(casSwapAddress, casAmount);
+          await approveTx.wait();
+        }
+        const tx = await swap.sellCAS(casAmount);
+        await tx.wait();
+        setTxHash(tx.hash);
+      }
+
+      loadCasBalance();
+      loadSwapInfo();
+    } catch (err) {
+      setError(err.reason || err.shortMessage || err.message || 'Swap failed');
+    }
+    setLoading(false);
+  }
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="card w-full max-w-md space-y-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold text-white">{t.title}</h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-white">
+            <X size={20} />
+          </button>
+        </div>
+
+        {!account && (
+          <button onClick={connectWallet} className="btn-primary w-full">
+            {t.connect}
+          </button>
+        )}
+
+        {account && (
+          <p className="text-xs text-slate-500">
+            {t.connected}: {account.slice(0, 6)}...{account.slice(-4)}
+            {casBalance && (
+              <span className="ml-2 text-slate-400">
+                {t.casBalance}: {(Number(casBalance) / 1e18).toFixed(4)}
+              </span>
+            )}
+          </p>
+        )}
+
+        <div className="flex gap-2">
+          <button
+            onClick={() => setMode('buy')}
+            className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium ${
+              mode === 'buy' ? 'bg-brand-500 text-white' : 'bg-slate-800 text-slate-400'
+            }`}
+          >
+            {t.buy} ({t.buyLabel})
+          </button>
+          <button
+            onClick={() => setMode('sell')}
+            className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium ${
+              mode === 'sell' ? 'bg-brand-500 text-white' : 'bg-slate-800 text-slate-400'
+            }`}
+          >
+            {t.sell} ({t.sellLabel})
+          </button>
+        </div>
+
+        <div>
+          <label className="label">
+            {mode === 'buy' ? t.polAmount : t.casAmount}
+          </label>
+          <input
+            type="number"
+            step="0.000001"
+            min="0"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="0.0"
+            className="input"
+          />
+        </div>
+
+        <div className="rounded-lg bg-slate-800/50 p-3 text-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500">{t.ratio}</span>
+            <span className="text-slate-300">1 POL = {ratioNum.toFixed(4)} CAS</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500">{t.swapFee}</span>
+            <span className="text-slate-300">{feePercent.toFixed(2)}%</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500">{t.youReceive}</span>
+            <span className="font-bold text-white">
+              {preview} {mode === 'buy' ? 'CAS' : 'POL'}
+            </span>
+          </div>
+        </div>
+
+        {error && (
+          <div className="flex items-start gap-2 rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
+            <AlertCircle size={16} className="mt-0.5 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {txHash && (
+          <div className="flex items-start gap-2 rounded-lg border border-green-500/40 bg-green-500/10 p-3 text-sm text-green-300">
+            <CheckCircle size={16} className="mt-0.5 shrink-0" />
+            <div>
+              <p>{t.swapSuccess}</p>
+              <a
+                href={`${explorer}/tx/${txHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand-400 hover:text-brand-300"
+              >
+                {t.viewExplorer}
+              </a>
+            </div>
+          </div>
+        )}
+
+        <button
+          onClick={handleSwap}
+          disabled={loading || !amount || parseFloat(amount) <= 0}
+          className="btn-primary w-full"
+        >
+          {loading ? (
+            <><Loader2 size={16} className="animate-spin" /> {t.swapping}</>
+          ) : (
+            <><ArrowUpDown size={16} /> {mode === 'buy' ? t.buy : t.sell}</>
+          )}
+        </button>
+      </div>
+    </div>,
+    document.body
+  );
+}
