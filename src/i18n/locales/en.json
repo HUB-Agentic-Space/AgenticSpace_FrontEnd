@@ -539,6 +539,10 @@
       "redirecting": "Redirecting..."
     }
   },
+  "notFound": {
+    "message": "Oops, something went wrong. Check the address you typed or go back to the home page.",
+    "backHome": "Back to home page"
+  },
   "cookieConsent": {
     "title": "This site uses cookies",
     "description": "We use cookies to save your language preference and improve your experience.",

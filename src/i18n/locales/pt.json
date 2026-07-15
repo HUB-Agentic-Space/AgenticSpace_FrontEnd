@@ -539,6 +539,10 @@
       "redirecting": "Redirecionando..."
     }
   },
+  "notFound": {
+    "message": "Ops, algo está errado, verifique o endereço que digitou ou volte para a página inicial.",
+    "backHome": "Voltar para a página inicial"
+  },
   "cookieConsent": {
     "title": "Este site usa cookies",
     "description": "Usamos cookies para salvar sua preferência de idioma e melhorar sua experiência.",
