@@ -435,6 +435,7 @@ export default function CASTokenPage() {
             symbol="CAS"
             decimals={18}
             chainId={POLYGON_CHAIN_ID}
+            image="/tokens/0x5151A34EaC7bA08cd6B540b32cD30316218A2287.png"
             label={t('casToken.cta.addToMetamask')}
           />
           <a href={`${EXPLORER_BASE}/token/${CAS_TOKEN_ADDRESS}`} target="_blank" rel="noopener noreferrer" className="btn-secondary flex items-center gap-2">

@@ -13,6 +13,8 @@ import { useState } from 'react';
 import { Plus, Check, AlertCircle, Loader2 } from 'lucide-react';
 import { useWatchAsset, getTokenIconUrl } from '@/lib/useWatchAsset';
 
+const CAS_ICON_URL = '/tokens/0x5151A34EaC7bA08cd6B540b32cD30316218A2287.png';
+
 /**
  * @param {Object} props
  * @param {string} props.address Endereço do contrato (checksum).
@@ -83,6 +85,8 @@ export default function AddTokenButton({
           <Check size={14} />
         ) : status === 'error' ? (
           <AlertCircle size={14} />
+        ) : image ? (
+          <img src={image} alt={symbol} width={14} height={14} className="rounded-full" />
         ) : (
           <Plus size={14} />
         )}

@@ -105,7 +105,7 @@ export default function CASSwapModal({
   }, []);
 
   const t = { ...DEFAULT_I18N, ...i18n };
-  const explorer = explorerUrl || 'https://amoy.polygonscan.com';
+  const explorer = explorerUrl || 'https://polygonscan.com';
 
   const connectWallet = useCallback(async () => {
     if (typeof window === 'undefined' || !window.ethereum) {
@@ -184,31 +184,31 @@ export default function CASSwapModal({
     }
   }
 
-  async function ensureNetwork(provider) {
+  async function ensureNetwork() {
     if (!chainId) return;
-    const net = await provider.getNetwork();
-    if (Number(net.chainId) !== chainId) {
-      const targetHex = '0x' + chainId.toString(16);
-      try {
+    const currentChain = await window.ethereum.request({ method: 'eth_chainId' });
+    const targetHex = '0x' + chainId.toString(16);
+    if (currentChain === targetHex) return;
+
+    try {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: targetHex }],
+      });
+    } catch (switchErr) {
+      if (switchErr.code === 4902) {
         await window.ethereum.request({
-          method: 'wallet_switchEthereumChain',
-          params: [{ chainId: targetHex }],
+          method: 'wallet_addEthereumChain',
+          params: [{
+            chainId: targetHex,
+            chainName: chainId === 137 ? 'Polygon Mainnet' : `Chain ${chainId}`,
+            nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
+            rpcUrls: ['https://polygon-rpc.com'],
+            blockExplorerUrls: [explorer],
+          }],
         });
-      } catch (switchErr) {
-        if (switchErr.code === 4902) {
-          await window.ethereum.request({
-            method: 'wallet_addEthereumChain',
-            params: [{
-              chainId: targetHex,
-              chainName: chainId === 137 ? 'Polygon Mainnet' : `Chain ${chainId}`,
-              nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
-              rpcUrls: ['https://polygon-rpc.com'],
-              blockExplorerUrls: [explorer],
-            }],
-          });
-        } else {
-          throw new Error(`Conecte-se à rede Polygon (chainId=${chainId}) na MetaMask.`);
-        }
+      } else {
+        throw new Error(`Conecte-se à rede Polygon (chainId=${chainId}) na MetaMask.`);
       }
     }
   }
@@ -231,9 +231,9 @@ export default function CASSwapModal({
         return;
       }
 
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      await ensureNetwork(provider);
+      await ensureNetwork();
 
+      const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       const gasOverrides = await getGasOverrides(provider);
       const swap = new ethers.Contract(casSwapAddress, CASSWAP_ABI, signer);
