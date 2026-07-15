@@ -26,8 +26,9 @@ import {
   CAS_TOKEN_ADDRESS, CASSWAP_ADDRESS, DIAMOND_ADDRESS,
   INFRA_FUND_ADDRESS, EXPLORER_BASE, POLYGON_CHAIN_ID,
   POLYGON_RPC, CASSWAP_READ_ABI, CAS_TOKEN_READ_ABI,
+  DIAMOND_READ_ABI,
   DEFAULT_RATIO, MAX_SUPPLY, INITIAL_SUPPLY,
-  PRICE_PHASES, OPERATIONAL_FEES,
+  PRICE_PHASES, DEFAULT_OPERATIONAL_FEES,
 } from '@/lib/cas-token-config';
 
 const COINGECKO_POL_CHART = 'https://api.coingecko.com/api/v3/coins/matic-network/market_chart?vs_currency=usd&days=1';
@@ -43,6 +44,7 @@ export default function CASTokenPage() {
   const [chartData, setChartData] = useState([]);
   const [ratio, setRatio] = useState(DEFAULT_RATIO);
   const [totalSupply, setTotalSupply] = useState(null);
+  const [operationalFees, setOperationalFees] = useState(DEFAULT_OPERATIONAL_FEES);
   const [loadingPrice, setLoadingPrice] = useState(true);
   const [priceError, setPriceError] = useState(false);
   const refreshTimer = useRef(null);
@@ -60,6 +62,15 @@ export default function CASTokenPage() {
       const cas = new ethers.Contract(CAS_TOKEN_ADDRESS, CAS_TOKEN_READ_ABI, provider);
       const supply = await cas.totalSupply();
       setTotalSupply(Number(ethers.formatEther(supply)));
+
+      const diamond = new ethers.Contract(DIAMOND_ADDRESS, DIAMOND_READ_ABI, provider);
+      const fees = await diamond.getFees();
+      const feesInCas = DEFAULT_OPERATIONAL_FEES.map((f) => ({
+        ...f,
+        fee: Number(ethers.formatEther(fees[f.contractField])),
+      }));
+      setOperationalFees(feesInCas);
+      console.info('[cas-token] fees loaded from Diamond:', feesInCas);
     } catch (err) {
       console.error('[cas-token] on-chain fetch failed:', err.message);
     }
@@ -136,7 +147,6 @@ export default function CASTokenPage() {
     agentRegistration: t('casToken.fees.agentRegistration'),
     agentValidation: t('casToken.fees.agentValidation'),
     daoProposal: t('casToken.fees.daoProposal'),
-    daoVoting: t('casToken.fees.daoVoting'),
   };
 
   return (
@@ -392,7 +402,7 @@ export default function CASTokenPage() {
           <div className="space-y-3">
             <h3 className="font-semibold text-white">{t('casToken.tokenomics.fees.title')}</h3>
             <div className="rounded-lg bg-slate-800/50 p-4 space-y-2 text-sm">
-              {OPERATIONAL_FEES.map((f, i) => (
+              {operationalFees.map((f, i) => (
                 <div key={i} className="flex justify-between">
                   <span className="text-slate-400">{feeLabels[f.operation]}</span>
                   <span className="text-white">{f.fee} CAS</span>
@@ -439,6 +449,7 @@ export default function CASTokenPage() {
         casSwapAddress={CASSWAP_ADDRESS}
         casTokenAddress={CAS_TOKEN_ADDRESS}
         explorerUrl={EXPLORER_BASE}
+        chainId={POLYGON_CHAIN_ID}
       />
 
       <CASLoginGate

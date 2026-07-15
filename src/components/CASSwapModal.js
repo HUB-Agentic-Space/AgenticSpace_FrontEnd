@@ -16,8 +16,27 @@ import {
   AlertCircle,
   CheckCircle,
   ArrowUpDown,
+  Network,
 } from 'lucide-react';
 import Spinner from '@/components/Spinner';
+
+const MIN_PRIORITY_FEE = 25_000_000_000n;
+
+async function getGasOverrides(provider) {
+  const feeData = await provider.getFeeData();
+  let maxPriorityFeePerGas = feeData.maxPriorityFeePerGas ?? 0n;
+  if (maxPriorityFeePerGas < MIN_PRIORITY_FEE) {
+    maxPriorityFeePerGas = MIN_PRIORITY_FEE;
+  }
+  const baseFee = feeData.maxFeePerGas
+    ? feeData.maxFeePerGas - (feeData.maxPriorityFeePerGas ?? 0n)
+    : 0n;
+  const maxFeePerGas = baseFee + maxPriorityFeePerGas * 2n;
+  if (feeData.maxFeePerGas && feeData.maxFeePerGas > maxFeePerGas) {
+    return { maxFeePerGas: feeData.maxFeePerGas, maxPriorityFeePerGas };
+  }
+  return { maxFeePerGas, maxPriorityFeePerGas };
+}
 
 const CASSWAP_ABI = [
   'function buyCAS(uint256 minCasOut, uint256 deadline) external payable returns (uint256)',
@@ -66,6 +85,7 @@ export default function CASSwapModal({
   casSwapAddress,
   casTokenAddress,
   explorerUrl,
+  chainId,
   i18n = DEFAULT_I18N,
 }) {
   const [mode, setMode] = useState('buy');
@@ -78,6 +98,7 @@ export default function CASSwapModal({
   const [account, setAccount] = useState(null);
   const [casBalance, setCasBalance] = useState(null);
   const [mounted, setMounted] = useState(false);
+  const [networkName, setNetworkName] = useState('');
 
   useEffect(() => {
     setMounted(true);
@@ -94,6 +115,9 @@ export default function CASSwapModal({
     try {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       setAccount(accounts[0]);
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const net = await provider.getNetwork();
+      setNetworkName(net.name || `chainId ${Number(net.chainId)}`);
     } catch (err) {
       setError(`Failed to connect wallet: ${err.message}`);
     }
@@ -160,6 +184,35 @@ export default function CASSwapModal({
     }
   }
 
+  async function ensureNetwork(provider) {
+    if (!chainId) return;
+    const net = await provider.getNetwork();
+    if (Number(net.chainId) !== chainId) {
+      const targetHex = '0x' + chainId.toString(16);
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: targetHex }],
+        });
+      } catch (switchErr) {
+        if (switchErr.code === 4902) {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: targetHex,
+              chainName: chainId === 137 ? 'Polygon Mainnet' : `Chain ${chainId}`,
+              nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
+              rpcUrls: ['https://polygon-rpc.com'],
+              blockExplorerUrls: [explorer],
+            }],
+          });
+        } else {
+          throw new Error(`Conecte-se à rede Polygon (chainId=${chainId}) na MetaMask.`);
+        }
+      }
+    }
+  }
+
   async function handleSwap() {
     setError('');
     setTxHash(null);
@@ -179,7 +232,10 @@ export default function CASSwapModal({
       }
 
       const provider = new ethers.BrowserProvider(window.ethereum);
+      await ensureNetwork(provider);
+
       const signer = await provider.getSigner();
+      const gasOverrides = await getGasOverrides(provider);
       const swap = new ethers.Contract(casSwapAddress, CASSWAP_ABI, signer);
 
       const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
@@ -188,7 +244,14 @@ export default function CASSwapModal({
         const polAmount = ethers.parseEther(amount);
         const casExpected = ethers.parseEther(preview);
         const minCasOut = (casExpected * 99n) / 100n;
-        const tx = await swap.buyCAS(minCasOut, deadline, { value: polAmount });
+
+        try {
+          await swap.buyCAS.staticCall(minCasOut, deadline, { value: polAmount, from: account });
+        } catch (simErr) {
+          throw new Error(simErr.reason || simErr.shortMessage || 'A transação seria revertida. Verifique se o contrato CASSwap tem liquidez suficiente.');
+        }
+
+        const tx = await swap.buyCAS(minCasOut, deadline, { value: polAmount, ...gasOverrides });
         await tx.wait();
         setTxHash(tx.hash);
       } else {
@@ -196,12 +259,19 @@ export default function CASSwapModal({
         const cas = new ethers.Contract(casTokenAddress, CAS_TOKEN_ABI, signer);
         const allowance = await cas.allowance(account, casSwapAddress);
         if (allowance < casAmount) {
-          const approveTx = await cas.approve(casSwapAddress, casAmount);
+          const approveTx = await cas.approve(casSwapAddress, casAmount, gasOverrides);
           await approveTx.wait();
         }
         const polExpected = ethers.parseEther(preview);
         const minPolOut = (polExpected * 99n) / 100n;
-        const tx = await swap.sellCAS(casAmount, minPolOut, deadline);
+
+        try {
+          await swap.sellCAS.staticCall(casAmount, minPolOut, deadline, { from: account });
+        } catch (simErr) {
+          throw new Error(simErr.reason || simErr.shortMessage || 'A transação seria revertida. Verifique seu saldo de CAS e allowance.');
+        }
+
+        const tx = await swap.sellCAS(casAmount, minPolOut, deadline, gasOverrides);
         await tx.wait();
         setTxHash(tx.hash);
       }
@@ -209,7 +279,13 @@ export default function CASSwapModal({
       loadCasBalance();
       loadSwapInfo();
     } catch (err) {
-      setError(err.reason || err.shortMessage || err.message || 'Swap failed');
+      const msg = err.reason || err.shortMessage || err.message || 'Swap failed';
+      if (msg.includes('missing revert data') || msg.includes('could not coalesce error')) {
+        setError('Erro de rede: não foi possível comunicar com o contrato. Verifique se a MetaMask está conectada à Polygon Mainnet (chainId 137) e tente novamente.');
+      } else {
+        setError(msg);
+      }
+      console.error('[CASSwapModal] swap error:', err);
     }
     setLoading(false);
   }
@@ -237,14 +313,30 @@ export default function CASSwapModal({
         )}
 
         {account && (
-          <p className="text-xs text-slate-500">
-            {t.connected}: {account.slice(0, 6)}...{account.slice(-4)}
-            {casBalance && (
-              <span className="ml-2 text-slate-400">
-                {t.casBalance}: {(Number(casBalance) / 1e18).toFixed(4)}
-              </span>
+          <div className="space-y-1">
+            <p className="text-xs text-slate-500">
+              {t.connected}: {account.slice(0, 6)}...{account.slice(-4)}
+              {casBalance && (
+                <span className="ml-2 text-slate-400">
+                  {t.casBalance}: {(Number(casBalance) / 1e18).toFixed(4)}
+                </span>
+              )}
+            </p>
+            {networkName && (
+              <p className="flex items-center gap-1 text-xs text-slate-500">
+                <Network size={12} /> {networkName}
+                {chainId && (
+                  <span className={
+                    networkName === 'matic' || networkName.includes(String(chainId))
+                      ? 'text-green-400'
+                      : 'text-amber-400'
+                  }>
+                    {networkName === 'matic' || networkName.includes(String(chainId)) ? ' \u2713' : ' \u26a0 rede incorreta'}
+                  </span>
+                )}
+              </p>
             )}
-          </p>
+          </div>
         )}
 
         <div className="flex gap-2">

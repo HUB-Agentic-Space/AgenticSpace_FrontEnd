@@ -756,6 +756,7 @@ function ProfileContent() {
         casSwapAddress={onchainConfig?.casSwapAddress || null}
         casTokenAddress={onchainConfig?.casTokenAddress || null}
         explorerUrl={onchainConfig?.explorerUrl}
+        chainId={onchainConfig?.chainId}
       />
     </div>
   );

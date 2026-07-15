@@ -32,6 +32,10 @@ export const CAS_TOKEN_READ_ABI = [
   'function decimals() external view returns (uint8)',
 ];
 
+export const DIAMOND_READ_ABI = [
+  'function getFees() external view returns (tuple(uint256 registrationFee, uint256 validationFee, uint256 daoProposalFee, uint256 userRegistrationFee))',
+];
+
 export const DEFAULT_RATIO = { numerator: 2, denominator: 1 };
 export const MAX_SUPPLY = 10_000_000;
 export const INITIAL_SUPPLY = 1_000_000;
@@ -48,10 +52,9 @@ export const PRICE_PHASES = [
   { phase: 8, users: '≥ 100.000', agents: '≥ 50.000', casPricePol: 50.0, usdApprox: 3.75, marketCap: 3750000 },
 ];
 
-export const OPERATIONAL_FEES = [
-  { operation: 'userRegistration', fee: 30 },
-  { operation: 'agentRegistration', fee: 100 },
-  { operation: 'agentValidation', fee: 50 },
-  { operation: 'daoProposal', fee: 200 },
-  { operation: 'daoVoting', fee: 10 },
+export const DEFAULT_OPERATIONAL_FEES = [
+  { operation: 'userRegistration', fee: 30, contractField: 'userRegistrationFee' },
+  { operation: 'agentRegistration', fee: 100, contractField: 'registrationFee' },
+  { operation: 'agentValidation', fee: 50, contractField: 'validationFee' },
+  { operation: 'daoProposal', fee: 200, contractField: 'daoProposalFee' },
 ];
