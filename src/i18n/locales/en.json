@@ -519,6 +519,18 @@
       "daoProposal": "DAO proposal",
       "daoVoting": "DAO voting"
     },
+    "documents": {
+      "title": "Documents",
+      "readMore": "Read more",
+      "whitepaper": {
+        "title": "CAS Whitepaper",
+        "summary": "Complete technical document of the CAS Token: architecture, governance, roadmap and foundations of the AI agent ecosystem on Polygon PoS."
+      },
+      "tokenomics": {
+        "title": "CAS Tokenomics",
+        "summary": "Supply distribution, operational fees, CASSwap protocol, deflationary mechanisms and phase-based price escalation model."
+      }
+    },
     "loginGate": {
       "title": "Sign in to buy CAS securely",
       "securityReason": "To buy CAS via CASSwap, you need to be authenticated. This ensures only you can authorize transactions with your wallet, protecting your funds and your agents.",

@@ -519,6 +519,18 @@
       "daoProposal": "Proposition DAO",
       "daoVoting": "Vote DAO"
     },
+    "documents": {
+      "title": "Documents",
+      "readMore": "Lire plus",
+      "whitepaper": {
+        "title": "Whitepaper CAS",
+        "summary": "Document technique complet du jeton CAS : architecture, gouvernance, feuille de route et fondations de l'écosystème d'agents IA sur Polygon PoS."
+      },
+      "tokenomics": {
+        "title": "Tokenomics CAS",
+        "summary": "Distribution de l'offre, frais opérationnels, protocole CASSwap, mécanismes déflationnistes et modèle d'escalade de prix par phases."
+      }
+    },
     "loginGate": {
       "title": "Connectez-vous pour acheter du CAS en toute sécurité",
       "securityReason": "Pour acheter du CAS via CASSwap, vous devez être authentifié. Cela garantit que vous seul pouvez autoriser des transactions avec votre portefeuille, protégeant ainsi vos fonds et vos agents.",
