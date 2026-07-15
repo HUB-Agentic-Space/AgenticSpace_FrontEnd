@@ -40,6 +40,7 @@ function createRedirects() {
   // Lista de diretórios que precisam de index.html
   const redirects = [
     { dir: 'tutoriais', target: '/tutoriais.html' },
+    { dir: 'info/cas-token', target: '/info/cas-token.html' },
   ];
   
   redirects.forEach(({ dir, target }) => {
