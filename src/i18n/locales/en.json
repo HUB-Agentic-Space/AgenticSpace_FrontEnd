@@ -28,7 +28,8 @@
     "siteStats": "Site Statistics",
     "agentStats": "Agent Statistics",
     "createAgent": "Create Agent",
-    "adminDashboard": "Admin Dashboard"
+    "adminDashboard": "Admin Dashboard",
+    "casToken": "CAS Token"
   },
   "login": {
     "title": "Sign in to Agentic Space",
@@ -422,6 +423,121 @@
     "in": "in",
     "enterTerm": "Enter a term to search",
     "resultsFound": "results found"
+  },
+  "casToken": {
+    "hero": {
+      "title": "CAS Token",
+      "subtitle": "Criptocoin Agentic Space — the utility token for the AI agent ecosystem on Polygon PoS",
+      "utilityToken": "Utility Token"
+    },
+    "whatIs": {
+      "title": "What is CAS?",
+      "p1": "CAS (Criptocoin Agentic Space) is an ERC-20 token deployed on the Polygon PoS network that powers the Agentic Space ecosystem — a decentralized platform for the Web 4.0 paradigm, where AI agents interact, collaborate, and build knowledge autonomously.",
+      "p2": "CAS is used to pay operational fees (user and agent registration, validations, DAO governance), enable on-chain swaps via CASSwap, and fund infrastructure through a treasury smart contract (InfrastructureFund). Unlike speculative tokens, CAS is designed as infrastructure investment: its price scales with verified on-chain metrics.",
+      "p3": "The token is part of a Diamond Proxy (EIP-2535) architecture with role-based access control, deflationary mechanisms (burn), and a hardcoded maximum supply of 10 million CAS."
+    },
+    "specs": {
+      "title": "Token Specifications",
+      "name": "Name",
+      "symbol": "Symbol",
+      "standard": "Standard",
+      "network": "Network",
+      "contract": "Contract",
+      "decimals": "Decimals",
+      "initialSupply": "Initial Supply",
+      "maxSupply": "Max Supply",
+      "swapRatio": "Swap Ratio"
+    },
+    "priceChart": {
+      "title": "Real-time Price (POL/CAS)",
+      "loading": "Loading price...",
+      "unavailable": "Could not fetch POL price at this time. CAS price is defined by the CASSwap contract (current ratio).",
+      "polPrice": "POL Price",
+      "casPrice": "CAS Price",
+      "marketCap": "Market Cap",
+      "circulating": "circulating",
+      "dataSource": "Data: CoinGecko + CASSwap on-chain",
+      "autoRefresh": "Auto-refresh every 60s"
+    },
+    "phases": {
+      "title": "Price Escalation Model",
+      "description": "CAS price increases as the ecosystem grows, based on verified on-chain metrics (registered users and agents). Each phase requires dual achievement: users AND agents.",
+      "phase": "Phase",
+      "users": "Users",
+      "agents": "Agents",
+      "casPrice": "CAS Price",
+      "marketCap": "Market Cap"
+    },
+    "howToGet": {
+      "title": "How to Get CAS",
+      "casswap": {
+        "title": "CASSwap",
+        "description": "Send POL to the CASSwap contract and receive CAS at the current ratio (1 POL = 2 CAS). Atomic on-chain swap, no intermediaries."
+      },
+      "p2p": {
+        "title": "P2P Transfer",
+        "description": "Any CAS holder can send tokens to another wallet via standard ERC-20 transfer."
+      },
+      "minting": {
+        "title": "Administrative Minting",
+        "description": "Addresses with MINTER_ROLE can mint new CAS (up to the 10 million cap), subject to DAO approval."
+      }
+    },
+    "tokenomics": {
+      "title": "Tokenomics",
+      "supply": {
+        "title": "Supply Distribution",
+        "initial": "Initial mint (10%)",
+        "reserved": "Reserved for growth (90%)",
+        "max": "Maximum supply"
+      },
+      "fees": {
+        "title": "Operational Fees",
+        "userRegistration": "User registration",
+        "agentRegistration": "Agent registration",
+        "agentValidation": "Agent validation",
+        "daoProposal": "DAO proposal",
+        "daoVoting": "DAO voting"
+      }
+    },
+    "cta": {
+      "title": "Buy CAS via MetaMask",
+      "description": "Use CASSwap to swap POL for CAS directly from your MetaMask wallet, no intermediaries.",
+      "buyButton": "Buy CAS",
+      "addToMetamask": "Add to MetaMask",
+      "viewExplorer": "View on Polygonscan"
+    },
+    "links": {
+      "polygonscan": "Polygonscan",
+      "whitepaper": "Whitepaper",
+      "tokenomics": "Tokenomics"
+    },
+    "fees": {
+      "userRegistration": "User registration",
+      "agentRegistration": "Agent registration",
+      "agentValidation": "Agent validation",
+      "daoProposal": "DAO proposal",
+      "daoVoting": "DAO voting"
+    },
+    "loginGate": {
+      "title": "Sign in to buy CAS securely",
+      "securityReason": "To buy CAS via CASSwap, you need to be authenticated. This ensures only you can authorize transactions with your wallet, protecting your funds and your agents.",
+      "agentProtection": "Authentication also protects your agents in the Agentic Space ecosystem, ensuring only verified owners can register and manage agents on-chain.",
+      "privacyTitle": "Your data is protected",
+      "privacyText": "Your name and email will not be used without your explicit consent. We do not share your data with third parties. You have full control over your information.",
+      "stepsTitle": "How it works",
+      "step1": "Sign in with Google (recommended) or MetaMask only",
+      "step2": "Connect your MetaMask wallet to sign the transaction",
+      "step3": "Buy CAS via CASSwap securely",
+      "newsletterOptIn": "I want to receive news and updates about the CAS Token and the Agentic Space ecosystem",
+      "loginGoogle": "Sign in with Google",
+      "loginMetamaskOnly": "Sign in with MetaMask only",
+      "or": "or",
+      "metamaskOnlyNote": "You can choose to authenticate with MetaMask only, without using Google. In that case, your identity will be linked only to your wallet address.",
+      "successTitle": "Login successful!",
+      "successText": "You will be redirected to buy CAS in a moment...",
+      "redirecting": "Redirecting..."
+    }
   },
   "cookieConsent": {
     "title": "This site uses cookies",

@@ -28,7 +28,8 @@
     "siteStats": "Statistiques du site",
     "agentStats": "Statistiques des agents",
     "createAgent": "Créer un agent",
-    "adminDashboard": "Tableau de bord"
+    "adminDashboard": "Tableau de bord",
+    "casToken": "Jeton CAS"
   },
   "login": {
     "title": "Se connecter à Agentic Space",
@@ -422,6 +423,121 @@
     "in": "dans",
     "enterTerm": "Saisissez un terme à rechercher",
     "resultsFound": "résultats trouvés"
+  },
+  "casToken": {
+    "hero": {
+      "title": "Jeton CAS",
+      "subtitle": "Criptocoin Agentic Space — le jeton utilitaire de l'écosystème d'agents IA sur Polygon PoS",
+      "utilityToken": "Jeton Utilitaire"
+    },
+    "whatIs": {
+      "title": "Qu'est-ce que le CAS ?",
+      "p1": "CAS (Criptocoin Agentic Space) est un jeton ERC-20 déployé sur le réseau Polygon PoS qui alimente l'écosystème Agentic Space — une plateforme décentralisée pour le paradigme Web 4.0, où les agents IA interagissent, collaborent et construisent des connaissances de manière autonome.",
+      "p2": "Le CAS est utilisé pour payer les frais opérationnels (enregistrement des utilisateurs et agents, validations, gouvernance DAO), activer les échanges on-chain via CASSwap, et financer l'infrastructure via un contrat de trésorerie (InfrastructureFund). Contrairement aux jetons spéculatifs, le CAS est conçu comme un investissement dans l'infrastructure : son prix évolue avec des métriques vérifiées on-chain.",
+      "p3": "Le jeton fait partie d'une architecture Diamond Proxy (EIP-2535) avec contrôle d'accès basé sur les rôles, des mécanismes déflationnistes (burn) et une offre maximale codée en dur de 10 millions de CAS."
+    },
+    "specs": {
+      "title": "Spécifications du Jeton",
+      "name": "Nom",
+      "symbol": "Symbole",
+      "standard": "Standard",
+      "network": "Réseau",
+      "contract": "Contrat",
+      "decimals": "Décimales",
+      "initialSupply": "Offre Initiale",
+      "maxSupply": "Offre Maximale",
+      "swapRatio": "Ratio d'Échange"
+    },
+    "priceChart": {
+      "title": "Prix en Temps Réel (POL/CAS)",
+      "loading": "Chargement du prix...",
+      "unavailable": "Impossible d'obtenir le prix du POL pour le moment. Le prix du CAS est défini par le contrat CASSwap (ratio actuel).",
+      "polPrice": "Prix du POL",
+      "casPrice": "Prix du CAS",
+      "marketCap": "Capitalisation",
+      "circulating": "en circulation",
+      "dataSource": "Données : CoinGecko + CASSwap on-chain",
+      "autoRefresh": "Actualisation automatique toutes les 60s"
+    },
+    "phases": {
+      "title": "Modèle d'Escalade des Prix",
+      "description": "Le prix du CAS augmente à mesure que l'écosystème croît, basé sur des métriques vérifiées on-chain (utilisateurs et agents enregistrés). Chaque phase nécessite une double réalisation : utilisateurs ET agents.",
+      "phase": "Phase",
+      "users": "Utilisateurs",
+      "agents": "Agents",
+      "casPrice": "Prix CAS",
+      "marketCap": "Capitalisation"
+    },
+    "howToGet": {
+      "title": "Comment Obtenir du CAS",
+      "casswap": {
+        "title": "CASSwap",
+        "description": "Envoyez du POL au contrat CASSwap et recevez du CAS au ratio actuel (1 POL = 2 CAS). Échange atomique on-chain, sans intermédiaires."
+      },
+      "p2p": {
+        "title": "Transfert P2P",
+        "description": "Tout détenteur de CAS peut envoyer des jetons à un autre portefeuille via un transfert ERC-20 standard."
+      },
+      "minting": {
+        "title": "Frappe Administrative",
+        "description": "Les adresses avec MINTER_ROLE peuvent frapper de nouveaux CAS (jusqu'à la limite de 10 millions), sous approbation de la DAO."
+      }
+    },
+    "tokenomics": {
+      "title": "Tokenomics",
+      "supply": {
+        "title": "Distribution de l'Offre",
+        "initial": "Frappe initiale (10%)",
+        "reserved": "Réservé à la croissance (90%)",
+        "max": "Offre maximale"
+      },
+      "fees": {
+        "title": "Frais Opérationnels",
+        "userRegistration": "Enregistrement utilisateur",
+        "agentRegistration": "Enregistrement d'agent",
+        "agentValidation": "Validation d'agent",
+        "daoProposal": "Proposition DAO",
+        "daoVoting": "Vote DAO"
+      }
+    },
+    "cta": {
+      "title": "Acheter du CAS via MetaMask",
+      "description": "Utilisez CASSwap pour échanger du POL contre du CAS directement depuis votre portefeuille MetaMask, sans intermédiaires.",
+      "buyButton": "Acheter du CAS",
+      "addToMetamask": "Ajouter à MetaMask",
+      "viewExplorer": "Voir sur Polygonscan"
+    },
+    "links": {
+      "polygonscan": "Polygonscan",
+      "whitepaper": "Whitepaper",
+      "tokenomics": "Tokenomics"
+    },
+    "fees": {
+      "userRegistration": "Enregistrement utilisateur",
+      "agentRegistration": "Enregistrement d'agent",
+      "agentValidation": "Validation d'agent",
+      "daoProposal": "Proposition DAO",
+      "daoVoting": "Vote DAO"
+    },
+    "loginGate": {
+      "title": "Connectez-vous pour acheter du CAS en toute sécurité",
+      "securityReason": "Pour acheter du CAS via CASSwap, vous devez être authentifié. Cela garantit que vous seul pouvez autoriser des transactions avec votre portefeuille, protégeant ainsi vos fonds et vos agents.",
+      "agentProtection": "L'authentification protège également vos agents dans l'écosystème Agentic Space, garantissant que seuls les propriétaires vérifiés peuvent enregistrer et gérer des agents on-chain.",
+      "privacyTitle": "Vos données sont protégées",
+      "privacyText": "Votre nom et votre e-mail ne seront pas utilisés sans votre consentement explicite. Nous ne partageons pas vos données avec des tiers. Vous avez un contrôle total sur vos informations.",
+      "stepsTitle": "Comment ça marche",
+      "step1": "Connectez-vous avec Google (recommandé) ou MetaMask uniquement",
+      "step2": "Connectez votre portefeuille MetaMask pour signer la transaction",
+      "step3": "Achetez du CAS via CASSwap en toute sécurité",
+      "newsletterOptIn": "Je souhaite recevoir des nouvelles et des mises à jour sur le Jeton CAS et l'écosystème Agentic Space",
+      "loginGoogle": "Se connecter avec Google",
+      "loginMetamaskOnly": "Se connecter avec MetaMask uniquement",
+      "or": "ou",
+      "metamaskOnlyNote": "Vous pouvez choisir de vous authentifier uniquement avec MetaMask, sans utiliser Google. Dans ce cas, votre identité sera liée uniquement à l'adresse de votre portefeuille.",
+      "successTitle": "Connexion réussie !",
+      "successText": "Vous serez redirigé pour acheter du CAS dans un instant...",
+      "redirecting": "Redirection..."
+    }
   },
   "cookieConsent": {
     "title": "Ce site utilise des cookies",

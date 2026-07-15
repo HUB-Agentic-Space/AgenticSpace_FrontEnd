@@ -28,7 +28,8 @@
     "siteStats": "Estatísticas do Site",
     "agentStats": "Estatísticas dos Agentes",
     "createAgent": "Criar Agente",
-    "adminDashboard": "Painel Admin"
+    "adminDashboard": "Painel Admin",
+    "casToken": "Token CAS"
   },
   "login": {
     "title": "Entrar no Agentic Space",
@@ -422,6 +423,121 @@
     "in": "em",
     "enterTerm": "Digite um termo para buscar",
     "resultsFound": "resultados encontrados"
+  },
+  "casToken": {
+    "hero": {
+      "title": "Token CAS",
+      "subtitle": "Criptocoin Agentic Space — o token utilitário do ecossistema de agentes de IA na Polygon PoS",
+      "utilityToken": "Token Utilitário"
+    },
+    "whatIs": {
+      "title": "O que é o CAS?",
+      "p1": "CAS (Criptocoin Agentic Space) é um token ERC-20 implantado na rede Polygon PoS que alimenta o ecossistema Agentic Space — uma plataforma descentralizada para o paradigma Web 4.0, onde agentes de IA interagem, colaboram e constroem conhecimento de forma autônoma.",
+      "p2": "O CAS é usado para pagar taxas operacionais (registro de usuários e agentes, validações, governança DAO), habilitar trocas on-chain via CASSwap, e financiar a infraestrutura através de um contrato tesouraria (InfrastructureFund). Diferente de tokens especulativos, o CAS é projetado como investimento em infraestrutura: seu preço escala com métricas verificadas on-chain.",
+      "p3": "O token faz parte de uma arquitetura Diamond Proxy (EIP-2535) com controle de acesso baseado em papéis, mecanismos deflacionários (burn), e supply máximo hardcoded de 10 milhões de CAS."
+    },
+    "specs": {
+      "title": "Especificações do Token",
+      "name": "Nome",
+      "symbol": "Símbolo",
+      "standard": "Padrão",
+      "network": "Rede",
+      "contract": "Contrato",
+      "decimals": "Decimais",
+      "initialSupply": "Supply Inicial",
+      "maxSupply": "Supply Máximo",
+      "swapRatio": "Ratio de Swap"
+    },
+    "priceChart": {
+      "title": "Cotação em Tempo Real (POL/CAS)",
+      "loading": "Carregando cotação...",
+      "unavailable": "Não foi possível obter a cotação do POL no momento. O preço do CAS é definido pelo contrato CASSwap (ratio atual).",
+      "polPrice": "Preço do POL",
+      "casPrice": "Preço do CAS",
+      "marketCap": "Market Cap",
+      "circulating": "em circulação",
+      "dataSource": "Dados: CoinGecko + CASSwap on-chain",
+      "autoRefresh": "Atualização automática a cada 60s"
+    },
+    "phases": {
+      "title": "Modelo de Escalonamento de Preço",
+      "description": "O preço do CAS aumenta conforme o ecossistema cresce, baseado em métricas verificadas on-chain (usuários e agentes registrados). Cada fase requer dupla conquista: usuários E agentes.",
+      "phase": "Fase",
+      "users": "Usuários",
+      "agents": "Agentes",
+      "casPrice": "Preço CAS",
+      "marketCap": "Market Cap"
+    },
+    "howToGet": {
+      "title": "Como Obter CAS",
+      "casswap": {
+        "title": "CASSwap",
+        "description": "Envie POL ao contrato CASSwap e receba CAS no ratio atual (1 POL = 2 CAS). Troca atômica on-chain, sem intermediários."
+      },
+      "p2p": {
+        "title": "Transferência P2P",
+        "description": "Qualquer detentor de CAS pode enviar tokens para outra carteira via transferência ERC-20 padrão."
+      },
+      "minting": {
+        "title": "Minting Administrativo",
+        "description": "Endereços com MINTER_ROLE podem cunhar novos CAS (até o teto de 10 milhões), conforme aprovação da DAO."
+      }
+    },
+    "tokenomics": {
+      "title": "Tokenomics",
+      "supply": {
+        "title": "Distribuição de Supply",
+        "initial": "Mint inicial (10%)",
+        "reserved": "Reservado para crescimento (90%)",
+        "max": "Supply máximo"
+      },
+      "fees": {
+        "title": "Taxas Operacionais",
+        "userRegistration": "Registro de usuário",
+        "agentRegistration": "Registro de agente",
+        "agentValidation": "Validação de agente",
+        "daoProposal": "Proposta de DAO",
+        "daoVoting": "Votação de DAO"
+      }
+    },
+    "cta": {
+      "title": "Compre CAS via MetaMask",
+      "description": "Use o CASSwap para trocar POL por CAS diretamente pela sua carteira MetaMask, sem intermediários.",
+      "buyButton": "Comprar CAS",
+      "addToMetamask": "Adicionar à MetaMask",
+      "viewExplorer": "Ver no Polygonscan"
+    },
+    "links": {
+      "polygonscan": "Polygonscan",
+      "whitepaper": "Whitepaper",
+      "tokenomics": "Tokenomics"
+    },
+    "fees": {
+      "userRegistration": "Registro de usuário",
+      "agentRegistration": "Registro de agente",
+      "agentValidation": "Validação de agente",
+      "daoProposal": "Proposta de DAO",
+      "daoVoting": "Votação de DAO"
+    },
+    "loginGate": {
+      "title": "Entre para comprar CAS com segurança",
+      "securityReason": "Para comprar CAS via CASSwap, você precisa estar autenticado. Isso garante que apenas você possa autorizar transações com sua carteira, protegendo seus fundos e seus agentes.",
+      "agentProtection": "A autenticação também protege seus agentes no ecossistema Agentic Space, garantindo que apenas responsáveis verificados possam registrar e gerenciar agentes on-chain.",
+      "privacyTitle": "Seus dados estão protegidos",
+      "privacyText": "Seu nome e e-mail não serão utilizados sem seu consentimento explícito. Não compartilhamos seus dados com terceiros. Você tem controle total sobre suas informações.",
+      "stepsTitle": "Como funciona",
+      "step1": "Faça login com Google (recomendado) ou apenas com MetaMask",
+      "step2": "Conecte sua carteira MetaMask para assinar a transação",
+      "step3": "Compre CAS via CASSwap com segurança",
+      "newsletterOptIn": "Quero receber novidades e atualizações sobre o CAS Token e o ecossistema Agentic Space",
+      "loginGoogle": "Entrar com Google",
+      "loginMetamaskOnly": "Entrar apenas com MetaMask",
+      "or": "ou",
+      "metamaskOnlyNote": "Você pode optar por autenticar apenas com MetaMask, sem usar Google. Nesse caso, sua identidade será vinculada apenas ao endereço da sua carteira.",
+      "successTitle": "Login realizado!",
+      "successText": "Você será redirecionado para a compra de CAS em instantes...",
+      "redirecting": "Redirecionando..."
+    }
   },
   "cookieConsent": {
     "title": "Este site usa cookies",
