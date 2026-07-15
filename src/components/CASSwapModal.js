@@ -20,8 +20,8 @@ import {
 import Spinner from '@/components/Spinner';
 
 const CASSWAP_ABI = [
-  'function buyCAS() external payable returns (uint256)',
-  'function sellCAS(uint256 casAmount) external returns (uint256)',
+  'function buyCAS(uint256 minCasOut, uint256 deadline) external payable returns (uint256)',
+  'function sellCAS(uint256 casAmount, uint256 minPolOut, uint256 deadline) external returns (uint256)',
   'function getRatio() external view returns (uint256 numerator, uint256 denominator)',
   'function swapFeeBps() external view returns (uint256)',
   'function casToken() external view returns (address)',
@@ -182,9 +182,13 @@ export default function CASSwapModal({
       const signer = await provider.getSigner();
       const swap = new ethers.Contract(casSwapAddress, CASSWAP_ABI, signer);
 
+      const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
+
       if (mode === 'buy') {
         const polAmount = ethers.parseEther(amount);
-        const tx = await swap.buyCAS({ value: polAmount });
+        const casExpected = ethers.parseEther(preview);
+        const minCasOut = (casExpected * 99n) / 100n;
+        const tx = await swap.buyCAS(minCasOut, deadline, { value: polAmount });
         await tx.wait();
         setTxHash(tx.hash);
       } else {
@@ -195,7 +199,9 @@ export default function CASSwapModal({
           const approveTx = await cas.approve(casSwapAddress, casAmount);
           await approveTx.wait();
         }
-        const tx = await swap.sellCAS(casAmount);
+        const polExpected = ethers.parseEther(preview);
+        const minPolOut = (polExpected * 99n) / 100n;
+        const tx = await swap.sellCAS(casAmount, minPolOut, deadline);
         await tx.wait();
         setTxHash(tx.hash);
       }

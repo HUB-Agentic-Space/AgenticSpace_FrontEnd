@@ -1,0 +1,70 @@
+{
+  "name": "Agentic Space Token List",
+  "description": "Official token list for Agentic Space ecosystem — CAS, fund trackers, and DEX LP tokens on Polygon.",
+  "timestamp": "2025-07-14T20:00:00.000Z",
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "logoURI": "https://app.agenticspace.rapport.tec.br/tokens/0x5151A34EaC7bA08cd6B540b32cD30316218A2287.png",
+  "keywords": ["agentic", "cas", "polygon", "defi", "ai"],
+  "tokens": [
+    {
+      "chainId": 137,
+      "address": "0x5151A34EaC7bA08cd6B540b32cD30316218A2287",
+      "name": "Agentic Space CAS Token v2.1",
+      "symbol": "CAS",
+      "decimals": 18,
+      "logoURI": "https://app.agenticspace.rapport.tec.br/tokens/0x5151A34EaC7bA08cd6B540b32cD30316218A2287.png"
+    },
+    {
+      "chainId": 137,
+      "address": "0xdF5Df5Eb32fa1a53749c66364B877C39b7031377",
+      "name": "Agentic CAS Fund",
+      "symbol": "aCAS",
+      "decimals": 18,
+      "logoURI": "https://app.agenticspace.rapport.tec.br/tokens/0xdF5Df5Eb32fa1a53749c66364B877C39b7031377.png"
+    },
+    {
+      "chainId": 137,
+      "address": "0x5b82Fb12Cd034dAFC932ABb0995E9652EebE34CF",
+      "name": "Agentic POL Fund",
+      "symbol": "aPOL",
+      "decimals": 18,
+      "logoURI": "https://app.agenticspace.rapport.tec.br/tokens/0x5b82Fb12Cd034dAFC932ABb0995E9652EebE34CF.png"
+    },
+    {
+      "chainId": 137,
+      "address": "0x265D86d4D43c32037b032097e8bFB6893E1C3964",
+      "name": "SushiSwap CAS/WPOL LP",
+      "symbol": "SLP",
+      "decimals": 18,
+      "logoURI": "https://app.agenticspace.rapport.tec.br/tokens/0x265D86d4D43c32037b032097e8bFB6893E1C3964.png"
+    },
+    {
+      "chainId": 137,
+      "address": "0xf77BD26fE17adb1bC99BE6Cd63414b2A7819690E",
+      "name": "QuickSwap CAS/WPOL LP",
+      "symbol": "QLP",
+      "decimals": 18,
+      "logoURI": "https://app.agenticspace.rapport.tec.br/tokens/0xf77BD26fE17adb1bC99BE6Cd63414b2A7819690E.png"
+    },
+    {
+      "chainId": 137,
+      "address": "0xF27F3c3E305FEdf21B491A1d531fd4c3c80312B4",
+      "name": "ApeSwap CAS/WPOL LP",
+      "symbol": "ALP",
+      "decimals": 18,
+      "logoURI": "https://app.agenticspace.rapport.tec.br/tokens/0xF27F3c3E305FEdf21B491A1d531fd4c3c80312B4.png"
+    },
+    {
+      "chainId": 137,
+      "address": "0x2275BFC0b1E26fB36a42E26fA1E5e4D823E62bc3",
+      "name": "Dfyn CAS/WETH LP",
+      "symbol": "DLP",
+      "decimals": 18,
+      "logoURI": "https://app.agenticspace.rapport.tec.br/tokens/0x2275BFC0b1E26fB36a42E26fA1E5e4D823E62bc3.png"
+    }
+  ]
+}
