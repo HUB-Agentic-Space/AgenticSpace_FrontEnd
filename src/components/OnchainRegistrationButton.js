@@ -31,6 +31,7 @@ import {
   Info
 } from 'lucide-react';
 import Spinner from '@/components/Spinner';
+import { useWallet } from '@/lib/wallet/useWallet';
 import {
   getOnchainConfig,
   getUserOnchainRegistration,
@@ -79,6 +80,7 @@ export default function OnchainRegistrationButton({
   const [error, setError] = useState('');
   const [step, setStep] = useState('');
   const [paymentAsset, setPaymentAsset] = useState('CAS');
+  const { connect: walletConnect, getProvider } = useWallet();
 
   const fetchConfig = useCallback(async () => {
     if (!jwt) return;
@@ -123,17 +125,15 @@ export default function OnchainRegistrationButton({
     setStep('');
 
     try {
-      if (typeof window === 'undefined' || typeof window.ethereum === 'undefined') {
-        throw new Error('MetaMask não está instalado.');
-      }
-
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const { accounts } = await walletConnect();
       if (!accounts || accounts.length === 0) {
-        throw new Error('Nenhuma conta MetaMask conectada.');
+        throw new Error('Nenhuma conta conectada.');
       }
 
       const account = accounts[0];
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const rawProvider = getProvider();
+      if (!rawProvider) throw new Error('Carteira não conectada.');
+      const provider = new ethers.BrowserProvider(rawProvider);
       const signer = await provider.getSigner();
 
       const gasOverrides = await getGasOverrides(provider);
@@ -141,14 +141,14 @@ export default function OnchainRegistrationButton({
       // Verificar chain ID
       const network = await provider.getNetwork();
       if (config.chainId && Number(network.chainId) !== config.chainId) {
-        setStep('Trocando rede na MetaMask...');
+        setStep('Trocando rede na carteira...');
         try {
-          await window.ethereum.request({
+          await rawProvider.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: '0x' + config.chainId.toString(16) }],
           });
         } catch {
-          throw new Error(`Conecte-se à rede chainId=${config.chainId} na MetaMask.`);
+          throw new Error(`Conecte-se à rede chainId=${config.chainId} na carteira.`);
         }
       }
 

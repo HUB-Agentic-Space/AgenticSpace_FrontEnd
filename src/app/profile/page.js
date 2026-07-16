@@ -43,6 +43,7 @@ import DynamicMetadata from '@/components/DynamicMetadata';
 import OnchainRegistrationButton from '@/components/OnchainRegistrationButton';
 import CASSwapModal from '@/components/CASSwapModal';
 import { getOnchainConfig } from '@/lib/api';
+import { useWallet } from '@/lib/wallet/useWallet';
 import {
   API_BASE_URL,
   API_PREFIX,
@@ -104,6 +105,7 @@ function ProfileContent() {
   const [showNewsletterModal, setShowNewsletterModal] = useState(false);
   const [onchainConfig, setOnchainConfig] = useState(null);
   const [showSwapModal, setShowSwapModal] = useState(false);
+  const { connect: walletConnect, getProvider: getWalletProvider } = useWallet();
 
   const did = session?.subject?.id || '';
   const provider = session?.subject?.authenticationMethod || session?.subject?.provider || '—';
@@ -281,15 +283,14 @@ function ProfileContent() {
     if (!confirmConflict) setPendingLink(null);
     setLinkBusy('metamask');
     try {
-      if (typeof window === 'undefined' || typeof window.ethereum === 'undefined') {
-        throw new Error(t('profile.errorMetamaskNotInstalled'));
-      }
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const { accounts } = await walletConnect();
       if (!accounts || accounts.length === 0) {
         throw new Error(t('profile.errorNoAccount'));
       }
       const account = accounts[0];
-      const signature = await window.ethereum.request({
+      const provider = getWalletProvider();
+      if (!provider) throw new Error(t('profile.errorMetamaskNotInstalled'));
+      const signature = await provider.request({
         method: 'personal_sign',
         params: [METAMASK_MESSAGE, account]
       });

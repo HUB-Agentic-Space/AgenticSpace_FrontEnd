@@ -10,6 +10,7 @@
  */
 
 import { useState, useCallback } from 'react';
+import { useWallet } from '@/lib/wallet/useWallet';
 
 /** URL base pública para os ícones de token. */
 const TOKEN_ICON_BASE_URL =
@@ -40,6 +41,7 @@ export function getTokenIconUrl(address) {
 export function useWatchAsset() {
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState(null);
+  const { connect, getProvider } = useWallet();
 
   const watchAsset = useCallback(
     async ({ address, symbol, decimals, image, chainId }) => {
@@ -47,32 +49,37 @@ export function useWatchAsset() {
       setResult(null);
 
       try {
-        if (typeof window === 'undefined' || typeof window.ethereum === 'undefined') {
-          throw new Error('MetaMask não está instalada.');
+        let provider = getProvider();
+        if (!provider) {
+          const { provider: connectedProvider } = await connect();
+          provider = connectedProvider;
+        }
+        if (!provider) {
+          throw new Error('Carteira não encontrada.');
         }
 
         const iconUrl = image || getTokenIconUrl(address);
 
         if (chainId) {
-          const currentChain = await window.ethereum.request({
+          const currentChain = await provider.request({
             method: 'eth_chainId',
           });
           const targetChainHex = '0x' + chainId.toString(16);
           if (currentChain !== targetChainHex) {
             try {
-              await window.ethereum.request({
+              await provider.request({
                 method: 'wallet_switchEthereumChain',
                 params: [{ chainId: targetChainHex }],
               });
             } catch {
               throw new Error(
-                `Conecte-se à rede chainId=${chainId} na MetaMask antes de adicionar o token.`
+                `Conecte-se à rede chainId=${chainId} na carteira antes de adicionar o token.`
               );
             }
           }
         }
 
-        const added = await window.ethereum.request({
+        const added = await provider.request({
           method: 'wallet_watchAsset',
           params: {
             type: 'ERC20',
@@ -96,7 +103,7 @@ export function useWatchAsset() {
         setPending(false);
       }
     },
-    []
+    [connect, getProvider]
   );
 
   return { watchAsset, pending, result };

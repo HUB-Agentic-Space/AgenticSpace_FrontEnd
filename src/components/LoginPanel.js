@@ -7,16 +7,18 @@
  * Reproduz o fluxo de autenticacao usado pelo `cmd-cli` e pelo backend:
  *  - Google: redireciona para a tela de consentimento OAuth e retorna via
  *    `/auth/google/callback`, onde o `code` e trocado por uma VC assinada.
- *  - MetaMask: solicita conexao da carteira (window.ethereum), assina uma
+ *  - MetaMask: solicita conexao da carteira (useWallet hook), assina uma
  *    mensagem e envia conta + assinatura ao servidor para gerar a VC.
+ *    No mobile, usa MetaMask SDK (deep link) ou WalletConnect (QR code).
  */
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Wallet, AlertCircle } from 'lucide-react';
+import { Wallet, AlertCircle, Link2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { API_BASE_URL, API_PREFIX, getGoogleRedirectUri } from '@/lib/api';
 import { useTranslations } from '@/lib/LocaleProvider';
+import { useWallet } from '@/lib/wallet/useWallet';
 
 /** Mensagem assinada na autenticacao MetaMask (igual a POC). */
 const METAMASK_MESSAGE = 'Login authentication for Agentic Space';
@@ -27,6 +29,7 @@ export default function LoginPanel() {
   const t = useTranslations();
   const [error, setError] = useState('');
   const [loadingProvider, setLoadingProvider] = useState(null);
+  const { connect, connectWalletConnect, isMobile } = useWallet();
 
   /** Inicia o fluxo OAuth do Google (redirecionamento). */
   async function loginWithGoogle() {
@@ -52,19 +55,47 @@ export default function LoginPanel() {
     setError('');
     setLoadingProvider('metamask');
     try {
-      if (typeof window === 'undefined' || typeof window.ethereum === 'undefined') {
-        throw new Error(t('login.errorMetamask'));
-      }
-
-      const accounts = await window.ethereum.request({
-        method: 'eth_requestAccounts'
-      });
+      const { provider, accounts } = await connect();
       if (!accounts || accounts.length === 0) {
         throw new Error(t('login.errorNoAccount'));
       }
 
       const account = accounts[0];
-      const signature = await window.ethereum.request({
+      const signature = await provider.request({
+        method: 'personal_sign',
+        params: [METAMASK_MESSAGE, account]
+      });
+
+      const res = await fetch(`${API_BASE_URL}${API_PREFIX}/auth/metamask`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ account, message: METAMASK_MESSAGE, signature })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || t('login.errorCredential'));
+      }
+
+      login(data);
+      router.push('/profile');
+    } catch (err) {
+      setError(err.message);
+      setLoadingProvider(null);
+    }
+  }
+
+  /** Conecta via WalletConnect (QR code) para outras carteiras. */
+  async function loginWithWalletConnect() {
+    setError('');
+    setLoadingProvider('walletconnect');
+    try {
+      const { provider, accounts } = await connectWalletConnect();
+      if (!accounts || accounts.length === 0) {
+        throw new Error(t('login.errorNoAccount'));
+      }
+
+      const account = accounts[0];
+      const signature = await provider.request({
         method: 'personal_sign',
         params: [METAMASK_MESSAGE, account]
       });
@@ -124,6 +155,17 @@ export default function LoginPanel() {
           <Wallet size={18} />
           {loadingProvider === 'metamask' ? t('login.waitingWallet') : t('login.metamask')}
         </button>
+
+        {isMobile && (
+          <button
+            onClick={loginWithWalletConnect}
+            disabled={loadingProvider !== null}
+            className="btn w-full border border-slate-700 bg-slate-800 text-white hover:bg-slate-700"
+          >
+            <Link2 size={18} />
+            {loadingProvider === 'walletconnect' ? t('login.waitingWallet') : 'WalletConnect'}
+          </button>
+        )}
       </div>
     </div>
   );

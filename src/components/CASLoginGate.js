@@ -15,11 +15,12 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import {
   X, Shield, Mail, Wallet, AlertCircle, Loader2,
-  CheckCircle, Lock, ArrowRight, Info,
+  CheckCircle, Lock, ArrowRight, Info, Link2,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useTranslations } from '@/lib/LocaleProvider';
 import { API_BASE_URL, API_PREFIX, getGoogleRedirectUri } from '@/lib/api';
+import { useWallet } from '@/lib/wallet/useWallet';
 
 const METAMASK_MESSAGE = 'Login authentication for Agentic Space';
 
@@ -32,6 +33,7 @@ export default function CASLoginGate({ open, onClose, onSuccess }) {
   const [error, setError] = useState('');
   const [newsletter, setNewsletter] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const { connect, connectWalletConnect, isMobile } = useWallet();
 
   useState(() => {
     if (open) setMounted(true);
@@ -65,19 +67,49 @@ export default function CASLoginGate({ open, onClose, onSuccess }) {
     setError('');
     setLoadingProvider('metamask');
     try {
-      if (typeof window === 'undefined' || typeof window.ethereum === 'undefined') {
-        throw new Error(t('login.errorMetamask'));
-      }
-
-      const accounts = await window.ethereum.request({
-        method: 'eth_requestAccounts',
-      });
+      const { provider, accounts } = await connect();
       if (!accounts || accounts.length === 0) {
         throw new Error(t('login.errorNoAccount'));
       }
 
       const account = accounts[0];
-      const signature = await window.ethereum.request({
+      const signature = await provider.request({
+        method: 'personal_sign',
+        params: [METAMASK_MESSAGE, account],
+      });
+
+      const res = await fetch(`${API_BASE_URL}${API_PREFIX}/auth/metamask`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ account, message: METAMASK_MESSAGE, signature }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || t('login.errorCredential'));
+      }
+
+      login(data);
+      setStep('success');
+      setTimeout(() => {
+        onSuccess?.();
+      }, 1500);
+    } catch (err) {
+      setError(err.message);
+      setLoadingProvider(null);
+    }
+  }
+
+  async function loginWithWalletConnect() {
+    setError('');
+    setLoadingProvider('walletconnect');
+    try {
+      const { provider, accounts } = await connectWalletConnect();
+      if (!accounts || accounts.length === 0) {
+        throw new Error(t('login.errorNoAccount'));
+      }
+
+      const account = accounts[0];
+      const signature = await provider.request({
         method: 'personal_sign',
         params: [METAMASK_MESSAGE, account],
       });
@@ -216,6 +248,20 @@ export default function CASLoginGate({ open, onClose, onSuccess }) {
                     <><Wallet size={18} /> {t('casToken.loginGate.loginMetamaskOnly')}</>
                   )}
                 </button>
+
+                {isMobile && (
+                  <button
+                    onClick={loginWithWalletConnect}
+                    disabled={loadingProvider !== null}
+                    className="btn w-full border border-slate-700 bg-slate-800 text-white hover:bg-slate-700"
+                  >
+                    {loadingProvider === 'walletconnect' ? (
+                      <><Loader2 size={18} className="animate-spin" /> {t('login.waitingWallet')}</>
+                    ) : (
+                      <><Link2 size={18} /> WalletConnect</>
+                    )}
+                  </button>
+                )}
 
                 <p className="text-center text-xs text-slate-500 pt-1">
                   {t('casToken.loginGate.metamaskOnlyNote')}

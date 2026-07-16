@@ -19,6 +19,7 @@ import {
   Network,
 } from 'lucide-react';
 import Spinner from '@/components/Spinner';
+import { useWallet } from '@/lib/wallet/useWallet';
 
 const MIN_PRIORITY_FEE = 25_000_000_000n;
 
@@ -99,6 +100,7 @@ export default function CASSwapModal({
   const [casBalance, setCasBalance] = useState(null);
   const [mounted, setMounted] = useState(false);
   const [networkName, setNetworkName] = useState('');
+  const { connect: walletConnect, ethersProvider: walletEthersProvider, getProvider } = useWallet();
 
   useEffect(() => {
     setMounted(true);
@@ -108,26 +110,26 @@ export default function CASSwapModal({
   const explorer = explorerUrl || 'https://polygonscan.com';
 
   const connectWallet = useCallback(async () => {
-    if (typeof window === 'undefined' || !window.ethereum) {
-      setError(t.metamaskNotFound);
-      return;
-    }
     try {
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const { accounts } = await walletConnect();
       setAccount(accounts[0]);
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const net = await provider.getNetwork();
-      setNetworkName(net.name || `chainId ${Number(net.chainId)}`);
+      const provider = getProvider();
+      if (provider) {
+        const ep = new ethers.BrowserProvider(provider);
+        const net = await ep.getNetwork();
+        setNetworkName(net.name || `chainId ${Number(net.chainId)}`);
+      }
     } catch (err) {
       setError(`Failed to connect wallet: ${err.message}`);
     }
-  }, [t.metamaskNotFound]);
+  }, [walletConnect, getProvider]);
 
   const loadSwapInfo = useCallback(async () => {
-    if (!casSwapAddress || typeof window === 'undefined' || !window.ethereum) return;
+    const provider = getProvider();
+    if (!casSwapAddress || !provider) return;
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const swap = new ethers.Contract(casSwapAddress, CASSWAP_ABI, provider);
+      const ep = new ethers.BrowserProvider(provider);
+      const swap = new ethers.Contract(casSwapAddress, CASSWAP_ABI, ep);
       const [num, den] = await swap.getRatio();
       setRatio({ numerator: num.toString(), denominator: den.toString() });
       const fee = await swap.swapFeeBps();
@@ -135,19 +137,20 @@ export default function CASSwapModal({
     } catch (err) {
       console.error('[CASSwapModal] loadSwapInfo:', err.message);
     }
-  }, [casSwapAddress]);
+  }, [casSwapAddress, getProvider]);
 
   const loadCasBalance = useCallback(async () => {
-    if (!casTokenAddress || !account || typeof window === 'undefined' || !window.ethereum) return;
+    const provider = getProvider();
+    if (!casTokenAddress || !account || !provider) return;
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const cas = new ethers.Contract(casTokenAddress, CAS_TOKEN_ABI, provider);
+      const ep = new ethers.BrowserProvider(provider);
+      const cas = new ethers.Contract(casTokenAddress, CAS_TOKEN_ABI, ep);
       const bal = await cas.balanceOf(account);
       setCasBalance(bal.toString());
     } catch (err) {
       console.error('[CASSwapModal] loadCasBalance:', err.message);
     }
-  }, [casTokenAddress, account]);
+  }, [casTokenAddress, account, getProvider]);
 
   useEffect(() => {
     if (open && casSwapAddress) {
@@ -186,18 +189,20 @@ export default function CASSwapModal({
 
   async function ensureNetwork() {
     if (!chainId) return;
-    const currentChain = await window.ethereum.request({ method: 'eth_chainId' });
+    const provider = getProvider();
+    if (!provider) throw new Error('Carteira não conectada.');
+    const currentChain = await provider.request({ method: 'eth_chainId' });
     const targetHex = '0x' + chainId.toString(16);
     if (currentChain === targetHex) return;
 
     try {
-      await window.ethereum.request({
+      await provider.request({
         method: 'wallet_switchEthereumChain',
         params: [{ chainId: targetHex }],
       });
     } catch (switchErr) {
       if (switchErr.code === 4902) {
-        await window.ethereum.request({
+        await provider.request({
           method: 'wallet_addEthereumChain',
           params: [{
             chainId: targetHex,
@@ -208,7 +213,7 @@ export default function CASSwapModal({
           }],
         });
       } else {
-        throw new Error(`Conecte-se à rede Polygon (chainId=${chainId}) na MetaMask.`);
+        throw new Error(`Conecte-se à rede Polygon (chainId=${chainId}) na carteira.`);
       }
     }
   }
@@ -233,7 +238,9 @@ export default function CASSwapModal({
 
       await ensureNetwork();
 
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const rawProvider = getProvider();
+      if (!rawProvider) throw new Error('Carteira não conectada.');
+      const provider = new ethers.BrowserProvider(rawProvider);
       const signer = await provider.getSigner();
       const gasOverrides = await getGasOverrides(provider);
       const swap = new ethers.Contract(casSwapAddress, CASSWAP_ABI, signer);

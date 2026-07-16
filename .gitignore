@@ -10,3 +10,5 @@ out/
 next-env.d.ts
 
 npm-audit-frontend.json
+.vercel
+.env*

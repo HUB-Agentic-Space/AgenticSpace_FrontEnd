@@ -28,8 +28,21 @@ const nextConfig = {
       '',
     NEXT_PUBLIC_GOOGLE_REDIRECT_URI:
       process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI ||
-      ''
-  }
+      '',
+    NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID:
+      process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ||
+      '',
+  },
+  webpack: (config) => {
+    // @metamask/sdk referencia módulos React Native que não existem no web.
+    // Ignora esses imports para evitar warnings de build.
+    config.resolve = config.resolve || {};
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      '@react-native-async-storage/async-storage': false,
+    };
+    return config;
+  },
 };
 
 export default nextConfig;
