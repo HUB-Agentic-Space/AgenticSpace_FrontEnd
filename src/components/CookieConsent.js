@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { notifyConsentChange, getCookieConsent } from '@/lib/cookie-consent';
 
 export default function CookieConsent() {
   const [show, setShow] = useState(false);
@@ -23,12 +24,14 @@ export default function CookieConsent() {
   }, []);
 
   const handleAccept = () => {
-    document.cookie = 'cookie_consent=accepted; path=/; max-age=31536000';
+    document.cookie = 'cookie_consent=accepted; path=/; max-age=31536000; SameSite=Lax';
+    notifyConsentChange('accepted');
     setShow(false);
   };
 
   const handleReject = () => {
-    document.cookie = 'cookie_consent=rejected; path=/; max-age=31536000';
+    document.cookie = 'cookie_consent=rejected; path=/; max-age=31536000; SameSite=Lax';
+    notifyConsentChange('rejected');
     setShow(false);
   };
 

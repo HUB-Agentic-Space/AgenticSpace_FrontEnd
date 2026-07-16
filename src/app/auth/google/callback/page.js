@@ -87,6 +87,7 @@ function GoogleCallbackInner() {
 
         const res = await fetch(`${API_BASE_URL}${API_PREFIX}/auth/google`, {
           method: 'POST',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code, redirectUri })
         });

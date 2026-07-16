@@ -21,9 +21,11 @@ const UNAUTHORIZED_EVENT = 'agentic-space:unauthorized';
 const SESSION_STORAGE_KEY = 'agentic_space_session';
 
 /**
- * Recupera o JWT da sessao armazenada em localStorage.
+ * Recupera o JWT da sessão armazenada em localStorage.
  * Espelha a chave usada por auth-context.js.
  *
+ * @deprecated A sessão agora é gerenciada via cookie httpOnly. Esta função
+ * mantida apenas para compatibilidade com fluxos legados.
  * @returns {string|null} JWT ou null se nao houver sessao valida.
  */
 export function getStoredJwt() {
@@ -83,9 +85,10 @@ export function getGoogleRedirectUri() {
 export async function apiPost(path, body, jwt) {
   const response = await fetch(`${API_BASE_URL}${API_PREFIX}${path}`, {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${jwt}`
+      ...(jwt ? { Authorization: `Bearer ${jwt}` } : {})
     },
     body: JSON.stringify(body)
   });
@@ -100,12 +103,14 @@ export async function apiPost(path, body, jwt) {
   return { status: response.status, data };
 }
 
-export async function apiRequest(path, { method = 'GET', body, jwt } = {}) {
+export async function apiRequest(path, { method = 'GET', body, jwt, apiKey } = {}) {
   const response = await fetch(`${API_BASE_URL}${API_PREFIX}${path}`, {
     method,
+    credentials: 'include',
     headers: {
       ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
-      Authorization: `Bearer ${jwt}`
+      ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
+      ...(apiKey ? { 'X-API-Key': apiKey } : {})
     },
     ...(body === undefined ? {} : { body: JSON.stringify(body) })
   });

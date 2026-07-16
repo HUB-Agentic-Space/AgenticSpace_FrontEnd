@@ -9,17 +9,19 @@
  *  - `apiKey`: chave de API gerada com a mesma validade do VC.
  *  - `subject`: dados do sujeito autenticado (DID, provider, conta, etc.).
  *
- * A sessao e persistida em `localStorage` para sobreviver a recarregamentos.
- * Nao armazenamos segredos do emissor no cliente; apenas o JWT/credencial do
- * proprio usuario, que tambem e enviado ao backend nas chamadas autenticadas.
+ * A sessao e persistida em cookie httpOnly pelo backend para sobreviver a
+ * recarregamentos. Nao armazenamos o JWT em localStorage; o cookie e enviado
+ * automaticamente nas chamadas autenticadas via credentials: 'include'.
  */
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 
-/** Chave usada para persistir a sessao em localStorage. */
+/** Chave usada para persistir a sessao em localStorage (legado). */
 const STORAGE_KEY = 'agentic_space_session';
 const LOCAL_SESSION_KEYS = ['agentic_space_session', 'agentic_space_link_google'];
 const ADMIN_API_PATH = '/api/v1/admin/me';
+const SESSION_API_PATH = '/api/v1/auth/session';
+const LOGOUT_API_PATH = '/api/v1/auth/logout';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
 const ADMIN_ROLES = ['superadmin', 'admin', 'moderator'];
 
@@ -54,38 +56,63 @@ export function AuthProvider({ children }) {
     return false;
   }, []);
 
-  // Hidrata a sessao a partir do localStorage no primeiro render do cliente.
+  // Hidrata a sessao a partir do cookie httpOnly via endpoint /auth/session.
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        const exp = parsed?.expirationDate;
-        const valid = !exp || Date.now() < new Date(exp).getTime();
-        if (parsed?.jwt && valid) {
-          setSession(parsed);
-          checkAdminRole(parsed.jwt).finally(() => setLoading(false));
-          return;
+    let cancelled = false;
+    const hydrate = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}${SESSION_API_PATH}`, {
+          credentials: 'include',
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (!cancelled && data?.jwt) {
+            setSession(data);
+            checkAdminRole(data.jwt).finally(() => setLoading(false));
+            return;
+          }
         }
-        localStorage.removeItem(STORAGE_KEY);
+      } catch {
+        // Sem cookie ou cookie expirado — sessão permanece null.
       }
-    } catch {
-      localStorage.removeItem(STORAGE_KEY);
-    } finally {
-      setLoading(false);
-    }
+      // Fallback: tenta localStorage para compatibilidade com sessões legadas.
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw && !cancelled) {
+          const parsed = JSON.parse(raw);
+          const exp = parsed?.expirationDate;
+          const valid = !exp || Date.now() < new Date(exp).getTime();
+          if (parsed?.jwt && valid) {
+            setSession(parsed);
+            checkAdminRole(parsed.jwt).finally(() => setLoading(false));
+            // Migra sessão legada para cookie via re-autenticação silenciosa não é possível,
+            // mas mantém funcionando até o token expirar.
+            return;
+          }
+          localStorage.removeItem(STORAGE_KEY);
+        }
+      } catch {
+        // ignore
+      }
+      if (!cancelled) setLoading(false);
+    };
+    hydrate();
+    return () => { cancelled = true; };
   }, []);
 
   /**
    * Persiste e ativa uma nova sessao autenticada.
+   * O JWT agora é armazenado em cookie httpOnly pelo backend;
+   * localStorage não é mais usado para o JWT.
    * @param {Object} data Dados retornados pelas rotas /api/v1/auth/*.
    */
   const login = useCallback((data) => {
     setSession(data);
+    // Limpa qualquer sessão legada do localStorage.
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      localStorage.removeItem(STORAGE_KEY);
     } catch {
-      // Ignora falhas de persistencia (ex.: modo privado).
+      // ignore
     }
     if (data?.jwt) {
       checkAdminRole(data.jwt);
@@ -93,7 +120,8 @@ export function AuthProvider({ children }) {
   }, [checkAdminRole]);
 
   /**
-   * Atualiza parcialmente a sessao atual e persiste o novo valor.
+   * Atualiza parcialmente a sessao atual (em memoria apenas).
+   * O JWT continua no cookie httpOnly; não persistimos em localStorage.
    * @param {Object|Function} patch Campos a mesclar ou updater.
    */
   const updateSession = useCallback((patch) => {
@@ -102,17 +130,20 @@ export function AuthProvider({ children }) {
         typeof patch === 'function'
           ? patch(current)
           : { ...(current || {}), ...(patch || {}) };
-      try {
-        if (next) localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      } catch {
-        // Ignora falhas de persistencia.
-      }
       return next;
     });
   }, []);
 
-  /** Encerra a sessao e limpa o armazenamento local. */
-  const logout = useCallback(() => {
+  /** Encerra a sessao, limpa o cookie httpOnly via backend e o armazenamento local. */
+  const logout = useCallback(async () => {
+    try {
+      await fetch(`${API_BASE_URL}${LOGOUT_API_PATH}`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch {
+      // Mesmo se o logout no backend falhar, limpa o estado local.
+    }
     setSession(null);
     setIsAdmin(false);
     clearLocalSessionState();

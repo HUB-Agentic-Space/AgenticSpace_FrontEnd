@@ -20,8 +20,8 @@ import { API_BASE_URL, API_PREFIX, getGoogleRedirectUri } from '@/lib/api';
 import { useTranslations } from '@/lib/LocaleProvider';
 import { useWallet } from '@/lib/wallet/useWallet';
 
-/** Mensagem assinada na autenticacao MetaMask (igual a POC). */
-const METAMASK_MESSAGE = 'Login authentication for Agentic Space';
+/** Prefixo da mensagem assinada na autenticacao MetaMask. */
+const METAMASK_MESSAGE_PREFIX = 'Login authentication for Agentic Space';
 
 export default function LoginPanel() {
   const router = useRouter();
@@ -60,16 +60,24 @@ export default function LoginPanel() {
         throw new Error(t('login.errorNoAccount'));
       }
 
+      const nonceRes = await fetch(`${API_BASE_URL}${API_PREFIX}/auth/metamask/nonce`);
+      const nonceData = await nonceRes.json();
+      if (!nonceRes.ok || !nonceData.nonce) {
+        throw new Error('Falha ao obter nonce do servidor.');
+      }
+
+      const message = `${METAMASK_MESSAGE_PREFIX}\nNonce: ${nonceData.nonce}`;
       const account = accounts[0];
       const signature = await provider.request({
         method: 'personal_sign',
-        params: [METAMASK_MESSAGE, account]
+        params: [message, account]
       });
 
       const res = await fetch(`${API_BASE_URL}${API_PREFIX}/auth/metamask`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ account, message: METAMASK_MESSAGE, signature })
+        body: JSON.stringify({ account, message, signature, nonce: nonceData.nonce })
       });
       const data = await res.json();
       if (!res.ok) {
@@ -94,16 +102,24 @@ export default function LoginPanel() {
         throw new Error(t('login.errorNoAccount'));
       }
 
+      const nonceRes = await fetch(`${API_BASE_URL}${API_PREFIX}/auth/metamask/nonce`);
+      const nonceData = await nonceRes.json();
+      if (!nonceRes.ok || !nonceData.nonce) {
+        throw new Error('Falha ao obter nonce do servidor.');
+      }
+
+      const message = `${METAMASK_MESSAGE_PREFIX}\nNonce: ${nonceData.nonce}`;
       const account = accounts[0];
       const signature = await provider.request({
         method: 'personal_sign',
-        params: [METAMASK_MESSAGE, account]
+        params: [message, account]
       });
 
       const res = await fetch(`${API_BASE_URL}${API_PREFIX}/auth/metamask`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ account, message: METAMASK_MESSAGE, signature })
+        body: JSON.stringify({ account, message, signature, nonce: nonceData.nonce })
       });
       const data = await res.json();
       if (!res.ok) {

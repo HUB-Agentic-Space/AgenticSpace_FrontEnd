@@ -7,12 +7,22 @@
  */
 
 import { useEffect, useState } from 'react';
+import { hasConsented, onConsentChange } from '@/lib/cookie-consent';
 
 export default function VisitTracker() {
   const [hasTracked, setHasTracked] = useState(false);
+  const [consented, setConsented] = useState(false);
 
   useEffect(() => {
-    if (hasTracked) return;
+    setConsented(hasConsented());
+    const unsubscribe = onConsentChange((consent) => {
+      setConsented(consent === 'accepted');
+    });
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    if (hasTracked || !consented) return;
 
     const trackVisit = async () => {
       try {
@@ -65,7 +75,7 @@ export default function VisitTracker() {
 
     // Rastrear apenas uma vez por sessão
     trackVisit();
-  }, [hasTracked]);
+  }, [hasTracked, consented]);
 
   return null;
 }

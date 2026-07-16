@@ -72,7 +72,7 @@ const EMPTY_PROFILE = {
   newsletterOptIn: false
 };
 
-const METAMASK_MESSAGE = 'Login authentication for Agentic Space';
+const METAMASK_MESSAGE_PREFIX = 'Login authentication for Agentic Space';
 const GOOGLE_LINK_KEY = 'agentic_space_link_google';
 
 function getApiKeyValue(apiKey) {
@@ -290,12 +290,20 @@ function ProfileContent() {
       const account = accounts[0];
       const provider = getWalletProvider();
       if (!provider) throw new Error(t('profile.errorMetamaskNotInstalled'));
+
+      const nonceRes = await fetch(`${API_BASE_URL}${API_PREFIX}/auth/metamask/nonce`);
+      const nonceData = await nonceRes.json();
+      if (!nonceRes.ok || !nonceData.nonce) {
+        throw new Error('Falha ao obter nonce do servidor.');
+      }
+
+      const message = `${METAMASK_MESSAGE_PREFIX}\nNonce: ${nonceData.nonce}`;
       const signature = await provider.request({
         method: 'personal_sign',
-        params: [METAMASK_MESSAGE, account]
+        params: [message, account]
       });
       const { status, data } = await linkMetaMaskAccount(
-        { account, message: METAMASK_MESSAGE, signature, confirmConflict },
+        { account, message, signature, nonce: nonceData.nonce, confirmConflict },
         session.jwt
       );
       handleLinkResult(status, data);

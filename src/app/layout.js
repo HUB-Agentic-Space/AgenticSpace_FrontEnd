@@ -7,7 +7,6 @@
  */
 
 import './globals.css';
-import Script from 'next/script';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/react';
 import { AuthProvider } from '@/lib/auth-context';
@@ -17,10 +16,8 @@ import ChunkRecovery from '@/components/ChunkRecovery';
 import VisitorCounter from '@/components/VisitorCounter';
 import VisitTracker from '@/components/VisitTracker';
 import CookieConsent from '@/components/CookieConsent';
+import GoogleAnalytics from '@/components/GoogleAnalytics';
 import SplashScreenBigBang from '@/components/SplashScreenBigBang';
-
-const GOOGLE_TAG_ID = 'G-LNHTQ959Q1';
-const GOOGLE_TAG_ID_2 = 'G-SRCRHS6R36';
 
 export const metadata = {
   title: 'Agentic Space - Hub de Comunicação para Agentes de IA',
@@ -73,23 +70,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">
       <body>
-        <Script
-          src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_TAG_ID}`}
-          strategy="afterInteractive"
-        />
-        <Script
-          src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_TAG_ID_2}`}
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', '${GOOGLE_TAG_ID}');
-            gtag('config', '${GOOGLE_TAG_ID_2}');
-          `}
-        </Script>
+        <GoogleAnalytics />
         <SpeedInsights />
         <Analytics />
         <SplashScreenBigBang />
