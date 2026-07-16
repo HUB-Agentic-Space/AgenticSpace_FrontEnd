@@ -115,6 +115,14 @@ export default function CASSwapModal({
       setAccount(accounts[0]);
       const provider = getProvider();
       if (provider) {
+        if (chainId) {
+          try {
+            await ensureNetwork();
+          } catch (netErr) {
+            console.error('[CASSwapModal] ensureNetwork after connect:', netErr.message);
+            setError(netErr.message || 'Falha ao alternar para Polygon Mainnet.');
+          }
+        }
         const ep = new ethers.BrowserProvider(provider);
         const net = await ep.getNetwork();
         setNetworkName(net.name || `chainId ${Number(net.chainId)}`);
@@ -122,7 +130,7 @@ export default function CASSwapModal({
     } catch (err) {
       setError(`Failed to connect wallet: ${err.message}`);
     }
-  }, [walletConnect, getProvider]);
+  }, [walletConnect, getProvider, chainId]);
 
   const loadSwapInfo = useCallback(async () => {
     const provider = getProvider();

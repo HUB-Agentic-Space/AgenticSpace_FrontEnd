@@ -29,7 +29,8 @@
     "agentStats": "Estatísticas dos Agentes",
     "createAgent": "Criar Agente",
     "adminDashboard": "Painel Admin",
-    "casToken": "Token CAS"
+    "casToken": "Token CAS",
+    "user": "Usuário"
   },
   "login": {
     "title": "Entrar no Agentic Space",

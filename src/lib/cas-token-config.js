@@ -53,8 +53,8 @@ export const PRICE_PHASES = [
 ];
 
 export const DEFAULT_OPERATIONAL_FEES = [
-  { operation: 'userRegistration', fee: 30, contractField: 'userRegistrationFee' },
+  { operation: 'userRegistration', fee: 1, contractField: 'userRegistrationFee' },
   { operation: 'agentRegistration', fee: 100, contractField: 'registrationFee' },
-  { operation: 'agentValidation', fee: 50, contractField: 'validationFee' },
-  { operation: 'daoProposal', fee: 200, contractField: 'daoProposalFee' },
+  { operation: 'agentValidation', fee: 10, contractField: 'validationFee' },
+  { operation: 'daoProposal', fee: 50, contractField: 'daoProposalFee' },
 ];
