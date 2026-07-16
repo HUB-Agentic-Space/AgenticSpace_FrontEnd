@@ -18,6 +18,27 @@
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
 export const API_PREFIX = '/api/v1';
 const UNAUTHORIZED_EVENT = 'agentic-space:unauthorized';
+const SESSION_STORAGE_KEY = 'agentic_space_session';
+
+/**
+ * Recupera o JWT da sessao armazenada em localStorage.
+ * Espelha a chave usada por auth-context.js.
+ *
+ * @returns {string|null} JWT ou null se nao houver sessao valida.
+ */
+export function getStoredJwt() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const exp = parsed?.expirationDate;
+    const valid = !exp || Date.now() < new Date(exp).getTime();
+    return valid ? parsed?.jwt || null : null;
+  } catch {
+    return null;
+  }
+}
 
 function notifyUnauthorized(response) {
   if (response.status === 401 && typeof window !== 'undefined') {

@@ -28,7 +28,8 @@ import {
   ArrowRight,
   Download,
   ShieldAlert,
-  Info
+  Info,
+  Coins
 } from 'lucide-react';
 import Spinner from '@/components/Spinner';
 import { useWallet } from '@/lib/wallet/useWallet';
@@ -156,6 +157,18 @@ export default function OnchainRegistrationButton({
       const casTokenAddress = config.casTokenAddress;
       const registrationFee = BigInt(config.registrationFee || '0');
       const userRegistrationFee = BigInt(config.userRegistrationFee || '0');
+
+      // Pre-check: verify CAS balance is sufficient before starting
+      const requiredFee = ownerType === 'user' ? userRegistrationFee : registrationFee;
+      if (requiredFee > 0n && (paymentAsset === 'CAS' || ownerType === 'agent') && casTokenAddress && casTokenAddress !== ethers.ZeroAddress) {
+        const casContract = new ethers.Contract(casTokenAddress, config.abis.casToken, provider);
+        const balance = await casContract.balanceOf(account);
+        if (balance < requiredFee) {
+          const feeStr = ethers.formatEther(requiredFee);
+          const balStr = ethers.formatEther(balance);
+          throw new Error(`Saldo CAS insuficiente. Necessário: ${feeStr} CAS, disponível: ${balStr} CAS. Use o CASSwap para obter CAS tokens.`);
+        }
+      }
 
       // Step 1: Prepare payment based on selected asset
       if (ownerType === 'user') {
@@ -346,6 +359,9 @@ export default function OnchainRegistrationButton({
             formatGasCost={formatGasCost}
             formatTimestamp={formatTimestamp}
             copyToClipboard={copyToClipboard}
+            ownerType={ownerType}
+            paymentAsset={paymentAsset}
+            config={config}
           />
         )}
       </>
@@ -397,6 +413,9 @@ export default function OnchainRegistrationButton({
           formatGasCost={formatGasCost}
           formatTimestamp={formatTimestamp}
           copyToClipboard={copyToClipboard}
+          ownerType={ownerType}
+          paymentAsset={paymentAsset}
+          config={config}
         />
       )}
     </>
@@ -411,7 +430,9 @@ export default function OnchainRegistrationButton({
  */
 function RegistrationConfirmModal({ onConfirm, onCancel, ownerType, paymentAsset, setPaymentAsset, config }) {
   const userRegFee = config?.userRegistrationFee;
+  const agentRegFee = config?.registrationFee;
   const wethAvailable = config?.wethTokenAddress && config.wethTokenAddress !== ethers.ZeroAddress;
+  const infraFundAddress = config?.infrastructureFundAddress;
 
   return createPortal(
     <div
@@ -482,6 +503,23 @@ function RegistrationConfirmModal({ onConfirm, onCancel, ownerType, paymentAsset
               )}
             </div>
           )}
+          {ownerType === 'agent' && agentRegFee && agentRegFee !== '0' && (
+            <div className="space-y-2 rounded-lg border border-slate-700 bg-slate-800/50 p-3">
+              <div className="flex items-center gap-2 text-slate-400 font-medium">
+                <Coins size={16} className="text-brand-400" />
+                <span>Taxa de Registro de Agente</span>
+              </div>
+              <p className="text-sm text-white">
+                {ethers.formatEther(BigInt(agentRegFee))} CAS
+              </p>
+              <p className="text-xs text-slate-500">
+                Pagamento em CAS tokens. A taxa é transferida para o InfrastructureFund.
+                {infraFundAddress && (
+                  <> Endereço: <code className="font-mono text-slate-400">{infraFundAddress.slice(0, 10)}...{infraFundAddress.slice(-8)}</code></>
+                )}
+              </p>
+            </div>
+          )}
           <p>
             Ao efetuar o registro on-chain, a ligação entre sua conta de login
             e o endereço da carteira (wallet address) será registrada na blockchain
@@ -529,9 +567,19 @@ function RegistrationDetailsModal({
   onClose,
   formatGasCost,
   formatTimestamp,
-  copyToClipboard
+  copyToClipboard,
+  ownerType,
+  paymentAsset,
+  config
 }) {
   if (!receipt) return null;
+
+  const feeAmount = ownerType === 'user'
+    ? config?.userRegistrationFee
+    : config?.registrationFee;
+  const infraFundAddress = config?.infrastructureFundAddress;
+  const diamondAddress = config?.diamondAddress;
+  const explorerUrl = config?.explorerUrl || '';
 
   function handleSaveJson() {
     const jsonData = {
@@ -550,6 +598,14 @@ function RegistrationDetailsModal({
         explorerUrl: receipt.explorerUrl,
         metadata: receipt.metadata,
         createdAt: receipt.createdAt,
+        fee: {
+          type: ownerType === 'user' ? 'User Registration' : 'Agent Registration',
+          asset: paymentAsset || 'CAS',
+          amount: feeAmount || '0',
+          amountFormatted: feeAmount ? ethers.formatEther(BigInt(feeAmount)) : '0',
+          infrastructureFundAddress: infraFundAddress || '',
+          diamondAddress: diamondAddress || '',
+        },
       },
     };
 
@@ -613,6 +669,60 @@ function RegistrationDetailsModal({
               </div>
               <div className="mt-1 font-mono text-slate-200">
                 #{receipt.blockNumber}
+              </div>
+            </div>
+          )}
+
+          {/* Fee Paid */}
+          {feeAmount && feeAmount !== '0' && (
+            <div className="rounded-lg border border-brand-500/30 bg-brand-500/5 p-3">
+              <div className="flex items-center gap-2 text-slate-400">
+                <Coins size={14} className="text-brand-400" />
+                <span>Taxa Paga</span>
+              </div>
+              <div className="mt-1 space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Tipo</span>
+                  <span className="text-slate-200">
+                    {ownerType === 'user' ? 'Registro de Usuário' : 'Registro de Agente'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Asset</span>
+                  <span className="text-slate-200">{paymentAsset || 'CAS'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Valor</span>
+                  <span className="font-mono text-brand-400">
+                    {ethers.formatEther(BigInt(feeAmount))} {paymentAsset || 'CAS'}
+                  </span>
+                </div>
+                {infraFundAddress && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">InfrastructureFund</span>
+                    <a
+                      href={`${explorerUrl}/address/${infraFundAddress}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-mono text-xs text-brand-300 hover:underline"
+                    >
+                      {infraFundAddress.slice(0, 10)}...{infraFundAddress.slice(-8)}
+                    </a>
+                  </div>
+                )}
+                {diamondAddress && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Diamond Proxy</span>
+                    <a
+                      href={`${explorerUrl}/address/${diamondAddress}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-mono text-xs text-brand-300 hover:underline"
+                    >
+                      {diamondAddress.slice(0, 10)}...{diamondAddress.slice(-8)}
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -59,19 +59,21 @@ All minting events emit `Minted(address indexed to, uint256 amount)` and are pub
 
 Every on-chain action in Agentic Space requires a CAS payment. These fees serve as an anti-spam mechanism and ensure that each operation has a real economic cost.
 
-- **User Registration**: 30 CAS — registers a human user on-chain (DID hash, wallet address)
+- **User Registration**: 1 CAS — registers a human user on-chain (DID hash, wallet address)
 - **Agent Registration**: 100 CAS — registers an AI agent on-chain (AUID, Merkle root, identity)
-- **Agent Validation**: 50 CAS — validates an agent's Verifiable Credential hashes
-- **DAO Proposal Creation**: 200 CAS — submits a governance proposal to RoadMapDAO or AgentDAO
+- **Agent Validation**: 10 CAS — validates an agent's Verifiable Credential hashes
+- **DAO Proposal Creation**: 50 CAS — submits a governance proposal to RoadMapDAO or AgentDAO
 - **DAO Voting**: 10 CAS — casts a vote on an existing proposal
+- **Community DAO — Pauta Submission**: 10 CAS (1/10 of agent registration) — proposes a pauta item for community voting
+- **Community DAO — Voting**: 50 CAS (1/2 of agent registration) — casts a vote on a community votação
 
-All fees are processed by `PaymentLib`, which transfers CAS from the user's wallet to the `InfrastructureFund` smart contract. Users must approve the CAS spending (ERC-20 `approve`) before the platform can debit the fee. Fees can be adjusted by the platform admin via `updateFees()` on the Diamond proxy.
+All fees are processed by `PaymentLib`, which transfers CAS from the user's wallet to the `InfrastructureFund` smart contract. Users must approve the CAS spending (ERC-20 `approve`) before the platform can debit the fee. Fees can be adjusted by the platform admin via `updateFees()` on the Diamond proxy. Community DAO fees use the extensible custom fee system (`registerFeeType` / `setCustomFee`) and are also deposited directly to the `InfrastructureFund`.
 
 ---
 
 ## 5. Infrastructure Funding
 
-All CAS fees collected from registrations, validations, proposals, and votes are sent to the `InfrastructureFund` — a treasury smart contract that custodies both CAS and POL.
+All CAS fees collected from registrations, validations, proposals, votes, pauta submissions, and community votações are sent to the `InfrastructureFund` — a treasury smart contract that custodies both CAS and POL. This includes the extensible custom fee system used by the Community DAO, ensuring that every economic activity on the platform contributes to infrastructure sustainability.
 
 - **Contract Address**: `0x190A9D2f206dbeb72Ce8b88Dc2603745fB5f50dB`
 - **Controlled by**: addresses with `TREASURER_ROLE`
@@ -178,8 +180,10 @@ The CAS token is part of a Diamond Proxy (EIP-2535) architecture:
 - **CASToken.sol**: UUPS upgradeable ERC-20 with mint, burn, pause, and role-based access control
 - **InfrastructureFund.sol**: Treasury that custodies CAS and POL collected from fees
 - **CASSwap.sol**: On-chain swap contract between CAS (ERC-20) and POL (native)
-- **Diamond Proxy**: single entry point for all protocol facets (UserRegistry, AgentRegistry, Payment, DAO, GasPromotion)
-- **PaymentLib**: processes fee transfers from users to InfrastructureFund
+- **Diamond Proxy**: single entry point for all protocol facets (UserRegistry, AgentRegistry, Payment, DAO, CommunityDAO, GasPromotion)
+- **PaymentLib**: processes fee transfers from users to InfrastructureFund, including extensible custom fees
+- **CommunityDAOFacet**: community governance with pauta proposals, Merkle tree verification, and votações
+- **MerkleTreeLib**: verifies integrity of off-chain pauta content via on-chain Merkle roots
 
 ---
 
@@ -195,5 +199,5 @@ The CAS token is part of a Diamond Proxy (EIP-2535) architecture:
 
 ---
 
-*Tokenomics version 1.0 — July 2026*
+*Tokenomics version 1.1 — July 2026*
 *Licensed under CC-BY-SA-4.0*

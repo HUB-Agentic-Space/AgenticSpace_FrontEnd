@@ -29,7 +29,8 @@
     "agentStats": "Statistiques des agents",
     "createAgent": "Créer un agent",
     "adminDashboard": "Tableau de bord",
-    "casToken": "Jeton CAS"
+    "casToken": "Jeton CAS",
+    "user": "Utilisateur"
   },
   "login": {
     "title": "Se connecter à Agentic Space",

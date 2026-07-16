@@ -11,7 +11,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Bot, UserCircle, PlusCircle, LogOut, Sparkles, Info, ChevronDown, Shield, Code, BarChart3, BookOpen, Activity, BookText, Search, LayoutDashboard, Coins } from 'lucide-react';
+import { Bot, UserCircle, PlusCircle, LogOut, Sparkles, Info, ChevronDown, Shield, Code, BarChart3, BookOpen, Activity, BookText, Search, LayoutDashboard, Coins, Vote } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useTranslations, useLocaleContext } from '@/lib/LocaleProvider';
 import LanguageSelector from '@/components/LanguageSelector';
@@ -43,6 +43,7 @@ export default function Navbar() {
   const t = useTranslations();
   const [institucionalOpen, setInstitucionalOpen] = useState(false);
   const [estatisticasOpen, setEstatisticasOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
 
@@ -62,6 +63,8 @@ export default function Navbar() {
 
   const isInstitucionalActive = pathname === '/about' || pathname === '/security-policy' || pathname === '/info/api-agentes' || pathname === '/info/cas-token' || pathname === '/stats' || pathname === '/agent-logs';
   const isTutoriaisActive = pathname?.startsWith('/tutoriais');
+  const isComunidadeActive = pathname?.startsWith('/comunidade');
+  const isUserActive = pathname === '/profile' || pathname?.startsWith('/agents') || pathname === '/admin';
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-950/80 backdrop-blur">
@@ -212,41 +215,84 @@ export default function Navbar() {
             active={isTutoriaisActive}
           />
 
+          <NavItem
+            href="/comunidade"
+            icon={Vote}
+            label="Comunidade"
+            active={isComunidadeActive}
+          />
+
           {isAuthenticated && (
-            <>
-              <NavItem
-                href="/profile"
-                icon={UserCircle}
-                label={t('navbar.profile')}
-                active={pathname === '/profile'}
-              />
-              <NavItem
-                href="/agents"
-                icon={Bot}
-                label={t('navbar.agents')}
-                active={pathname?.startsWith('/agents') && pathname !== '/agents/create'}
-              />
-              <NavItem
-                href="/agents/create"
-                icon={PlusCircle}
-                label={t('navbar.createAgent')}
-                active={pathname === '/agents/create'}
-              />
-              {isAdmin && (
-                <a
-                  href="/admin"
-                  className="flex items-center gap-2 rounded-lg bg-brand-600/20 px-3 py-2 text-sm font-medium text-brand-300 ring-1 ring-brand-500/30 transition hover:bg-brand-600/30"
-                  title={t('navbar.adminDashboard')}
-                >
-                  <LayoutDashboard size={18} />
-                  <span className="hidden sm:inline">{t('navbar.adminDashboard')}</span>
-                </a>
-              )}
-              <button onClick={handleLogout} className="btn-secondary ml-2" title={t('navbar.logout')}>
-                <LogOut size={16} />
-                <span className="hidden sm:inline">{t('navbar.logout')}</span>
+            <div className="relative">
+              <button
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                  isUserActive ? 'bg-brand-600 text-white' : 'text-slate-300 hover:bg-slate-800'
+                }`}
+              >
+                <UserCircle size={18} />
+                <span className="hidden sm:inline">{t('navbar.user')}</span>
+                <ChevronDown size={16} className={`hidden sm:inline transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
               </button>
-            </>
+
+              {userMenuOpen && (
+                <div className="absolute right-0 mt-2 w-56 rounded-lg bg-slate-900 border border-slate-700 shadow-xl">
+                  <Link
+                    href="/profile"
+                    className={`flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-800 hover:text-white ${
+                      pathname === '/profile' ? 'text-brand-400' : 'text-slate-300'
+                    }`}
+                    onClick={() => setUserMenuOpen(false)}
+                  >
+                    <UserCircle size={16} />
+                    {t('navbar.profile')}
+                  </Link>
+                  <Link
+                    href="/agents"
+                    className={`flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-800 hover:text-white ${
+                      pathname?.startsWith('/agents') && pathname !== '/agents/create' ? 'text-brand-400' : 'text-slate-300'
+                    }`}
+                    onClick={() => setUserMenuOpen(false)}
+                  >
+                    <Bot size={16} />
+                    {t('navbar.agents')}
+                  </Link>
+                  <Link
+                    href="/agents/create"
+                    className={`flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-800 hover:text-white ${
+                      pathname === '/agents/create' ? 'text-brand-400' : 'text-slate-300'
+                    }`}
+                    onClick={() => setUserMenuOpen(false)}
+                  >
+                    <PlusCircle size={16} />
+                    {t('navbar.createAgent')}
+                  </Link>
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      className={`flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-800 hover:text-white ${
+                        pathname === '/admin' ? 'text-brand-400' : 'text-slate-300'
+                      }`}
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      <LayoutDashboard size={16} />
+                      {t('navbar.adminDashboard')}
+                    </Link>
+                  )}
+                  <div className="border-t border-slate-700 my-1"></div>
+                  <button
+                    onClick={() => {
+                      setUserMenuOpen(false);
+                      handleLogout();
+                    }}
+                    className="flex w-full items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
+                  >
+                    <LogOut size={16} />
+                    {t('navbar.logout')}
+                  </button>
+                </div>
+              )}
+            </div>
           )}
           {!isAuthenticated && (
             <span className="text-sm text-slate-400">{t('home.publicView')}</span>
