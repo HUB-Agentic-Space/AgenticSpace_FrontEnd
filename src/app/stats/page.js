@@ -10,6 +10,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { Users, Eye, Bot, TrendingUp, BarChart3, ArrowLeft, Calendar, Activity, X, Sparkles, DollarSign, Target, Zap, AlertTriangle, Server, Cpu, PiggyBank, LineChart as LineChartIcon } from 'lucide-react';
 import Link from 'next/link';
 import enTranslations from '@/i18n/locales/en.json';
+import { API_BASE_URL } from '@/lib/api.js';
 import {
   LineChart,
   Line,
@@ -83,7 +84,7 @@ function StatsPageContent() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('/api/v1/stats');
+      const response = await fetch(`${API_BASE_URL}/api/v1/stats`);
       if (response.ok) {
         const data = await response.json();
         setStats(data);
@@ -98,7 +99,7 @@ function StatsPageContent() {
 
   const fetchInvestmentAnalysis = async () => {
     try {
-      const response = await fetch('/api/v1/investment-analysis');
+      const response = await fetch(`${API_BASE_URL}/api/v1/investment-analysis`);
       if (response.ok) {
         const data = await response.json();
         setInvestmentAnalysis(data);
@@ -110,7 +111,7 @@ function StatsPageContent() {
 
   const fetchVercelMetrics = async () => {
     try {
-      const response = await fetch('/api/v1/vercel-metrics');
+      const response = await fetch(`${API_BASE_URL}/api/v1/vercel-metrics`);
       if (response.ok) {
         const data = await response.json();
         setVercelMetrics(data);
@@ -124,7 +125,7 @@ function StatsPageContent() {
 
   const fetchVercelBillingData = async () => {
     try {
-      const response = await fetch('/api/v1/vercel/billing-charges');
+      const response = await fetch(`${API_BASE_URL}/api/v1/vercel/billing-charges`);
       if (response.ok) {
         const data = await response.json();
         setVercelBillingData(data.billingData);
@@ -138,7 +139,7 @@ function StatsPageContent() {
 
   const fetchCostHistory = async () => {
     try {
-      const response = await fetch('/api/v1/vercel/cost-history?days=30');
+      const response = await fetch(`${API_BASE_URL}/api/v1/vercel/cost-history?days=30`);
       if (response.ok) {
         const data = await response.json();
         setCostHistory(data.history);
@@ -499,17 +500,17 @@ function StatsPageContent() {
         <div className="grid gap-4 md:grid-cols-3">
           <MetricCard
             label={t('stats.agentsPerUser')}
-            value={stats.agentsPerUser.toFixed(2)}
+            value={(stats.agentsPerUser ?? 0).toFixed(2)}
             description={t('stats.averageRatio')}
           />
           <MetricCard
             label={t('stats.averageAgents')}
-            value={stats.avgAgentsPerUser.toFixed(2)}
+            value={(stats.avgAgentsPerUser ?? 0).toFixed(2)}
             description={t('stats.arithmeticMean')}
           />
           <MetricCard
             label={t('stats.medianAgents')}
-            value={stats.medianAgentsPerUser.toFixed(2)}
+            value={(stats.medianAgentsPerUser ?? 0).toFixed(2)}
             description={t('stats.centralValue')}
           />
         </div>
@@ -528,15 +529,15 @@ function StatsPageContent() {
               <XAxis 
                 dataKey="date" 
                 stroke="#94a3b8"
-                tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit' })}
+                tickFormatter={(value) => value ? new Date(value).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit' }) : '—'}
               />
               <YAxis stroke="#94a3b8" />
               <Tooltip 
                 contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
                 labelStyle={{ color: '#f1f5f9' }}
                 itemStyle={{ color: '#f1f5f9' }}
-                formatter={(value) => [value.toLocaleString(), 'Visitors']}
-                labelFormatter={(value) => new Date(value).toLocaleDateString('en-US')}
+                formatter={(value) => [(value ?? 0).toLocaleString(), 'Visitors']}
+                labelFormatter={(value) => value ? new Date(value).toLocaleDateString('en-US') : '—'}
               />
               <Area 
                 type="monotone" 
@@ -563,15 +564,15 @@ function StatsPageContent() {
               <XAxis 
                 dataKey="date" 
                 stroke="#94a3b8"
-                tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit' })}
+                tickFormatter={(value) => value ? new Date(value).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit' }) : '—'}
               />
               <YAxis stroke="#94a3b8" />
               <Tooltip 
                 contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
                 labelStyle={{ color: '#f1f5f9' }}
                 itemStyle={{ color: '#f1f5f9' }}
-                formatter={(value) => [value.toLocaleString(), 'Page Views']}
-                labelFormatter={(value) => new Date(value).toLocaleDateString('en-US')}
+                formatter={(value) => [(value ?? 0).toLocaleString(), 'Page Views']}
+                labelFormatter={(value) => value ? new Date(value).toLocaleDateString('en-US') : '—'}
               />
               <Bar dataKey="views" fill="#38bdf8" />
             </BarChart>
@@ -621,7 +622,7 @@ function StatsPageContent() {
                 <XAxis 
                   dataKey="date" 
                   stroke="#94a3b8"
-                  tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit' })}
+                  tickFormatter={(value) => value ? new Date(value).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit' }) : '—'}
                 />
                 <YAxis stroke="#94a3b8" />
                 <Tooltip 
@@ -629,10 +630,10 @@ function StatsPageContent() {
                   labelStyle={{ color: '#f1f5f9' }}
                   itemStyle={{ color: '#f1f5f9' }}
                   formatter={(value, name) => [
-                    value.toLocaleString(), 
+                    (value ?? 0).toLocaleString(),
                     name === 'visitors' ? 'Visitors' : 'Projection'
                   ]}
-                  labelFormatter={(value) => new Date(value).toLocaleDateString('en-US')}
+                  labelFormatter={(value) => value ? new Date(value).toLocaleDateString('en-US') : '—'}
                 />
                 <Legend />
                 <Line 
@@ -675,7 +676,7 @@ function StatsPageContent() {
                 <XAxis 
                   dataKey="date" 
                   stroke="#94a3b8"
-                  tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit' })}
+                  tickFormatter={(value) => value ? new Date(value).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit' }) : '—'}
                 />
                 <YAxis stroke="#94a3b8" />
                 <Tooltip 
@@ -683,10 +684,10 @@ function StatsPageContent() {
                   labelStyle={{ color: '#f1f5f9' }}
                   itemStyle={{ color: '#f1f5f9' }}
                   formatter={(value, name) => [
-                    value.toLocaleString(), 
+                    (value ?? 0).toLocaleString(),
                     name === 'agents' ? 'Agents' : 'Projection'
                   ]}
-                  labelFormatter={(value) => new Date(value).toLocaleDateString('en-US')}
+                  labelFormatter={(value) => value ? new Date(value).toLocaleDateString('en-US') : '—'}
                 />
                 <Legend />
                 <Line 
@@ -729,15 +730,15 @@ function StatsPageContent() {
                 <XAxis 
                   dataKey="date" 
                   stroke="#94a3b8"
-                  tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit' })}
+                  tickFormatter={(value) => value ? new Date(value).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit' }) : '—'}
                 />
                 <YAxis stroke="#94a3b8" />
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
                   labelStyle={{ color: '#f1f5f9' }}
                   itemStyle={{ color: '#f1f5f9' }}
-                  formatter={(value) => [value.toFixed(2), 'Agents per User']}
-                  labelFormatter={(value) => new Date(value).toLocaleDateString('en-US')}
+                  formatter={(value) => [(value ?? 0).toFixed(2), 'Agents per User']}
+                  labelFormatter={(value) => value ? new Date(value).toLocaleDateString('en-US') : '—'}
                 />
                 <Line 
                   type="monotone" 
@@ -788,10 +789,10 @@ function StatsPageContent() {
                     contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
                     labelStyle={{ color: '#f1f5f9' }}
                     itemStyle={{ color: '#f1f5f9' }}
-                    formatter={(value) => [value.toLocaleString(), 'Visitors']}
+                    formatter={(value) => [(value ?? 0).toLocaleString(), 'Visitors']}
                     labelFormatter={(value, payload) => {
                       const item = payload && payload.length ? payload[0].payload : null;
-                      return item ? (item.region ? `${item.country} - ${item.region}` : item.country) : value;
+                      return item ? (item.region ? `${item.country} - ${item.region}` : item.country) : (value || '—');
                     }}
                   />
                   <Bar 
@@ -830,7 +831,7 @@ function StatsPageContent() {
                     cy="50%"
                     labelLine={false}
                     label={({ country, visitors, percent }) => {
-                      return `${country}: ${visitors} (${(percent * 100).toFixed(0)}%)`;
+                      return `${country || 'Other'}: ${visitors || 0} (${(Number(percent ?? 0) * 100).toFixed(0)}%)`;
                     }}
                     outerRadius={80}
                     fill="#8884d8"
@@ -853,7 +854,7 @@ function StatsPageContent() {
                     formatter={(value, name, props) => {
                       const item = props.payload;
                       const label = item ? item.country : name;
-                      return [value.toLocaleString(), label];
+                      return [(value ?? 0).toLocaleString(), label];
                     }}
                   />
                 </PieChart>
@@ -872,7 +873,7 @@ function StatsPageContent() {
         <div className="grid gap-6 md:grid-cols-1">
           <HighlightCard
             title="Exceptional User Engagement"
-            description={`Each user creates an average of ${stats.avgAgentsPerUser.toFixed(2)} agents, demonstrating exceptional engagement with the platform. This level of activity indicates that users find real value in the product, creating multiple agents for different use cases. Retention and continued usage are strong indicators of product-market fit and monetization potential through subscription or premium usage models.`}
+            description={`Each user creates an average of ${(stats.avgAgentsPerUser ?? 0).toFixed(2)} agents, demonstrating exceptional engagement with the platform. This level of activity indicates that users find real value in the product, creating multiple agents for different use cases. Retention and continued usage are strong indicators of product-market fit and monetization potential through subscription or premium usage models.`}
             onClick={() => setShowInvestmentModal(true)}
           />
           <HighlightCard
@@ -1059,7 +1060,7 @@ function StatsPageContent() {
                       contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
                       labelStyle={{ color: '#f1f5f9' }}
                       itemStyle={{ color: '#f1f5f9' }}
-                      formatter={(value) => [`$${value.toFixed(2)}`, 'Cost']}
+                      formatter={(value) => [`$${(value ?? 0).toFixed(2)}`, 'Cost']}
                     />
                     <Line 
                       type="monotone" 
@@ -1083,16 +1084,16 @@ function StatsPageContent() {
                   <div key={category} className="bg-slate-800/50 rounded-lg p-3 border border-slate-700">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-slate-300">{category}</span>
-                      <span className="text-sm font-semibold text-white">${data.cost.toFixed(2)}</span>
+                      <span className="text-sm font-semibold text-white">${(data.cost ?? 0).toFixed(2)}</span>
                     </div>
                     <div className="w-full bg-slate-700 rounded-full h-2">
                       <div 
                         className="bg-brand-500 h-2 rounded-full"
-                        style={{ width: `${(data.cost / vercelBillingData.totalCost) * 100}%` }}
+                        style={{ width: `${vercelBillingData.totalCost > 0 ? (data.cost / vercelBillingData.totalCost) * 100 : 0}%` }}
                       />
                     </div>
                     <div className="text-xs text-slate-500 mt-1">
-                      {((data.cost / vercelBillingData.totalCost) * 100).toFixed(1)}% of total
+                      {vercelBillingData.totalCost > 0 ? ((data.cost / vercelBillingData.totalCost) * 100).toFixed(1) : '0.0'}% of total
                     </div>
                   </div>
                 ))}
@@ -1114,7 +1115,7 @@ function StatsPageContent() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Total Cost:</span>
-                  <span className="text-white">${vercelBillingData.totalCost.toFixed(2)}</span>
+                  <span className="text-white">${(vercelBillingData.totalCost ?? 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Efficiency:</span>
@@ -1132,11 +1133,11 @@ function StatsPageContent() {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-slate-400">Current Cost:</span>
-                  <span className="text-white">${vercelBillingData.totalCost.toFixed(2)}</span>
+                  <span className="text-white">${(vercelBillingData.totalCost ?? 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Projected (10% growth):</span>
-                  <span className="text-white">${(vercelBillingData.totalCost * 1.1).toFixed(2)}</span>
+                  <span className="text-white">${((vercelBillingData.totalCost ?? 0) * 1.1).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Variation:</span>
@@ -1169,7 +1170,7 @@ function StatsPageContent() {
 
 function KPICard({ icon, title, value, subtitle, investmentSummary, onClick }) {
   return (
-    <div 
+    <div
       className="card p-4 cursor-pointer hover:border-brand-500/50 transition-colors"
       onClick={onClick}
     >
@@ -1177,7 +1178,7 @@ function KPICard({ icon, title, value, subtitle, investmentSummary, onClick }) {
         {icon}
         <h3 className="text-sm text-slate-400">{title}</h3>
       </div>
-      <div className="text-2xl font-bold text-white">{value.toLocaleString()}</div>
+      <div className="text-2xl font-bold text-white">{(value ?? 0).toLocaleString()}</div>
       <div className="text-xs text-slate-500 mt-1">{subtitle}</div>
       {investmentSummary && (
         <div className="mt-3 pt-3 border-t border-slate-700">
@@ -1337,28 +1338,29 @@ function BenefitCard({ icon, title, description }) {
 
 function UsageMetricCard({ icon, label, current, limit, percent, status, formatBytes = false, formatMs = false }) {
   const formatValue = (value) => {
+    const safe = Number(value ?? 0);
     if (formatBytes) {
-      if (value >= 1024 * 1024 * 1024) {
-        return `${(value / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+      if (safe >= 1024 * 1024 * 1024) {
+        return `${(safe / (1024 * 1024 * 1024)).toFixed(2)} GB`;
       }
-      if (value >= 1024 * 1024) {
-        return `${(value / (1024 * 1024)).toFixed(2)} MB`;
+      if (safe >= 1024 * 1024) {
+        return `${(safe / (1024 * 1024)).toFixed(2)} MB`;
       }
-      if (value >= 1024) {
-        return `${(value / 1024).toFixed(2)} KB`;
+      if (safe >= 1024) {
+        return `${(safe / 1024).toFixed(2)} KB`;
       }
-      return `${value} B`;
+      return `${safe} B`;
     }
     if (formatMs) {
-      if (value >= 3600 * 1000) {
-        return `${(value / (3600 * 1000)).toFixed(2)}h`;
+      if (safe >= 3600 * 1000) {
+        return `${(safe / (3600 * 1000)).toFixed(2)}h`;
       }
-      if (value >= 60 * 1000) {
-        return `${(value / (60 * 1000)).toFixed(2)}m`;
+      if (safe >= 60 * 1000) {
+        return `${(safe / (60 * 1000)).toFixed(2)}m`;
       }
-      return `${(value / 1000).toFixed(2)}s`;
+      return `${(safe / 1000).toFixed(2)}s`;
     }
-    return value.toLocaleString();
+    return safe.toLocaleString();
   };
 
   const statusColor = status === 'warning' ? 'text-yellow-400' : 'text-green-400';
@@ -1394,30 +1396,32 @@ function UsageMetricCard({ icon, label, current, limit, percent, status, formatB
 }
 
 function PlanCard({ plan, isRecommended }) {
+  const safePlan = plan || {};
   const formatBytes = (value) => {
-    if (value >= 1024 * 1024 * 1024) {
-      return `${(value / (1024 * 1024 * 1024)).toFixed(0)} GB`;
+    const safe = Number(value ?? 0);
+    if (safe >= 1024 * 1024 * 1024) {
+      return `${(safe / (1024 * 1024 * 1024)).toFixed(0)} GB`;
     }
-    if (value >= 1024 * 1024) {
-      return `${(value / (1024 * 1024)).toFixed(0)} MB`;
+    if (safe >= 1024 * 1024) {
+      return `${(safe / (1024 * 1024)).toFixed(0)} MB`;
     }
-    return `${value} B`;
+    return `${safe} B`;
   };
 
   return (
     <div className={`bg-slate-800/50 rounded-lg p-4 border ${isRecommended ? 'border-brand-500/50' : 'border-slate-700'}`}>
       <div className="flex items-center justify-between mb-3">
-        <h4 className="font-semibold text-white">{plan.name}</h4>
+        <h4 className="font-semibold text-white">{safePlan.name || '—'}</h4>
         {isRecommended && (
           <span className="text-xs bg-brand-500/20 text-brand-400 px-2 py-1 rounded">Recommended</span>
         )}
       </div>
-      <div className="text-2xl font-bold text-green-400 mb-3">${plan.cost}/mo</div>
+      <div className="text-2xl font-bold text-green-400 mb-3">${safePlan.cost ?? 0}/mo</div>
       <ul className="space-y-2 text-sm text-slate-300">
-        <li>• {plan.functionInvocations.toLocaleString()} function invocations</li>
-        <li>• {formatBytes(plan.fastTransfer)} fast transfer</li>
-        {plan.cpuHours && <li>• {(plan.cpuHours / (3600 * 1000)).toFixed(1)}h CPU</li>}
-        <li>• {plan.edgeRequests.toLocaleString()} edge requests</li>
+        <li>• {(safePlan.functionInvocations ?? 0).toLocaleString()} function invocations</li>
+        <li>• {formatBytes(safePlan.fastTransfer)} fast transfer</li>
+        {safePlan.cpuHours !== undefined && safePlan.cpuHours !== null && <li>• {(Number(safePlan.cpuHours) / (3600 * 1000)).toFixed(1)}h CPU</li>}
+        <li>• {(safePlan.edgeRequests ?? 0).toLocaleString()} edge requests</li>
       </ul>
     </div>
   );
@@ -1426,7 +1430,7 @@ function PlanCard({ plan, isRecommended }) {
 function OtherRegionsModal({ regions, onClose }) {
   if (!regions || regions.length === 0) return null;
 
-  const totalVisitors = regions.reduce((sum, region) => sum + region.visitors, 0);
+  const totalVisitors = regions.reduce((sum, region) => sum + (region.visitors ?? 0), 0);
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
@@ -1466,16 +1470,16 @@ function OtherRegionsModal({ regions, onClose }) {
                       {region.region && <span className="text-slate-400 ml-2">- {region.region}</span>}
                     </h3>
                   </div>
-                  <span className="text-lg font-bold text-brand-400">{region.visitors.toLocaleString()}</span>
+                  <span className="text-lg font-bold text-brand-400">{(region.visitors ?? 0).toLocaleString()}</span>
                 </div>
                 <div className="w-full bg-slate-700 rounded-full h-2">
                   <div
                     className="bg-brand-500 h-2 rounded-full"
-                    style={{ width: `${(region.visitors / totalVisitors) * 100}%` }}
+                    style={{ width: `${totalVisitors > 0 ? (region.visitors / totalVisitors) * 100 : 0}%` }}
                   />
                 </div>
                 <div className="text-xs text-slate-500 mt-1">
-                  {((region.visitors / totalVisitors) * 100).toFixed(1)}% of total
+                  {totalVisitors > 0 ? ((region.visitors / totalVisitors) * 100).toFixed(1) : '0.0'}% of total
                 </div>
               </div>
             ))}

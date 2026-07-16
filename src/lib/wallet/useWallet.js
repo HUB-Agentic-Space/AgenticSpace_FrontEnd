@@ -59,17 +59,50 @@ export function useWallet(opts = {}) {
   const providerRef = useRef(null);
   const isMobile = isMobileDevice();
 
+  const _handleAccountsChanged = useCallback((accs) => {
+    setAccount(accs?.[0] || null);
+  }, []);
+
+  const _handleChainChanged = useCallback((cidHex) => {
+    setChainId(cidHex ? parseInt(cidHex, 16) : null);
+  }, []);
+
+  const _removeListeners = useCallback((p) => {
+    if (!p) return;
+    try {
+      p.removeListener?.('accountsChanged', _handleAccountsChanged);
+      p.removeListener?.('chainChanged', _handleChainChanged);
+    } catch {
+      // Alguns provedores não expõem removeListener.
+    }
+  }, [_handleAccountsChanged, _handleChainChanged]);
+
+  const _addListeners = useCallback((p) => {
+    if (!p) return;
+    _removeListeners(p);
+    try {
+      p.on?.('accountsChanged', _handleAccountsChanged);
+      p.on?.('chainChanged', _handleChainChanged);
+    } catch {
+      // Provider pode não suportar eventos.
+    }
+  }, [_removeListeners, _handleAccountsChanged, _handleChainChanged]);
+
   const _syncProvider = useCallback((p, type) => {
+    if (providerRef.current && providerRef.current !== p) {
+      _removeListeners(providerRef.current);
+    }
     providerRef.current = p;
     setProvider(p);
     setWalletType(type);
     if (p) {
       const ep = new ethers.BrowserProvider(p);
       setEthersProvider(ep);
+      _addListeners(p);
     } else {
       setEthersProvider(null);
     }
-  }, []);
+  }, [_removeListeners, _addListeners]);
 
   const _syncAccountsAndChain = useCallback(async (p) => {
     try {
@@ -119,13 +152,6 @@ export function useWallet(opts = {}) {
         // chainId opcional neste ponto.
       }
 
-      p.on?.('accountsChanged', (accs) => {
-        setAccount(accs?.[0] || null);
-      });
-      p.on?.('chainChanged', (cidHex) => {
-        setChainId(cidHex ? parseInt(cidHex, 16) : null);
-      });
-
       return { accounts, provider: p };
     } catch (err) {
       setError(err.message || 'Falha ao conectar carteira.');
@@ -165,13 +191,6 @@ export function useWallet(opts = {}) {
       } catch {
         // chainId opcional.
       }
-
-      p.on?.('accountsChanged', (accs) => {
-        setAccount(accs?.[0] || null);
-      });
-      p.on?.('chainChanged', (cidHex) => {
-        setChainId(cidHex ? parseInt(cidHex, 16) : null);
-      });
 
       return { accounts, provider: p };
     } catch (err) {
@@ -239,15 +258,15 @@ export function useWallet(opts = {}) {
       if (p) {
         _syncProvider(p, 'injected');
         _syncAccountsAndChain(p);
-        p.on?.('accountsChanged', (accs) => {
-          setAccount(accs?.[0] || null);
-        });
-        p.on?.('chainChanged', (cidHex) => {
-          setChainId(cidHex ? parseInt(cidHex, 16) : null);
-        });
       }
     }
-  }, [_syncProvider, _syncAccountsAndChain]);
+
+    return () => {
+      if (providerRef.current) {
+        _removeListeners(providerRef.current);
+      }
+    };
+  }, [_syncProvider, _syncAccountsAndChain, _removeListeners]);
 
   return {
     provider,

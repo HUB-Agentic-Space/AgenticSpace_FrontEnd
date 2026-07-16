@@ -264,6 +264,7 @@ function VotacaoPageContent() {
 
 export default function VotacaoPage() {
   return (
+    <Suspense fallback={
       <div className="flex items-center justify-center gap-2 text-slate-400">
         <Loader2 className="h-5 w-5 animate-spin" />
         Carregando votação...

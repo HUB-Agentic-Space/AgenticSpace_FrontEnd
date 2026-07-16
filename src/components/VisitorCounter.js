@@ -9,6 +9,7 @@
 import { useState, useEffect } from 'react';
 import { Users, Eye, Bot, TrendingUp, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
+import { API_BASE_URL } from '@/lib/api.js';
 
 export default function VisitorCounter() {
   const [counter, setCounter] = useState(null);
@@ -39,7 +40,7 @@ export default function VisitorCounter() {
 
   const fetchCounter = async () => {
     try {
-      const response = await fetch('/api/v1/stats/counter');
+      const response = await fetch(`${API_BASE_URL}/api/v1/stats/counter`);
       if (response.ok) {
         const data = await response.json();
         setCounter(data);
@@ -53,7 +54,7 @@ export default function VisitorCounter() {
 
   const fetchDetailedStats = async () => {
     try {
-      const response = await fetch('/api/v1/stats');
+      const response = await fetch(`${API_BASE_URL}/api/v1/stats`);
       if (response.ok) {
         const data = await response.json();
         setDetailedStats(data);
@@ -131,15 +132,15 @@ export default function VisitorCounter() {
           <div className="border-t border-slate-700 pt-3 space-y-2">
             <StatRow
               label="Agentes por usuário"
-              value={detailedStats.agentsPerUser.toFixed(2)}
+              value={Number(detailedStats.agentsPerUser ?? 0).toFixed(2)}
             />
             <StatRow
               label="Média de agentes"
-              value={detailedStats.avgAgentsPerUser.toFixed(2)}
+              value={Number(detailedStats.avgAgentsPerUser ?? 0).toFixed(2)}
             />
             <StatRow
               label="Mediana de agentes"
-              value={detailedStats.medianAgentsPerUser.toFixed(2)}
+              value={Number(detailedStats.medianAgentsPerUser ?? 0).toFixed(2)}
             />
           </div>
 
@@ -159,7 +160,7 @@ function StatItem({ icon, label, value }) {
       {icon}
       <div>
         <div className="text-xs text-slate-400">{label}</div>
-        <div className="text-sm font-semibold text-white">{value.toLocaleString()}</div>
+        <div className="text-sm font-semibold text-white">{(value ?? 0).toLocaleString()}</div>
       </div>
     </div>
   );

@@ -8,6 +8,7 @@
 
 import { useEffect, useState } from 'react';
 import { hasConsented, onConsentChange } from '@/lib/cookie-consent';
+import { API_BASE_URL } from '@/lib/api.js';
 
 export default function VisitTracker() {
   const [hasTracked, setHasTracked] = useState(false);
@@ -49,7 +50,7 @@ export default function VisitTracker() {
         }
 
         // Enviar dados para o backend
-        await fetch('/api/v1/track/visit', {
+        await fetch(`${API_BASE_URL}/api/v1/track/visit`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
