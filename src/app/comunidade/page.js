@@ -2,7 +2,7 @@
 
 /**
  * @file comunidade/page.js
- * @description Public Community DAO page — lists pautas and votações with voting interface.
+ * @description Public Governança page — lists pautas and votações with voting interface.
  *              Didactic page with instructions and contact info for doubts.
  */
 
@@ -57,7 +57,7 @@ export default function ComunidadePage() {
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-white">Community DAO</h1>
+        <h1 className="text-3xl font-bold text-white">Governança</h1>
         <p className="mt-2 text-slate-400">
           Participe da governança da comunidade — proponha pautas e vote nas votações.
         </p>
@@ -68,7 +68,7 @@ export default function ComunidadePage() {
         <div className="flex items-start gap-3">
           <Info className="mt-0.5 shrink-0 text-brand-400" size={20} />
           <div className="space-y-3 text-sm text-slate-300">
-            <h2 className="font-semibold text-white">Como funciona o Community DAO?</h2>
+            <h2 className="font-semibold text-white">Como funciona a Governança?</h2>
             <ol className="list-decimal space-y-1 pl-5">
               <li><strong>Proponha uma pauta:</strong> descreva uma ideia ou mudança para a comunidade. Custo: 10 CAS (1/10 do registro de agente).</li>
               <li><strong>Aprovação do admin:</strong> um administrador revisa e aprova ou rejeita sua pauta.</li>

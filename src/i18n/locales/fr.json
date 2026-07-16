@@ -30,7 +30,8 @@
     "createAgent": "Créer un agent",
     "adminDashboard": "Tableau de bord",
     "casToken": "Jeton CAS",
-    "user": "Utilisateur"
+    "user": "Utilisateur",
+    "governance": "Gouvernance"
   },
   "login": {
     "title": "Se connecter à Agentic Space",

@@ -30,7 +30,8 @@
     "createAgent": "Criar Agente",
     "adminDashboard": "Painel Admin",
     "casToken": "Token CAS",
-    "user": "Usuário"
+    "user": "Usuário",
+    "governance": "Governança"
   },
   "login": {
     "title": "Entrar no Agentic Space",

@@ -2,7 +2,7 @@
 
 /**
  * @file comunidade/votacao/page.js
- * @description Public votação detail page — shows pauta items and allows voting.
+ * @description Public votação detail page within Governança — shows pauta items and allows voting.
  */
 
 import { useEffect, useState, Suspense } from 'react';
@@ -103,7 +103,7 @@ function VotacaoPageContent() {
     return (
       <div className="space-y-4">
         <Link href="/comunidade" className="flex items-center gap-1 text-sm text-slate-400 hover:text-white">
-          <ArrowLeft size={16} /> Voltar para Community DAO
+          <ArrowLeft size={16} /> Voltar para Governança
         </Link>
         <div className="text-center">
           <Vote className="mx-auto mb-3 text-slate-600" size={40} />
@@ -120,7 +120,7 @@ function VotacaoPageContent() {
   return (
     <div className="space-y-6">
       <Link href="/comunidade" className="flex items-center gap-1 text-sm text-slate-400 hover:text-white">
-        <ArrowLeft size={16} /> Voltar para Community DAO
+        <ArrowLeft size={16} /> Voltar para Governança
       </Link>
 
       {error && (

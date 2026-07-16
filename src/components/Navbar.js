@@ -218,7 +218,7 @@ export default function Navbar() {
           <NavItem
             href="/comunidade"
             icon={Vote}
-            label="Comunidade"
+            label={t('navbar.governance')}
             active={isComunidadeActive}
           />
 

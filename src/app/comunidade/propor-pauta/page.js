@@ -2,7 +2,7 @@
 
 /**
  * @file comunidade/propor-pauta/page.js
- * @description Public page for users to submit a pauta to the Community DAO.
+ * @description Public page for users to submit a pauta to the Governança.
  *              Didactic with clear instructions and contact info.
  */
 
@@ -66,7 +66,7 @@ export default function ProporPautaPage() {
   return (
     <div className="space-y-6">
       <Link href="/comunidade" className="flex items-center gap-1 text-sm text-slate-400 hover:text-white">
-        <ArrowLeft size={16} /> Voltar para Community DAO
+        <ArrowLeft size={16} /> Voltar para Governança
       </Link>
 
       <div className="text-center">

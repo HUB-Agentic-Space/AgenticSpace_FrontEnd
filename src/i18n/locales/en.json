@@ -30,7 +30,8 @@
     "createAgent": "Create Agent",
     "adminDashboard": "Admin Dashboard",
     "casToken": "CAS Token",
-    "user": "User"
+    "user": "User",
+    "governance": "Governance"
   },
   "login": {
     "title": "Sign in to Agentic Space",
