@@ -34,6 +34,7 @@ export const CAS_TOKEN_READ_ABI = [
 
 export const DIAMOND_READ_ABI = [
   'function getFees() external view returns (tuple(uint256 registrationFee, uint256 validationFee, uint256 daoProposalFee, uint256 userRegistrationFee))',
+  'function getAllFeeTypes() external view returns (uint256[] feeTypes, uint256[] amounts)',
 ];
 
 export const DEFAULT_RATIO = { numerator: 2, denominator: 1 };
@@ -52,12 +53,27 @@ export const PRICE_PHASES = [
   { phase: 8, users: '≥ 100.000', agents: '≥ 50.000', casPricePol: 50.0, usdApprox: 3.75, marketCap: 3750000 },
 ];
 
-export const DEFAULT_OPERATIONAL_FEES = [
-  { operation: 'userRegistration', fee: 1, contractField: 'userRegistrationFee' },
-  { operation: 'agentRegistration', fee: 100, contractField: 'registrationFee' },
-  { operation: 'agentValidation', fee: 10, contractField: 'validationFee' },
-  { operation: 'daoProposal', fee: 50, contractField: 'daoProposalFee' },
+/**
+ * Metadados dos quatro campos legados de getFees(). Os valores nunca ficam
+ * definidos no frontend: são sempre lidos do Diamond.
+ */
+export const CORE_OPERATIONAL_FEES = [
+  { feeType: '0', operation: 'agentRegistration', contractField: 'registrationFee' },
+  { feeType: '1', operation: 'agentValidation', contractField: 'validationFee' },
+  { feeType: '2', operation: 'daoProposal', contractField: 'daoProposalFee' },
+  { feeType: '3', operation: 'userRegistration', contractField: 'userRegistrationFee' },
 ];
+
+/**
+ * Nomes semânticos conhecidos para compatibilidade com consumidores atuais.
+ * Tipos futuros não precisam ser adicionados aqui para aparecer na listagem:
+ * recebem automaticamente a operação `customFee:<id>`.
+ */
+export const KNOWN_CUSTOM_FEE_OPERATIONS = Object.freeze({
+  4: 'daoAgendaSubmission',
+  5: 'daoVoting',
+  6: 'certificateIssuance',
+});
 
 export const COINGECKO_MULTI_PRICE_URL =
   'https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=usd,brl,eur&include_24hr_change=true';
@@ -80,5 +96,5 @@ export const CURRENCY_LOCALE_MAP = {
   EUR: 'fr-FR',
 };
 
-export const FEES_CACHE_KEY = 'agentic_space_fees_cache';
+export const FEES_CACHE_KEY = 'agentic_space_fees_cache_v2';
 export const FEES_CACHE_TTL_MS = 60_000;

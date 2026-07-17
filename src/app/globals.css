@@ -34,6 +34,68 @@ body {
   @apply mb-1 block text-sm font-medium text-slate-300;
 }
 
+/* Certificado A4 paisagem */
+.certificate-preview-shell {
+  aspect-ratio: 297 / 210;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  background: #f8f4ea;
+  box-shadow: 0 24px 70px rgb(0 0 0 / 35%);
+}
+
+.certificate-preview-shell > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+@page {
+  size: A4 landscape;
+  margin: 0;
+}
+
+@media print {
+  html,
+  body {
+    width: 297mm;
+    height: 210mm;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  #certificate-print-target,
+  #certificate-print-target * {
+    visibility: visible !important;
+  }
+
+  #certificate-print-target {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 297mm !important;
+    height: 210mm !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+  }
+
+  #certificate-print-target > svg {
+    width: 297mm !important;
+    height: 210mm !important;
+  }
+}
+
 /* Markdown styles */
 .markdown-content {
   @apply text-slate-300 leading-relaxed;

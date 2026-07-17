@@ -12,15 +12,16 @@ import { ethers } from 'ethers';
 import {
   Coins, ExternalLink, TrendingUp, BarChart3, Zap, Shield,
   ArrowUpDown, Info, Database, Layers, Wallet, FileText,
+  AlertTriangle, RefreshCw,
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import Link from 'next/link';
-import { useTranslations } from '@/lib/LocaleProvider';
+import { useLocaleContext } from '@/lib/LocaleProvider';
 import { useAuth } from '@/lib/auth-context';
-import { useFees, formatFiat } from '@/lib/useFees';
+import { useFees, formatCas, formatFiat } from '@/lib/useFees';
 import CASSwapModal from '@/components/CASSwapModal';
 import AddTokenButton from '@/components/AddTokenButton';
 import CASLoginGate from '@/components/CASLoginGate';
@@ -30,16 +31,24 @@ import {
   POLYGON_RPC, CASSWAP_READ_ABI, CAS_TOKEN_READ_ABI,
   DIAMOND_READ_ABI,
   DEFAULT_RATIO, MAX_SUPPLY, INITIAL_SUPPLY,
-  PRICE_PHASES, DEFAULT_OPERATIONAL_FEES,
+  PRICE_PHASES,
 } from '@/lib/cas-token-config';
 
 const COINGECKO_POL_CHART = 'https://api.coingecko.com/api/v3/coins/matic-network/market_chart?vs_currency=usd&days=1';
 const COINGECKO_POL_PRICE = 'https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=usd&include_24hr_change=true';
 
 export default function CASTokenPage() {
-  const t = useTranslations();
+  const { locale, t } = useLocaleContext();
   const { session } = useAuth();
-  const { fees: onChainFees, ratio: onChainRatio, polPrice: polPriceData, loading: feesLoading } = useFees();
+  const {
+    feeList,
+    ratio: onChainRatio,
+    polPrice: polPriceData,
+    loading: feesLoading,
+    error: feesError,
+    warning: feesWarning,
+    refresh: refreshFees,
+  } = useFees();
   const [swapOpen, setSwapOpen] = useState(false);
   const [loginGateOpen, setLoginGateOpen] = useState(false);
   const [polChange24h, setPolChange24h] = useState(null);
@@ -134,14 +143,17 @@ export default function CASTokenPage() {
     agentRegistration: t('casToken.fees.agentRegistration'),
     agentValidation: t('casToken.fees.agentValidation'),
     daoProposal: t('casToken.fees.daoProposal'),
+    daoAgendaSubmission: t('casToken.fees.daoAgendaSubmission'),
     daoVoting: t('casToken.fees.daoVoting'),
+    certificateIssuance: t('casToken.fees.certificateIssuance'),
   };
 
-  const feeOrder = ['userRegistration', 'agentRegistration', 'agentValidation', 'daoProposal', 'daoVoting'];
+  const getFeeLabel = (fee) => feeLabels[fee.operation]
+    ?? `${t('casToken.fees.unknownFee')} #${fee.feeType}`;
 
   const formatFeeLine = (feeObj) => {
     if (!feeObj) return '—';
-    const parts = [`${feeObj.cas} CAS`];
+    const parts = [`${formatCas(feeObj.casFormatted, locale)} CAS`];
     if (feeObj.usd != null) {
       parts.push(formatFiat(feeObj.usd, 'USD'));
     }
@@ -402,19 +414,83 @@ export default function CASTokenPage() {
             </div>
           </div>
           <div className="space-y-3">
-            <h3 className="font-semibold text-white">{t('casToken.tokenomics.fees.title')}</h3>
-            <div className="rounded-lg bg-slate-800/50 p-4 space-y-2 text-sm">
-              {feeOrder.map((key) => {
-                const feeObj = onChainFees?.[key];
-                return (
-                  <div key={key} className="flex justify-between">
-                    <span className="text-slate-400">{feeLabels[key]}</span>
-                    <span className="text-white text-right">
-                      {feesLoading ? t('fees.loading', 'Carregando taxas...') : formatFeeLine(feeObj)}
-                    </span>
+            <div className="flex items-center justify-between gap-3">
+              <h3 id="operational-fees-title" className="font-semibold text-white">
+                {t('casToken.tokenomics.fees.title')}
+              </h3>
+              <button
+                type="button"
+                onClick={refreshFees}
+                disabled={feesLoading}
+                className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-brand-300 transition-colors hover:bg-brand-500/10 hover:text-brand-200 disabled:cursor-wait disabled:opacity-50"
+                aria-label={t('fees.refresh')}
+              >
+                <RefreshCw aria-hidden="true" size={14} className={feesLoading ? 'animate-spin' : ''} />
+                {t('fees.refresh')}
+              </button>
+            </div>
+            <div
+              className="rounded-lg bg-slate-800/50 p-4 text-sm"
+              aria-labelledby="operational-fees-title"
+              aria-busy={feesLoading}
+            >
+              {feesLoading ? (
+                <div className="flex items-center gap-2 py-4 text-slate-400" role="status" aria-live="polite">
+                  <RefreshCw aria-hidden="true" size={16} className="animate-spin" />
+                  <span>{t('fees.loading')}</span>
+                </div>
+              ) : feesError ? (
+                <div className="space-y-3 rounded-md border border-red-500/30 bg-red-500/10 p-3" role="alert">
+                  <div className="flex items-start gap-2 text-red-200">
+                    <AlertTriangle aria-hidden="true" size={18} className="mt-0.5 shrink-0" />
+                    <div>
+                      <p className="font-medium">{t('fees.unavailable')}</p>
+                      <p className="mt-1 text-xs text-red-200/80">{t('fees.unavailableHint')}</p>
+                    </div>
                   </div>
-                );
-              })}
+                  <button type="button" onClick={refreshFees} className="btn-secondary text-xs">
+                    {t('fees.tryAgain')}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {feesWarning ? (
+                    <div className="flex items-start gap-2 rounded-md border border-yellow-500/30 bg-yellow-500/10 p-3 text-xs text-yellow-200" role="status">
+                      <AlertTriangle aria-hidden="true" size={16} className="mt-0.5 shrink-0" />
+                      <span>{t('fees.partialCatalog')}</span>
+                    </div>
+                  ) : null}
+
+                  {feeList?.length ? (
+                    <dl className="divide-y divide-slate-700/70">
+                      {feeList.map((fee) => (
+                        <div key={fee.feeType} className="flex items-start justify-between gap-4 py-2.5 first:pt-0 last:pb-0">
+                          <dt className="min-w-0 text-slate-400">
+                            <span className="block">{getFeeLabel(fee)}</span>
+                            <span className="mt-0.5 block font-mono text-[10px] text-slate-600">
+                              {t('fees.onchainType')} #{fee.feeType}
+                            </span>
+                          </dt>
+                          <dd className="shrink-0 text-right font-medium text-white">
+                            {formatFeeLine(fee)}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  ) : (
+                    <p className="py-3 text-slate-400" role="status">{t('fees.empty')}</p>
+                  )}
+
+                  <a
+                    href={`${EXPLORER_BASE}/address/${DIAMOND_ADDRESS}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-slate-500 transition-colors hover:text-brand-300"
+                  >
+                    {t('fees.contractSource')} <ExternalLink aria-hidden="true" size={12} />
+                  </a>
+                </div>
+              )}
             </div>
           </div>
         </div>

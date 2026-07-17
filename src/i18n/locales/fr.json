@@ -597,7 +597,10 @@
       "agentRegistration": "Enregistrement d'agent",
       "agentValidation": "Validation d'agent",
       "daoProposal": "Proposition DAO",
-      "daoVoting": "Vote DAO"
+      "daoAgendaSubmission": "Soumission d'une proposition",
+      "daoVoting": "Vote DAO",
+      "certificateIssuance": "Émission de certificat/diplôme",
+      "unknownFee": "Frais opérationnels"
     },
     "documents": {
       "title": "Documents",
@@ -634,6 +637,13 @@
   "fees": {
     "loading": "Chargement des frais...",
     "unavailable": "Impossible de charger les frais on-chain",
+    "unavailableHint": "Le contrat Diamond ou le réseau Polygon peut être temporairement indisponible.",
+    "partialCatalog": "Les valeurs principales ont été chargées, mais le catalogue extensible du contrat est temporairement indisponible.",
+    "empty": "Aucun frais n'est enregistré dans le contrat.",
+    "refresh": "Actualiser les frais",
+    "tryAgain": "Réessayer",
+    "onchainType": "Type on-chain",
+    "contractSource": "Voir le contrat Diamond sur Polygonscan",
     "estimatedCost": "Coût estimé",
     "equivalentIn": "Équivalent en"
   },

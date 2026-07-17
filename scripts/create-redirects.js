@@ -41,6 +41,7 @@ function createRedirects() {
   const redirects = [
     { dir: 'tutoriais', target: '/tutoriais.html' },
     { dir: 'info/cas-token', target: '/info/cas-token.html' },
+    { dir: 'certificado', target: '/certificado.html' },
   ];
   
   redirects.forEach(({ dir, target }) => {

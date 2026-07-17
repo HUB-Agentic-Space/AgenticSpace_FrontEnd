@@ -11,7 +11,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Bot, UserCircle, PlusCircle, LogOut, Sparkles, Info, ChevronDown, Shield, Code, BarChart3, BookOpen, Activity, BookText, Search, LayoutDashboard, Coins, Vote } from 'lucide-react';
+import { Bot, UserCircle, PlusCircle, LogOut, Sparkles, Info, ChevronDown, Shield, Code, BarChart3, Activity, BookText, Search, LayoutDashboard, Coins, Vote, BadgeCheck, Award } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useTranslations, useLocaleContext } from '@/lib/LocaleProvider';
 import LanguageSelector from '@/components/LanguageSelector';
@@ -61,10 +61,10 @@ export default function Navbar() {
     }
   };
 
-  const isInstitucionalActive = pathname === '/about' || pathname === '/security-policy' || pathname === '/info/api-agentes' || pathname === '/info/cas-token' || pathname === '/stats' || pathname === '/agent-logs';
+  const isInstitucionalActive = pathname === '/about' || pathname === '/security-policy' || pathname === '/info/api-agentes' || pathname === '/info/cas-token' || pathname === '/stats' || pathname === '/agent-logs' || pathname === '/certificado/verificar';
   const isTutoriaisActive = pathname?.startsWith('/tutoriais');
   const isComunidadeActive = pathname?.startsWith('/comunidade');
-  const isUserActive = pathname === '/profile' || pathname?.startsWith('/agents') || pathname === '/admin';
+  const isUserActive = pathname === '/profile' || pathname?.startsWith('/agents') || pathname === '/admin' || pathname === '/certificado';
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-950/80 backdrop-blur">
@@ -158,6 +158,14 @@ export default function Navbar() {
                   >
                     <Coins size={16} />
                     {t('navbar.casToken')}
+                  </Link>
+                  <Link
+                    href="/certificado/verificar"
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
+                    onClick={() => setInstitucionalOpen(false)}
+                  >
+                    <BadgeCheck size={16} />
+                    Verificar certificado
                   </Link>
                   
                   {/* Submenu Estatísticas */}
@@ -266,6 +274,16 @@ export default function Navbar() {
                   >
                     <PlusCircle size={16} />
                     {t('navbar.createAgent')}
+                  </Link>
+                  <Link
+                    href="/certificado"
+                    className={`flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-800 hover:text-white ${
+                      pathname === '/certificado' ? 'text-brand-400' : 'text-slate-300'
+                    }`}
+                    onClick={() => setUserMenuOpen(false)}
+                  >
+                    <Award size={16} />
+                    Meu certificado
                   </Link>
                   {isAdmin && (
                     <Link

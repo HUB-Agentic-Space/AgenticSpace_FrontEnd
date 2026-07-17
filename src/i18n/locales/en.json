@@ -597,7 +597,10 @@
       "agentRegistration": "Agent registration",
       "agentValidation": "Agent validation",
       "daoProposal": "DAO proposal",
-      "daoVoting": "DAO voting"
+      "daoAgendaSubmission": "Agenda submission",
+      "daoVoting": "DAO voting",
+      "certificateIssuance": "Certificate/diploma issuance",
+      "unknownFee": "Operational fee"
     },
     "documents": {
       "title": "Documents",
@@ -638,6 +641,13 @@
   "fees": {
     "loading": "Loading fees...",
     "unavailable": "Could not load on-chain fees",
+    "unavailableHint": "The Diamond contract or Polygon network may be temporarily unavailable.",
+    "partialCatalog": "Core values were loaded, but the contract's extensible catalog is temporarily unavailable.",
+    "empty": "No fees are registered in the contract.",
+    "refresh": "Refresh fees",
+    "tryAgain": "Try again",
+    "onchainType": "On-chain type",
+    "contractSource": "View Diamond contract on Polygonscan",
     "estimatedCost": "Estimated cost",
     "equivalentIn": "Equivalent in"
   },

@@ -597,7 +597,10 @@
       "agentRegistration": "Registro de agente",
       "agentValidation": "Validação de agente",
       "daoProposal": "Proposta de DAO",
-      "daoVoting": "Votação de DAO"
+      "daoAgendaSubmission": "Submissão de pauta",
+      "daoVoting": "Votação de DAO",
+      "certificateIssuance": "Emissão de certificado/diploma",
+      "unknownFee": "Taxa operacional"
     },
     "documents": {
       "title": "Documentos",
@@ -638,6 +641,13 @@
   "fees": {
     "loading": "Carregando taxas...",
     "unavailable": "Não foi possível carregar as taxas on-chain",
+    "unavailableHint": "O contrato Diamond ou a rede Polygon pode estar temporariamente indisponível.",
+    "partialCatalog": "Os valores básicos foram carregados, mas o catálogo extensível do contrato está temporariamente indisponível.",
+    "empty": "Nenhuma taxa está cadastrada no contrato.",
+    "refresh": "Atualizar taxas",
+    "tryAgain": "Tentar novamente",
+    "onchainType": "Tipo on-chain",
+    "contractSource": "Consultar contrato Diamond no Polygonscan",
     "estimatedCost": "Custo estimado",
     "equivalentIn": "Equivalente em"
   },
