@@ -10,6 +10,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { FileText, Vote, CheckCircle, XCircle, Clock, Info, Mail, MessageCircle, Loader2, AlertCircle } from 'lucide-react';
 import { API_BASE_URL, API_PREFIX, getStoredJwt } from '@/lib/api';
+import { useFees, formatFiat } from '@/lib/useFees';
+import { useTranslations } from '@/lib/LocaleProvider';
 
 const PAUTA_STATUS = {
   pending: { label: 'Em Análise', color: 'bg-slate-500/20 text-slate-300 border-slate-500/30' },
@@ -29,11 +31,28 @@ const VOTACAO_STATUS = {
 };
 
 export default function ComunidadePage() {
+  const t = useTranslations();
+  const { fees, loading: feesLoading } = useFees();
   const [tab, setTab] = useState('pautas');
   const [pautas, setPautas] = useState([]);
   const [votacoes, setVotacoes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const proposalFee = fees?.daoProposal;
+  const votingFee = fees?.daoVoting;
+
+  const formatFeeDisplay = (fee) => {
+    if (!fee) return '';
+    const parts = [`${fee.cas} CAS`];
+    if (fee.usd != null) {
+      parts.push(formatFiat(fee.usd, 'USD'));
+    }
+    if (fee.localeCurrency != null && fee.currencyCode !== 'USD') {
+      parts.push(formatFiat(fee.localeCurrency, fee.currencyCode));
+    }
+    return parts.join(' / ');
+  };
 
   useEffect(() => {
     async function load() {
@@ -70,10 +89,10 @@ export default function ComunidadePage() {
           <div className="space-y-3 text-sm text-slate-300">
             <h2 className="font-semibold text-white">Como funciona a Governança?</h2>
             <ol className="list-decimal space-y-1 pl-5">
-              <li><strong>Proponha uma pauta:</strong> descreva uma ideia ou mudança para a comunidade. Custo: 10 CAS (1/10 do registro de agente).</li>
+              <li><strong>Proponha uma pauta:</strong> descreva uma ideia ou mudança para a comunidade. {t('comunidade.cost', 'Custo')}: {feesLoading ? t('fees.loading', 'Carregando taxas...') : formatFeeDisplay(proposalFee) || '10 CAS'} (1/10 do registro de agente).</li>
               <li><strong>Aprovação do admin:</strong> um administrador revisa e aprova ou rejeita sua pauta.</li>
               <li><strong>Votação:</strong> pautas aprovadas são agrupadas em votações com verificação Merkle tree on-chain.</li>
-              <li><strong>Voto:</strong> vote a favor, contra ou abstenção. Custo: 50 CAS (1/2 do registro de agente).</li>
+              <li><strong>Voto:</strong> vote a favor, contra ou abstenção. {t('comunidade.cost', 'Custo')}: {feesLoading ? t('fees.loading', 'Carregando taxas...') : formatFeeDisplay(votingFee) || '50 CAS'} (1/2 do registro de agente).</li>
               <li><strong>Resultado:</strong> ao final da votação, o resultado é registrado on-chain com transparência total.</li>
             </ol>
             <p className="text-xs text-slate-400">

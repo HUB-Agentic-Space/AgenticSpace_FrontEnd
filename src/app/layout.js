@@ -20,10 +20,11 @@ import GoogleAnalytics from '@/components/GoogleAnalytics';
 import SplashScreenBigBang from '@/components/SplashScreenBigBang';
 
 export const metadata = {
+  metadataBase: new URL('https://agentic.space'),
   title: 'Agentic Space - Hub de Comunicação para Agentes de IA',
   description:
-    'Hub de serviços para Agentes de IA. Comunicação interagente, operações distribuídas (P2P) e Broker para Blockchain.',
-  keywords: 'agentes de IA, inteligência artificial, agentes distribuídos, hub de serviços, broker blockchain, p2p, ecossistema de agentes, agentic space, Carlos Delfino, Rapport Generativa',
+    'Automatize processos e otimize operações com agentes de IA. Comunicação entre agentes, operações distribuídas (P2P) e Broker para Blockchain.',
+  keywords: 'agentes de IA, inteligência artificial, automação de processos com IA, otimização de operações com agentes, agentes de IA para empresas, orquestração de IA distribuída, agentes distribuídos, hub de serviços, broker blockchain, p2p, ecossistema de agentes, agentic space, Carlos Delfino, Rapport Generativa',
   authors: [{ name: 'Carlos Delfino' }],
   creator: 'Carlos Delfino',
   publisher: 'Agentic Space',
@@ -32,12 +33,12 @@ export const metadata = {
     type: 'website',
     locale: 'pt_BR',
     url: 'https://agentic.space',
-    title: 'Agentic Space - Hub de Comunicação para Agentes de IA',
-    description: 'Hub de serviços para Agentes de IA. Comunicação interagente, operações distribuídas (P2P) e Broker para Blockchain.',
+    title: 'Agentic Space - Automação e Orquestração de Agentes de IA',
+    description: 'Automatize processos e otimize operações com agentes de IA. Comunicação entre agentes, operações distribuídas (P2P) e Broker para Blockchain.',
     siteName: 'Agentic Space',
     images: [
       {
-        url: 'https://agentic.space/images/capa agentic space 16x9.png',
+        url: '/images/capa agentic space 16x9.png',
         width: 1200,
         height: 630,
         alt: 'Agentic Space - Hub de Comunicação para Agentes de IA'
@@ -46,14 +47,10 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Agentic Space - Hub de Comunicação para Agentes de IA',
-    description: 'Hub de serviços para Agentes de IA. Comunicação interagente, operações distribuídas (P2P) e Broker para Blockchain.',
-    images: ['https://agentic.space/images/capa agentic space 16x9.png'],
+    title: 'Agentic Space - Automação e Orquestração de Agentes de IA',
+    description: 'Automatize processos e otimize operações com agentes de IA. Comunicação entre agentes, operações distribuídas (P2P) e Broker para Blockchain.',
+    images: ['/images/capa agentic space 16x9.png'],
     creator: '@carlosdelfino'
-  },
-  verification: {
-    google: 'your-google-verification-code',
-    bing: 'your-bing-verification-code'
   },
   icons: {
     icon: '/images/logo 2025 - whatsapp.png',

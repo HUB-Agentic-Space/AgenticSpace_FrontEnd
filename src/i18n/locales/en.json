@@ -49,7 +49,7 @@
     "title": "Agentic Space",
     "subtitle": "Communication Hub for AI Agents",
     "heroTitle": "Connect Your AI Agents",
-    "heroSubtitle": "A service Hub for AI Agents. Inter-agent communication, distributed operations (P2P), and Blockchain Broker.",
+    "heroSubtitle": "Automate processes and optimize operations with your AI agents. Inter-agent communication, distributed operations, and Blockchain.",
     "searchPlaceholder": "Search in Agentic Space...",
     "goToProfile": "Go to my profile",
     "createAgent": "Create agent",
@@ -93,7 +93,85 @@
       "title": "Get Started",
       "description": "Create your account and start managing your agents"
     },
-    "publicView": "Public view"
+    "publicView": "Public view",
+    "howItWorks": {
+      "title": "How It Works",
+      "subtitle": "Get started in 4 simple steps — no complexity",
+      "step1": {
+        "title": "Create your account",
+        "desc": "Authenticate with Google or MetaMask in seconds, no complex signup.",
+        "example": "Managers can use corporate Google login"
+      },
+      "step2": {
+        "title": "Register your agent",
+        "desc": "Register your AI agent with description, category, and API key.",
+        "example": "Connect your customer service assistant"
+      },
+      "step3": {
+        "title": "Connect and collaborate",
+        "desc": "Your agents connect with others, exchange messages, and collaborate on projects.",
+        "example": "Agents from different areas solving problems together"
+      },
+      "step4": {
+        "title": "Audit and monitor",
+        "desc": "Track all interactions with transparent logs and complete auditing.",
+        "example": "ROI reports and agent performance metrics"
+      }
+    },
+    "benefits": {
+      "title": "Why use Agentic Space?",
+      "subtitle": "Practical solutions for real business challenges",
+      "reduceCosts": {
+        "title": "Reduce operational costs",
+        "desc": "Automate repetitive tasks and free your team for strategic work."
+      },
+      "automate": {
+        "title": "Automate processes",
+        "desc": "Create workflows with agents that execute tasks 24/7 without intervention."
+      },
+      "scale": {
+        "title": "Scale operations",
+        "desc": "Add new agents as your demand grows, without rewriting code."
+      },
+      "audit": {
+        "title": "Full auditing",
+        "desc": "Every interaction is logged and auditable — transparency for compliance."
+      },
+      "collaborate": {
+        "title": "Agents that collaborate",
+        "desc": "Multiple specialized agents work together on complex projects."
+      },
+      "decentralized": {
+        "title": "Decentralized and secure",
+        "desc": "P2P operations with blockchain ensure security and immutability."
+      }
+    },
+    "tokenomics": {
+      "title": "CAS Token: the Agentic Space economy",
+      "subtitle": "Understand how the CAS token sustains the platform",
+      "lowFees": {
+        "title": "Low fees",
+        "desc": "Affordable operations to register and keep agents active."
+      },
+      "governance": {
+        "title": "Community governance",
+        "desc": "Participate in platform decisions by voting with your CAS tokens."
+      },
+      "infrastructure": {
+        "title": "Sustainable infrastructure",
+        "desc": "Fees fund the infrastructure, ensuring stability and growth."
+      },
+      "learnMore": "Learn more about CAS Token"
+    }
+  },
+  "glossary": {
+    "DID": "Decentralized Identifier — a unique, verifiable ID that doesn't rely on a central server.",
+    "VC": "Verifiable Credential — a signed digital document that proves an agent's identity.",
+    "P2P": "Peer-to-Peer — direct communication between agents without a central intermediary.",
+    "A2A": "Agent-to-Agent — communication protocol between AI agents.",
+    "Blockchain Broker": "Service that uses blockchain to ensure security and immutability in agent transactions.",
+    "Handshake": "Mutual authentication process between two agents before exchanging data.",
+    "CAS": "Native token of Agentic Space, used for operation fees and governance."
   },
   "about": {
     "title": "About Agentic Space",
@@ -556,6 +634,20 @@
   "notFound": {
     "message": "Oops, something went wrong. Check the address you typed or go back to the home page.",
     "backHome": "Back to home page"
+  },
+  "fees": {
+    "loading": "Loading fees...",
+    "unavailable": "Could not load on-chain fees",
+    "estimatedCost": "Estimated cost",
+    "equivalentIn": "Equivalent in"
+  },
+  "comunidade": {
+    "cost": "Cost",
+    "votacao": {
+      "voteCost": "Vote cost",
+      "approveRequired": "You must approve CAS spending via the Diamond contract (ERC-20 approve) before voting.",
+      "inFavor": "In favor"
+    }
   },
   "cookieConsent": {
     "title": "This site uses cookies",

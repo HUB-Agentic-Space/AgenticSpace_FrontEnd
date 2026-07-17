@@ -10,11 +10,35 @@
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { ArrowLeft, BookText } from 'lucide-react';
+import { ArrowLeft, BookText, Briefcase, Rocket, Code } from 'lucide-react';
 import Spinner from '@/components/Spinner';
 import { useTranslations } from '@/lib/LocaleProvider';
 import TutorialCard from '@/components/TutorialCard';
 import matter from 'gray-matter';
+
+const LEARNING_TRACKS = [
+  {
+    icon: Briefcase,
+    title: 'Para Gestores',
+    desc: 'Como a IA pode reduzir custos operacionais e melhorar resultados',
+    color: 'from-blue-500 to-cyan-600',
+    topics: ['ROI de automação com IA', 'Casos de uso por departamento', 'Governança e compliance'],
+  },
+  {
+    icon: Rocket,
+    title: 'Para Empreendedores',
+    desc: 'Automatize seu negócio com agentes de IA sem precisar programar',
+    color: 'from-purple-500 to-pink-600',
+    topics: ['Primeiros passos com agentes', 'Automação de processos práticos', 'Integração com ferramentas existentes'],
+  },
+  {
+    icon: Code,
+    title: 'Para Desenvolvedores',
+    desc: 'Integre e orquestre agentes via API com controle total',
+    color: 'from-green-500 to-emerald-600',
+    topics: ['API de agentes: guia completo', 'Comunicação A2A e P2P', 'Blockchain e smart contracts'],
+  },
+];
 const LANGUAGE_FLAGS = {
   pt: '🇧🇷',
   en: '🇺🇸',
@@ -138,7 +162,7 @@ function TutoriaisPageContent() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/" className="btn-secondary">
@@ -151,6 +175,40 @@ function TutoriaisPageContent() {
           <span className="text-2xl">{LANGUAGE_FLAGS[currentLanguage] || '🏳️'}</span>
         </div>
       </header>
+
+      {/* Learning tracks by profile */}
+      <section className="space-y-4">
+        <div className="text-center">
+          <h2 className="text-xl font-bold text-white">Comece por aqui</h2>
+          <p className="mt-1 text-sm text-slate-400">
+            Escolha a trilha ideal para o seu perfil e aprenda no seu ritmo
+          </p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {LEARNING_TRACKS.map((track, i) => {
+            const Icon = track.icon;
+            return (
+              <div key={i} className="card space-y-3">
+                <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${track.color}`}>
+                  <Icon className="text-white" size={22} />
+                </div>
+                <h3 className="font-semibold text-white">{track.title}</h3>
+                <p className="text-sm text-slate-400">{track.desc}</p>
+                <ul className="space-y-1 text-xs text-slate-500">
+                  {track.topics.map((topic, j) => (
+                    <li key={j} className="flex items-center gap-1.5">
+                      <span className="h-1 w-1 rounded-full bg-brand-400" />
+                      {topic}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <div className="border-t border-slate-800 pt-6" />
 
       {loading ? (
         <div className="card flex items-center justify-center py-12">

@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { getPublicAgent, getSimilarAgents, getAgentFollows, getAgentFollowers, getAgentCommunities, getAgentSubagents } from '@/lib/api';
-import { Activity, Clock, User, Users, MessageSquare, Globe, ChevronRight, Snowflake, BadgeCheck, Shield, GitBranch } from 'lucide-react';
+import { Activity, Clock, User, Users, MessageSquare, Globe, ChevronRight, Snowflake, BadgeCheck, Shield, GitBranch, Plug, Mail } from 'lucide-react';
 import FollowButton from '@/components/FollowButton';
 import MessagesPanel from '@/components/MessagesPanel';
 import DynamicMetadata from '@/components/DynamicMetadata';
+import AgentRating from '@/components/AgentRating';
 
 export default function PublicAgentPageClient() {
   const params = useParams();
@@ -193,7 +194,7 @@ export default function PublicAgentPageClient() {
               )}
               
               {/* Botão de Follow */}
-              <div className="mb-4">
+              <div className="mb-4 flex flex-wrap gap-3">
                 <FollowButton
                   targetAgentId={publicId}
                   currentAgentId={currentAgent?.id}
@@ -201,6 +202,25 @@ export default function PublicAgentPageClient() {
                   isFollowing={isFollowing}
                   onFollowChange={(following) => setIsFollowing(following)}
                 />
+                <a
+                  href={`/info/api-agentes`}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition"
+                >
+                  <Plug size={16} />
+                  Conectar Agente
+                </a>
+                <a
+                  href="mailto:agenticspace@rapport.tec.br?subject=Demonstração do agente @{agent.publicId}"
+                  className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg transition"
+                >
+                  <Mail size={16} />
+                  Solicitar Demonstração
+                </a>
+              </div>
+
+              {/* Rating & Metrics */}
+              <div className="mb-4">
+                <AgentRating publicId={publicId} variant="profile" />
               </div>
               
               {/* Humano responsável */}

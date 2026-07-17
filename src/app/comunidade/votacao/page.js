@@ -10,6 +10,9 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Vote, Loader2, AlertCircle, CheckCircle, XCircle, Clock, ArrowLeft, Info, Mail, MessageCircle } from 'lucide-react';
 import { API_BASE_URL, API_PREFIX, getStoredJwt } from '@/lib/api';
+import { useFees, formatFiat } from '@/lib/useFees';
+import { useLocaleContext } from '@/lib/LocaleProvider';
+import { useTranslations } from '@/lib/LocaleProvider';
 
 const VOTACAO_STATUS = {
   active: { label: 'Ativa', color: 'bg-blue-500/20 text-blue-300 border-blue-500/30' },
@@ -24,12 +27,32 @@ const VOTACAO_STATUS = {
 function VotacaoPageContent() {
   const searchParams = useSearchParams();
   const id = searchParams.get('id');
+  const t = useTranslations();
+  const { locale } = useLocaleContext();
+  const { fees, loading: feesLoading } = useFees();
   const [votacao, setVotacao] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [voteLoading, setVoteLoading] = useState(null);
   const [voteError, setVoteError] = useState('');
   const [voteSuccess, setVoteSuccess] = useState(null);
+
+  const votingFee = fees?.daoVoting;
+  const votingFeeCas = votingFee?.cas ?? 50;
+  const votingFeeUsd = votingFee?.usd;
+  const votingFeeLocale = votingFee?.localeCurrency;
+  const votingCurrencyCode = votingFee?.currencyCode || 'USD';
+
+  const formatFeeDisplay = () => {
+    const parts = [`${votingFeeCas} CAS`];
+    if (votingFeeUsd != null) {
+      parts.push(formatFiat(votingFeeUsd, 'USD'));
+    }
+    if (votingFeeLocale != null && votingCurrencyCode !== 'USD') {
+      parts.push(formatFiat(votingFeeLocale, votingCurrencyCode));
+    }
+    return parts.join(' / ');
+  };
 
   useEffect(() => {
     if (!id) { setLoading(false); return; }
@@ -172,8 +195,8 @@ function VotacaoPageContent() {
               <div className="flex items-start gap-2">
                 <Info className="mt-0.5 shrink-0 text-brand-400" size={16} />
                 <div className="text-sm text-slate-300">
-                  <p><strong>Custo do voto:</strong> 50 CAS (1/2 do registro de agente) + gas, depositados no InfrastructureFund.</p>
-                  <p className="mt-1">Você precisa ter aprovado o gasto de CAS pelo contrato Diamond (ERC-20 approve) antes de votar.</p>
+                  <p><strong>{t('comunidade.votacao.voteCost', 'Custo do voto')}:</strong> {feesLoading ? t('fees.loading', 'Carregando taxas...') : formatFeeDisplay()} + gas, depositados no InfrastructureFund.</p>
+                  <p className="mt-1">{t('comunidade.votacao.approveRequired', 'Você precisa ter aprovado o gasto de CAS pelo contrato Diamond (ERC-20 approve) antes de votar.')}</p>
                   <div className="flex flex-wrap gap-4 pt-2 text-xs">
                     <a href="mailto:agenticspace@rapport.tec.br" className="flex items-center gap-1 text-brand-400 hover:text-brand-300">
                       <Mail size={14} /> agenticspace@rapport.tec.br
@@ -215,7 +238,7 @@ function VotacaoPageContent() {
                 className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-6 py-3 text-sm font-medium text-white transition hover:bg-green-500 disabled:opacity-50"
               >
                 {voteLoading === 1 ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
-                A favor (50 CAS)
+                {t('comunidade.votacao.inFavor', 'A favor')} ({votingFeeCas} CAS)
               </button>
               <button
                 onClick={() => handleVote(0)}

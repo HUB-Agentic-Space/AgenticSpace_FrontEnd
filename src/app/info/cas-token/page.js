@@ -20,6 +20,7 @@ import {
 import Link from 'next/link';
 import { useTranslations } from '@/lib/LocaleProvider';
 import { useAuth } from '@/lib/auth-context';
+import { useFees, formatFiat } from '@/lib/useFees';
 import CASSwapModal from '@/components/CASSwapModal';
 import AddTokenButton from '@/components/AddTokenButton';
 import CASLoginGate from '@/components/CASLoginGate';
@@ -38,58 +39,43 @@ const COINGECKO_POL_PRICE = 'https://api.coingecko.com/api/v3/simple/price?ids=m
 export default function CASTokenPage() {
   const t = useTranslations();
   const { session } = useAuth();
+  const { fees: onChainFees, ratio: onChainRatio, polPrice: polPriceData, loading: feesLoading } = useFees();
   const [swapOpen, setSwapOpen] = useState(false);
   const [loginGateOpen, setLoginGateOpen] = useState(false);
-  const [polPrice, setPolPrice] = useState(null);
   const [polChange24h, setPolChange24h] = useState(null);
   const [chartData, setChartData] = useState([]);
-  const [ratio, setRatio] = useState(DEFAULT_RATIO);
   const [totalSupply, setTotalSupply] = useState(null);
-  const [operationalFees, setOperationalFees] = useState(DEFAULT_OPERATIONAL_FEES);
   const [loadingPrice, setLoadingPrice] = useState(true);
   const [priceError, setPriceError] = useState(false);
   const refreshTimer = useRef(null);
 
+  const ratio = onChainRatio ?? { numerator: String(DEFAULT_RATIO.numerator), denominator: String(DEFAULT_RATIO.denominator) };
   const ratioNum = Number(ratio.numerator) / Number(ratio.denominator);
+  const polPrice = polPriceData?.usd ?? null;
   const casPriceUsd = polPrice ? polPrice / ratioNum : null;
 
-  const fetchOnChainData = useCallback(async () => {
+  const fetchTotalSupply = useCallback(async () => {
     try {
       const provider = new ethers.JsonRpcProvider(POLYGON_RPC);
-      const swap = new ethers.Contract(CASSWAP_ADDRESS, CASSWAP_READ_ABI, provider);
-      const [num, den] = await swap.getRatio();
-      setRatio({ numerator: num.toString(), denominator: den.toString() });
-
       const cas = new ethers.Contract(CAS_TOKEN_ADDRESS, CAS_TOKEN_READ_ABI, provider);
       const supply = await cas.totalSupply();
       setTotalSupply(Number(ethers.formatEther(supply)));
-
-      const diamond = new ethers.Contract(DIAMOND_ADDRESS, DIAMOND_READ_ABI, provider);
-      const fees = await diamond.getFees();
-      const feesInCas = DEFAULT_OPERATIONAL_FEES.map((f) => ({
-        ...f,
-        fee: Number(ethers.formatEther(fees[f.contractField])),
-      }));
-      setOperationalFees(feesInCas);
-      console.info('[cas-token] fees loaded from Diamond:', feesInCas);
     } catch (err) {
-      console.error('[cas-token] on-chain fetch failed:', err.message);
+      console.error('[cas-token] totalSupply fetch failed:', err.message);
     }
   }, []);
 
-  const fetchPriceData = useCallback(async () => {
+  const fetchPriceChange = useCallback(async () => {
     try {
       const res = await fetch(COINGECKO_POL_PRICE);
       if (!res.ok) throw new Error('CoinGecko price fetch failed');
       const data = await res.json();
-      const price = data['matic-network']?.usd;
       const change = data['matic-network']?.usd_24h_change;
-      if (price) {
-        setPolPrice(price);
+      if (change != null) {
         setPolChange24h(change);
       }
     } catch (err) {
-      console.error('[cas-token] price fetch failed:', err.message);
+      console.error('[cas-token] price change fetch failed:', err.message);
       setPriceError(true);
     }
   }, []);
@@ -114,10 +100,10 @@ export default function CASTokenPage() {
 
   useEffect(() => {
     setLoadingPrice(true);
-    Promise.all([fetchOnChainData(), fetchPriceData()]).finally(() => {
+    Promise.all([fetchTotalSupply(), fetchPriceChange()]).finally(() => {
       setLoadingPrice(false);
     });
-  }, [fetchOnChainData, fetchPriceData]);
+  }, [fetchTotalSupply, fetchPriceChange]);
 
   useEffect(() => {
     fetchChartData();
@@ -125,11 +111,11 @@ export default function CASTokenPage() {
 
   useEffect(() => {
     refreshTimer.current = setInterval(() => {
-      fetchPriceData();
+      fetchPriceChange();
       fetchChartData();
     }, 60000);
     return () => clearInterval(refreshTimer.current);
-  }, [fetchPriceData, fetchChartData]);
+  }, [fetchPriceChange, fetchChartData]);
 
   const specs = [
     { label: t('casToken.specs.name'), value: 'Agentic Space CAS Token v2.1' },
@@ -148,6 +134,21 @@ export default function CASTokenPage() {
     agentRegistration: t('casToken.fees.agentRegistration'),
     agentValidation: t('casToken.fees.agentValidation'),
     daoProposal: t('casToken.fees.daoProposal'),
+    daoVoting: t('casToken.fees.daoVoting'),
+  };
+
+  const feeOrder = ['userRegistration', 'agentRegistration', 'agentValidation', 'daoProposal', 'daoVoting'];
+
+  const formatFeeLine = (feeObj) => {
+    if (!feeObj) return '—';
+    const parts = [`${feeObj.cas} CAS`];
+    if (feeObj.usd != null) {
+      parts.push(formatFiat(feeObj.usd, 'USD'));
+    }
+    if (feeObj.localeCurrency != null && feeObj.currencyCode && feeObj.currencyCode !== 'USD') {
+      parts.push(formatFiat(feeObj.localeCurrency, feeObj.currencyCode));
+    }
+    return parts.join(' · ');
   };
 
   return (
@@ -403,12 +404,17 @@ export default function CASTokenPage() {
           <div className="space-y-3">
             <h3 className="font-semibold text-white">{t('casToken.tokenomics.fees.title')}</h3>
             <div className="rounded-lg bg-slate-800/50 p-4 space-y-2 text-sm">
-              {operationalFees.map((f, i) => (
-                <div key={i} className="flex justify-between">
-                  <span className="text-slate-400">{feeLabels[f.operation]}</span>
-                  <span className="text-white">{f.fee} CAS</span>
-                </div>
-              ))}
+              {feeOrder.map((key) => {
+                const feeObj = onChainFees?.[key];
+                return (
+                  <div key={key} className="flex justify-between">
+                    <span className="text-slate-400">{feeLabels[key]}</span>
+                    <span className="text-white text-right">
+                      {feesLoading ? t('fees.loading', 'Carregando taxas...') : formatFeeLine(feeObj)}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

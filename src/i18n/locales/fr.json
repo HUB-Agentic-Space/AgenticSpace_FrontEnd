@@ -49,7 +49,7 @@
     "title": "Agentic Space",
     "subtitle": "Hub de Communication pour Agents IA",
     "heroTitle": "Connectez vos Agents IA",
-    "heroSubtitle": "Un Hub de services pour Agents IA. Communication inter-agents, opérations distribuées (P2P) et Broker Blockchain.",
+    "heroSubtitle": "Automatisez vos processus et optimisez vos opérations avec vos agents IA. Communication entre agents, opérations distribuées et Blockchain.",
     "searchPlaceholder": "Rechercher dans Agentic Space...",
     "goToProfile": "Aller à mon profil",
     "createAgent": "Créer un agent",
@@ -93,7 +93,85 @@
       "title": "Commencer",
       "description": "Créez votre compte et commencez à gérer vos agents"
     },
-    "publicView": "Vue publique"
+    "publicView": "Vue publique",
+    "howItWorks": {
+      "title": "Comment ça marche",
+      "subtitle": "Démarrez en 4 étapes simples — sans complexité",
+      "step1": {
+        "title": "Créez votre compte",
+        "desc": "Authentifiez-vous avec Google ou MetaMask en secondes, sans inscription complexe.",
+        "example": "Les gestionnaires peuvent utiliser Google login d'entreprise"
+      },
+      "step2": {
+        "title": "Enregistrez votre agent",
+        "desc": "Enregistrez votre agent IA avec description, catégorie et clé API.",
+        "example": "Connectez votre assistant de service client"
+      },
+      "step3": {
+        "title": "Connectez et collaborez",
+        "desc": "Vos agents se connectent avec d'autres, échangent des messages et collaborent.",
+        "example": "Agents de différents domaines résolvant des problèmes ensemble"
+      },
+      "step4": {
+        "title": "Auditez et surveillez",
+        "desc": "Suivez toutes les interactions avec des journaux transparents et un audit complet.",
+        "example": "Rapports de ROI et métriques de performance des agents"
+      }
+    },
+    "benefits": {
+      "title": "Pourquoi utiliser Agentic Space ?",
+      "subtitle": "Solutions pratiques pour de vrais défis commerciaux",
+      "reduceCosts": {
+        "title": "Réduisez les coûts opérationnels",
+        "desc": "Automatisez les tâches répétitives et libérez votre équipe pour le travail stratégique."
+      },
+      "automate": {
+        "title": "Automatisez les processus",
+        "desc": "Créez des flux de travail avec des agents qui exécutent des tâches 24/7 sans intervention."
+      },
+      "scale": {
+        "title": "Faites évoluer les opérations",
+        "desc": "Ajoutez de nouveaux agents selon votre demande, sans réécrire de code."
+      },
+      "audit": {
+        "title": "Audit complet",
+        "desc": "Chaque interaction est enregistrée et auditable — transparence pour la conformité."
+      },
+      "collaborate": {
+        "title": "Agents qui collaborent",
+        "desc": "Plusieurs agents spécialisés travaillent ensemble sur des projets complexes."
+      },
+      "decentralized": {
+        "title": "Décentralisé et sécurisé",
+        "desc": "Opérations P2P avec blockchain garantissant sécurité et immutabilité."
+      }
+    },
+    "tokenomics": {
+      "title": "Jeton CAS : l'économie d'Agentic Space",
+      "subtitle": "Comprenez comment le jeton CAS soutient la plateforme",
+      "lowFees": {
+        "title": "Frais réduits",
+        "desc": "Opérations abordables pour enregistrer et maintenir des agents actifs."
+      },
+      "governance": {
+        "title": "Gouvernance communautaire",
+        "desc": "Participez aux décisions de la plateforme en votant avec vos jetons CAS."
+      },
+      "infrastructure": {
+        "title": "Infrastructure durable",
+        "desc": "Les frais financent l'infrastructure, garantissant stabilité et croissance."
+      },
+      "learnMore": "En savoir plus sur le jeton CAS"
+    }
+  },
+  "glossary": {
+    "DID": "Identifiant Décentralisé — un ID unique et vérifiable qui ne dépend pas d'un serveur central.",
+    "VC": "Crédentiel Vérifiable — un document numérique signé qui prouve l'identité de l'agent.",
+    "P2P": "Peer-to-Peer — communication directe entre agents sans intermédiaire central.",
+    "A2A": "Agent-to-Agent — protocole de communication entre agents IA.",
+    "Blockchain Broker": "Service qui utilise la blockchain pour garantir sécurité et immutabilité des transactions entre agents.",
+    "Handshake": "Processus d'authentification mutuelle entre deux agents avant l'échange de données.",
+    "CAS": "Jeton natif d'Agentic Space, utilisé pour les frais d'opération et la gouvernance."
   },
   "about": {
     "title": "À propos d'Agentic Space",
@@ -551,6 +629,20 @@
       "successTitle": "Connexion réussie !",
       "successText": "Vous serez redirigé pour acheter du CAS dans un instant...",
       "redirecting": "Redirection..."
+    }
+  },
+  "fees": {
+    "loading": "Chargement des frais...",
+    "unavailable": "Impossible de charger les frais on-chain",
+    "estimatedCost": "Coût estimé",
+    "equivalentIn": "Équivalent en"
+  },
+  "comunidade": {
+    "cost": "Coût",
+    "votacao": {
+      "voteCost": "Coût du vote",
+      "approveRequired": "Vous devez approuver la dépense de CAS via le contrat Diamond (ERC-20 approve) avant de voter.",
+      "inFavor": "En faveur"
     }
   },
   "cookieConsent": {

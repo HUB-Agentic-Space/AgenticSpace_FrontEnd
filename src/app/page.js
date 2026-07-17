@@ -13,6 +13,10 @@ import { useRouter } from 'next/navigation';
 import { Bot, Network, ShieldCheck, Workflow, BarChart3, Activity, Search } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import LoginPanel from '@/components/LoginPanel';
+import AnimatedBanner from '@/components/AnimatedBanner';
+import HowItWorks from '@/components/HowItWorks';
+import BenefitsSection from '@/components/BenefitsSection';
+import TokenomicsPreview from '@/components/TokenomicsPreview';
 import { useTranslations } from '@/lib/LocaleProvider';
 import { useState } from 'react';
 
@@ -42,15 +46,8 @@ export default function HomePage() {
 
   return (
     <div className="space-y-10">
-      {/* Banner SVG 16:6 */}
-      <div className="w-full">
-        <img 
-          src="/images/capa agentic space 16x9.png" 
-          alt="Agentic Space Banner" 
-          className="w-full h-auto"
-          style={{ aspectRatio: '16/6' }}
-        />
-      </div>
+      {/* Banner animado CSS/SVG */}
+      <AnimatedBanner />
 
       {/* Campo de busca */}
       <section className="max-w-2xl mx-auto">
@@ -71,6 +68,12 @@ export default function HomePage() {
           </button>
         </form>
       </section>
+
+      {/* Como Funciona */}
+      <HowItWorks />
+
+      {/* Benefícios Chave */}
+      <BenefitsSection />
 
       <section className="grid items-center gap-8 md:grid-cols-2">
         <div>
@@ -185,6 +188,9 @@ export default function HomePage() {
           {t('home.features.logs.description')}
         </Feature>
       </section>
+
+      {/* Tokenomia CAS */}
+      <TokenomicsPreview />
     </div>
   );
 }

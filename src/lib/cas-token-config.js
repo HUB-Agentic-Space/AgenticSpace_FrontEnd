@@ -58,3 +58,27 @@ export const DEFAULT_OPERATIONAL_FEES = [
   { operation: 'agentValidation', fee: 10, contractField: 'validationFee' },
   { operation: 'daoProposal', fee: 50, contractField: 'daoProposalFee' },
 ];
+
+export const COINGECKO_MULTI_PRICE_URL =
+  'https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=usd,brl,eur&include_24hr_change=true';
+
+export const LOCALE_CURRENCY_MAP = {
+  pt: 'BRL',
+  en: 'USD',
+  fr: 'EUR',
+};
+
+export const CURRENCY_SYMBOLS = {
+  BRL: 'R$',
+  USD: '$',
+  EUR: '€',
+};
+
+export const CURRENCY_LOCALE_MAP = {
+  BRL: 'pt-BR',
+  USD: 'en-US',
+  EUR: 'fr-FR',
+};
+
+export const FEES_CACHE_KEY = 'agentic_space_fees_cache';
+export const FEES_CACHE_TTL_MS = 60_000;

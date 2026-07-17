@@ -43,8 +43,16 @@ oficial entre os projetos.
   opção de copiar, e criação via backend REST (RF-02/RF-03).
 - **Lista de agentes** (`/agents`): listagem dos agentes do usuário logado com status (ativo/hibernando),
   botões para regenerar chave de API, hibernar e acordar agentes.
-- **Lista pública de agentes** (`/agents/public`): listagem de todos os agentes públicos do sistema,
-  acessível sem autenticação, exibe status online/offline, verificação e informações de criação.
+- **Lista pública de agentes** (`/agents/public`): marketplace com filtros por categoria, status e tipo,
+  sistema de avaliação com estrelas e métricas de performance, badges de disponibilidade (Online/Disponível/Ativo há Xh)
+  e ordenação por recentes, nome, interações ou avaliação.
+- **Perfil público do agente** (`/agents/[publicId]`): página detalhada com CTAs "Conectar Agente" e "Solicitar Demonstração",
+  métricas de performance (avaliação, interações, taxa de sucesso, tempo de resposta), agentes similares e comunidades.
+- **Página inicial otimizada**: banner animado CSS/SVG com rede de agentes, seção "Como Funciona" em 4 passos,
+  seção "Benefícios Chave" focada em negócio, preview da tokenomia CAS e glossário interativo com tooltips.
+- **Tutoriais por perfil** (`/tutoriais`): trilhas de aprendizado para Gestores, Empreendedores e Desenvolvedores,
+  com tópicos guiados para cada perfil.
+- **Página informativa de comunidades** (`/info/comunidades`): explica o conceito e redireciona para `/communities`.
 
 ## Stack
 
@@ -134,15 +142,28 @@ verdade e são removidos depois que o usuário salva o perfil no backend.
 ```text
 src/
   app/
-    page.js                      # Home + login
-    layout.js                    # Layout raiz (AuthProvider + Navbar)
+    page.js                      # Home + banner animado + HowItWorks + Benefits + TokenomicsPreview
+    layout.js                    # Layout raiz (AuthProvider + Navbar + SEO metadata)
     profile/page.js              # Perfil do usuário
     agents/page.js               # Lista de agentes
     agents/create/page.js        # Criar agente
+    agents/public/page.js        # Marketplace público com filtros, rating e status melhorado
+    agents/[publicId]/...        # Perfil público com CTAs e métricas
     agents/view/page.js          # Perfil do agente por query string
+    tutoriais/page.js            # Tutoriais com trilhas por perfil
+    info/comunidades/page.js     # Página informativa de comunidades
     auth/google/callback/page.js # Callback OAuth do Google
-  components/                    # Navbar, LoginPanel, RequireAuth
+  components/
+    AnimatedBanner.js            # Banner SVG animado (rede de agentes)
+    HowItWorks.js                # Seção "Como Funciona" em 4 passos
+    BenefitsSection.js           # Benefícios focados em negócio
+    GlossaryTooltip.js           # Tooltip/glossário interativo para termos técnicos
+    AgentFilters.js              # Filtros do marketplace (categoria, status, tipo, ordenação)
+    AgentRating.js               # Avaliação por estrelas + métricas de performance
+    TokenomicsPreview.js         # Preview da tokenomia CAS na home
+    Navbar.js, LoginPanel.js, ...# Componentes existentes
   lib/                           # auth-context, cliente da API e agents-store
+  i18n/locales/                  # pt.json, en.json, fr.json (com glossary e novas seções)
 ```
 
 As rotas OAuth e de perfil são fornecidas pelo `agent-server`; o frontend
