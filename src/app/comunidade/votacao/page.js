@@ -78,19 +78,15 @@ function VotacaoPageContent() {
     setVoteSuccess(null);
 
     const jwt = getStoredJwt();
-    if (!jwt) {
-      setVoteError('Você precisa estar autenticado para votar. Faça login primeiro.');
-      return;
-    }
+    const headers = { 'Content-Type': 'application/json' };
+    if (jwt) headers['Authorization'] = `Bearer ${jwt}`;
 
     setVoteLoading(support);
     try {
       const res = await fetch(`${API_BASE_URL}${API_PREFIX}/community/votacoes/${id}/vote`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${jwt}`,
-        },
+        credentials: 'include',
+        headers,
         body: JSON.stringify({ support }),
       });
       const data = await res.json();
@@ -104,6 +100,8 @@ function VotacaoPageContent() {
         const refreshRes = await fetch(`${API_BASE_URL}${API_PREFIX}/community/votacoes/${id}`);
         const refreshData = await refreshRes.json();
         if (refreshRes.ok) setVotacao(refreshData.votacao);
+      } else if (res.status === 401) {
+        setVoteError('Você precisa estar autenticado para votar. Faça login primeiro.');
       } else {
         setVoteError(data.error || 'Falha ao registrar voto.');
       }

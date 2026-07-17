@@ -29,19 +29,15 @@ export default function ProporPautaPage() {
     }
 
     const jwt = getStoredJwt();
-    if (!jwt) {
-      setError('Você precisa estar autenticado para propor uma pauta. Faça login primeiro.');
-      return;
-    }
+    const headers = { 'Content-Type': 'application/json' };
+    if (jwt) headers['Authorization'] = `Bearer ${jwt}`;
 
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}${API_PREFIX}/community/pautas`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${jwt}`,
-        },
+        credentials: 'include',
+        headers,
         body: JSON.stringify({ title: title.trim(), description: description.trim() }),
       });
       const data = await res.json();
@@ -54,6 +50,8 @@ export default function ProporPautaPage() {
         });
         setTitle('');
         setDescription('');
+      } else if (res.status === 401) {
+        setError('Você precisa estar autenticado para propor uma pauta. Faça login primeiro.');
       } else {
         setError(data.error || 'Falha ao enviar pauta.');
       }
