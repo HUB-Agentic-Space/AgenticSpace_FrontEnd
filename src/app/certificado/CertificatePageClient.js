@@ -603,14 +603,31 @@ function CertificateContent() {
             )}
 
             {!currentCertificate ? (
-              <button
-                onClick={handleMint}
-                disabled={minting || !profileName || !phase?.active || !config?.enabled}
-                className="btn-primary w-full"
-              >
-                {minting ? <Spinner size={17} /> : <Award size={17} />}
-                {minting ? (step || 'Processando...') : 'Emitir certificado'}
-              </button>
+              <>
+                <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-3 text-xs text-blue-200/90">
+                  <p className="font-semibold">⚠️ Aviso sobre alerta do MetaMask</p>
+                  <p className="mt-1 text-blue-100/70">
+                    O MetaMask pode exibir um alerta &quot;This is a deceptive request&quot; ao aprovar
+                    o CAS ou emitir o certificado. Este é um <strong>falso positivo</strong> da
+                    Blockaid — o contrato é verificado no{' '}
+                    <a
+                      href="https://polygonscan.com/address/0xAaFc452FA2b0F224588c7Eb893ad5cAa098037A1#code"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline hover:text-blue-100"
+                    >Polygonscan</a> e a transação é legítima.
+                    Pode prosseguir com segurança.
+                  </p>
+                </div>
+                <button
+                  onClick={handleMint}
+                  disabled={minting || !profileName || !phase?.active || !config?.enabled}
+                  className="btn-primary w-full"
+                >
+                  {minting ? <Spinner size={17} /> : <Award size={17} />}
+                  {minting ? (step || 'Processando...') : 'Emitir certificado'}
+                </button>
+              </>
             ) : (
               <div className={`rounded-xl border p-4 ${
                 currentCertificate.revoked
