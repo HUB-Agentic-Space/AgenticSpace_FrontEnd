@@ -53,6 +53,10 @@ oficial entre os projetos.
 - **Tutoriais por perfil** (`/tutoriais`): trilhas de aprendizado para Gestores, Empreendedores e Desenvolvedores,
   com tópicos guiados para cada perfil.
 - **Página informativa de comunidades** (`/info/comunidades`): explica o conceito e redireciona para `/communities`.
+- **Certificado de Sócio Fundador** (`/certificado`): emissão, visualização e exportação de certificado
+  verificável on-chain (ERC-721 + ERC-6551). Exige contas Google e MetaMask mescladas para exibir o
+  conteúdo; caso contrário, orienta o usuário ao perfil. O card de verificação
+  (`/certificado/verificar`) permanece sempre acessível.
 
 ## Stack
 
@@ -153,6 +157,8 @@ src/
     tutoriais/page.js            # Tutoriais com trilhas por perfil
     info/comunidades/page.js     # Página informativa de comunidades
     auth/google/callback/page.js # Callback OAuth do Google
+    certificado/page.js          # Certificado de Sócio Fundador (exige contas mescladas)
+    certificado/verificar/page.js # Verificação pública de certificados
   components/
     AnimatedBanner.js            # Banner SVG animado (rede de agentes)
     HowItWorks.js                # Seção "Como Funciona" em 4 passos

@@ -114,6 +114,8 @@ function CertificateContent() {
   const [lastTxHash, setLastTxHash] = useState('');
   const [showSwap, setShowSwap] = useState(false);
   const [linkedWalletAddress, setLinkedWalletAddress] = useState(null);
+  const [linkedAccountsList, setLinkedAccountsList] = useState([]);
+  const [accountsChecked, setAccountsChecked] = useState(false);
 
   const loadCertificates = useCallback(async (activeConfig, recipient, jwt) => {
     if (!ethers.isAddress(activeConfig?.certificateAddress || '')) return;
@@ -223,13 +225,19 @@ function CertificateContent() {
     async function loadLinkedWallet() {
       try {
         const { status, data } = await listLinkedAccounts(session.jwt);
-        if (cancelled || status >= 400 || !Array.isArray(data.accounts)) return;
+        if (cancelled || status >= 400 || !Array.isArray(data.accounts)) {
+          if (!cancelled) setAccountsChecked(true);
+          return;
+        }
+        setLinkedAccountsList(data.accounts);
         const metamask = data.accounts.find((a) => a.provider === 'metamask');
         if (metamask?.providerId) {
           setLinkedWalletAddress(ethers.getAddress(metamask.providerId));
         }
       } catch {
         // Non-critical: linked wallet detection is best-effort.
+      } finally {
+        if (!cancelled) setAccountsChecked(true);
       }
     }
     loadLinkedWallet();
@@ -240,6 +248,13 @@ function CertificateContent() {
     account && linkedWalletAddress &&
     account.toLowerCase() !== linkedWalletAddress.toLowerCase()
   );
+
+  const currentProvider = session?.subject?.authenticationMethod || session?.subject?.provider || '';
+  const hasGoogleIdentity =
+    currentProvider === 'google' || linkedAccountsList.some((a) => a.provider === 'google');
+  const hasMetamaskIdentity =
+    currentProvider === 'metamask' || linkedAccountsList.some((a) => a.provider === 'metamask');
+  const accountsMerged = hasGoogleIdentity && hasMetamaskIdentity;
 
   const nameMatches = Boolean(
     certificate && profileName && account &&
@@ -474,7 +489,7 @@ function CertificateContent() {
     );
   }
 
-  if (loading) {
+  if (loading || !accountsChecked) {
     return <div className="flex justify-center py-24"><Spinner size={28} /></div>;
   }
 
@@ -501,6 +516,24 @@ function CertificateContent() {
           </Link>
         </div>
       </section>
+
+      {accountsChecked && !accountsMerged && (
+        <div className="flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-amber-200">
+          <AlertCircle className="mt-0.5 shrink-0" size={20} />
+          <div>
+            <p className="font-semibold">Contas não mescladas</p>
+            <p className="mt-1 text-sm text-amber-100/80">
+              Para visualizar e validar seu certificado, é necessário ter uma conta blockchain
+              mesclada com uma conta Google. Acesse seu{' '}
+              <Link href="/profile" className="text-brand-400 hover:text-brand-300">perfil</Link>{' '}
+              para conectar e mesclar as contas.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {accountsMerged && (
+        <>
 
       {!config?.enabled && (
         <div className="flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-amber-200">
@@ -783,6 +816,10 @@ function CertificateContent() {
           chainId={config.chainId}
         />
       )}
+
+        </>
+      )}
+
     </div>
   );
 }
