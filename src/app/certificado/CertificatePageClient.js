@@ -509,6 +509,18 @@ function CertificateContent() {
             <p className="mt-1 text-sm text-amber-100/80">
               O contrato, o emissor ou uma fase ativa ainda precisam ser configurados. Certificados ja emitidos continuam consultaveis.
             </p>
+            {config?.unavailableReasons?.length > 0 && (
+              <ul className="mt-2 list-inside list-disc text-xs text-amber-100/70">
+                {config.unavailableReasons.map((reason) => (
+                  <li key={reason}>{reason}</li>
+                ))}
+              </ul>
+            )}
+            {config?.onchain?.available === false && config?.onchain?.reason && (
+              <p className="mt-1 text-xs text-amber-100/60">
+                Motivo on-chain: {config.onchain.reason}
+              </p>
+            )}
           </div>
         </div>
       )}

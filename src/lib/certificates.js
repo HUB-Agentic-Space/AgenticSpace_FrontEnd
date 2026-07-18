@@ -113,6 +113,8 @@ function normalizeConfig(data = {}) {
     ).replace(/\/$/, ''),
     issuerAddress: source.issuerAddress || '',
     currentPhase: source.currentPhase || null,
+    unavailableReasons: Array.isArray(source.unavailableReasons) ? source.unavailableReasons : [],
+    onchain: source.onchain || null,
   };
 }
 
