@@ -22,13 +22,18 @@ export const CERTIFICATE_ABI = [
   'function getPhase(uint256 phaseId) view returns (tuple(string name, bytes32 templateHash, uint256 minCasDeposit, uint256 startsAt, uint256 endsAt, uint256 minted, bool active))',
   'function getCertificate(uint256 tokenId) view returns (tuple(uint256 phaseId, address recipient, address tokenBoundAccount, bytes32 issuanceId, bytes32 nameHash, bytes32 metadataHash, uint256 casDeposited, uint256 issuedAt, bool revoked, bytes32 revocationReasonHash, uint256 revokedAt, bytes32 documentHash))',
   'function mintCertificate((bytes32 issuanceId, address recipient, bytes32 nameHash, uint256 phaseId, bytes32 metadataHash, uint256 casAmount, uint256 nonce, uint256 deadline) auth, address issuer, bytes signature) returns (uint256 tokenId, address tokenBoundAccount_)',
+  'function depositCasForMint(uint256 phaseId)',
+  'function withdrawCasDeposit(uint256 phaseId)',
+  'function casDepositBalance(address recipient, uint256 phaseId) view returns (uint256)',
   'function verifyCertificate(uint256 tokenId) view returns (bool valid, address recipient, uint256 phaseId, address account, uint256 currentCasBalance, bytes32 metadataHash, bytes32 documentHash)',
   'function verifyDocument(bytes32 documentHash) view returns (bool valid, uint256 tokenId)',
   'event CertificateMinted(uint256 indexed tokenId, uint256 indexed phaseId, address indexed recipient, address tokenBoundAccount, bytes32 issuanceId, bytes32 nameHash, bytes32 metadataHash, uint256 casAmount)',
+  'event CasDeposited(address indexed recipient, uint256 indexed phaseId, uint256 amount, uint256 newBalance)',
 ];
 
 export const CAS_CERTIFICATE_ABI = [
   'function balanceOf(address account) view returns (uint256)',
+  'function transfer(address to, uint256 amount) returns (bool)',
   'function allowance(address owner, address spender) view returns (uint256)',
   'function approve(address spender, uint256 amount) returns (bool)',
   'function decimals() view returns (uint8)',

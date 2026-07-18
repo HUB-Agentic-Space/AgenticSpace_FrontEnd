@@ -368,12 +368,13 @@ function CertificateContent() {
         );
       }
 
-      const allowance = await cas.allowance(recipient, config.certificateAddress);
-      if (allowance < BigInt(authorization.casAmount)) {
-        setStep(`Aprovando ${formatCasAmount(authorization.casAmount)} para o certificado...`);
-        const approveTx = await cas.approve(config.certificateAddress, authorization.casAmount);
-        await approveTx.wait();
-      }
+      setStep(`Transferindo ${formatCasAmount(authorization.casAmount)} CAS para o contrato...`);
+      const transferTx = await cas.transfer(config.certificateAddress, authorization.casAmount);
+      await transferTx.wait();
+
+      setStep('Registrando o depósito CAS...');
+      const depositTx = await contract.depositCasForMint(authorization.phaseId);
+      await depositTx.wait();
 
       setStep('Emitindo o NFT e criando a conta ERC-6551...');
       const mintTx = await contract.mintCertificate(authorization, issuer, signature);
@@ -605,18 +606,16 @@ function CertificateContent() {
             {!currentCertificate ? (
               <>
                 <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-3 text-xs text-blue-200/90">
-                  <p className="font-semibold">⚠️ Aviso sobre alerta do MetaMask</p>
+                  <p className="font-semibold">ℹ️ Fluxo de emissão em 3 passos</p>
                   <p className="mt-1 text-blue-100/70">
-                    O MetaMask pode exibir um alerta &quot;This is a deceptive request&quot; ao aprovar
-                    o CAS ou emitir o certificado. Este é um <strong>falso positivo</strong> da
-                    Blockaid — o contrato é verificado no{' '}
+                    A emissão envolve três transações: (1) transferência de CAS para o contrato,
+                    (2) registro do depósito e (3) mint do NFT. O contrato é verificado no{' '}
                     <a
                       href="https://polygonscan.com/address/0xAaFc452FA2b0F224588c7Eb893ad5cAa098037A1#code"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="underline hover:text-blue-100"
-                    >Polygonscan</a> e a transação é legítima.
-                    Pode prosseguir com segurança.
+                    >Polygonscan</a>.
                   </p>
                 </div>
                 <button
