@@ -52,10 +52,13 @@ export function normalizeCertificateName(value) {
   return String(value || '').normalize('NFC').trim().replace(/\s+/gu, ' ');
 }
 
-export function hashCertificateName(value) {
+export function hashCertificateName(value, salt = '') {
   const normalized = normalizeCertificateName(value);
   if (!normalized) return ethers.ZeroHash;
-  return ethers.keccak256(ethers.toUtf8Bytes(normalized));
+  const salted = ethers.isAddress(salt)
+    ? `${normalized}:${ethers.getAddress(salt).toLowerCase()}`
+    : normalized;
+  return ethers.keccak256(ethers.toUtf8Bytes(salted));
 }
 
 export function formatCasAmount(value, maximumFractionDigits = 2) {
@@ -126,6 +129,10 @@ export async function loadCertificateConfig(jwt) {
 
 export async function prepareCertificateMint(payload, jwt) {
   return apiRequest('/certificates/prepare', { method: 'POST', body: payload, jwt });
+}
+
+export async function autoPrepareCertificateMint(payload, jwt) {
+  return apiRequest('/certificates/auto-prepare', { method: 'POST', body: payload, jwt });
 }
 
 export async function confirmCertificateMint(payload, jwt) {
@@ -288,7 +295,7 @@ export function buildDraftManifest({ config, phase, recipientName, recipient = '
       phaseTitle: phase?.name || 'Sócio Fundador',
       recipientName: normalizedName,
       recipient: recipient || '—',
-      nameHash: hashCertificateName(normalizedName),
+      nameHash: hashCertificateName(normalizedName, recipient),
       metadataHash: ethers.ZeroHash,
       issuanceId: ethers.ZeroHash,
       issuedAt: '0',
@@ -325,7 +332,7 @@ function compareManifest(manifest, record, phase, verification) {
       manifest.issuer?.website === ISSUER.website &&
       manifest.issuer?.agenticSpaceWebsite === ISSUER.agenticSpaceWebsite,
     issuance: certificate.issuanceId === record.issuanceId,
-    recipientName: hashCertificateName(certificate.recipientName) === record.nameHash,
+    recipientName: hashCertificateName(certificate.recipientName, record.recipient) === record.nameHash,
     recipient: equalAddress(certificate.recipient, record.recipient),
     phase: String(certificate.phaseId) === record.phaseId && certificate.phaseTitle === phase.name,
     metadata: certificate.metadataHash === record.metadataHash,

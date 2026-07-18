@@ -25,7 +25,7 @@ import Spinner from '@/components/Spinner';
 import CASSwapModal from '@/components/CASSwapModal';
 import CertificateSvg from '@/components/certificates/CertificateSvg';
 import { useAuth } from '@/lib/auth-context';
-import { getProfile } from '@/lib/api';
+import { getProfile, listLinkedAccounts } from '@/lib/api';
 import { useWallet } from '@/lib/wallet/useWallet';
 import {
   buildCertificateManifest,
@@ -113,6 +113,7 @@ function CertificateContent() {
   const [success, setSuccess] = useState('');
   const [lastTxHash, setLastTxHash] = useState('');
   const [showSwap, setShowSwap] = useState(false);
+  const [linkedWalletAddress, setLinkedWalletAddress] = useState(null);
 
   const loadCertificates = useCallback(async (activeConfig, recipient, jwt) => {
     if (!ethers.isAddress(activeConfig?.certificateAddress || '')) return;
@@ -197,8 +198,52 @@ function CertificateContent() {
     loadCertificates(config, account, session?.jwt).catch((loadError) => setError(walletError(loadError)));
   }, [account, config, loadCertificates, session?.jwt]);
 
+  useEffect(() => {
+    if (!account || !config?.casTokenAddress || !getProvider()) return;
+    let cancelled = false;
+    async function readWalletBalance() {
+      try {
+        const rawProvider = getProvider();
+        if (!rawProvider) return;
+        const provider = new ethers.BrowserProvider(rawProvider);
+        const cas = getCasContract(config.casTokenAddress, provider);
+        const balance = await cas.balanceOf(account);
+        if (!cancelled) setCasBalance(balance.toString());
+      } catch {
+        // Silently ignore — the JsonRpcProvider fallback in loadCertificates already set a value.
+      }
+    }
+    readWalletBalance();
+    return () => { cancelled = true; };
+  }, [account, config?.casTokenAddress, config?.chainId, getProvider]);
+
+  useEffect(() => {
+    if (!session?.jwt) return;
+    let cancelled = false;
+    async function loadLinkedWallet() {
+      try {
+        const { status, data } = await listLinkedAccounts(session.jwt);
+        if (cancelled || status >= 400 || !Array.isArray(data.accounts)) return;
+        const metamask = data.accounts.find((a) => a.provider === 'metamask');
+        if (metamask?.providerId) {
+          setLinkedWalletAddress(ethers.getAddress(metamask.providerId));
+        }
+      } catch {
+        // Non-critical: linked wallet detection is best-effort.
+      }
+    }
+    loadLinkedWallet();
+    return () => { cancelled = true; };
+  }, [session?.jwt]);
+
+  const walletMismatch = Boolean(
+    account && linkedWalletAddress &&
+    account.toLowerCase() !== linkedWalletAddress.toLowerCase()
+  );
+
   const nameMatches = Boolean(
-    certificate && profileName && hashCertificateName(profileName) === certificate.nameHash
+    certificate && profileName && account &&
+    hashCertificateName(profileName, account) === certificate.nameHash
   );
 
   const manifest = useMemo(() => {
@@ -267,7 +312,7 @@ function CertificateContent() {
     try {
       const recipient = await ensureWallet();
       await loadCertificates(config, recipient, session?.jwt);
-      const nameHash = hashCertificateName(profileName);
+      const nameHash = hashCertificateName(profileName, recipient);
 
       setStep('Confirmando sua elegibilidade como inscrito...');
       const preparedResponse = await prepareCertificateMint({
@@ -463,6 +508,22 @@ function CertificateContent() {
             <p className="font-semibold">Previa disponivel; emissao indisponivel neste momento</p>
             <p className="mt-1 text-sm text-amber-100/80">
               O contrato, o emissor ou uma fase ativa ainda precisam ser configurados. Certificados ja emitidos continuam consultaveis.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {walletMismatch && (
+        <div className="flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-amber-200">
+          <AlertCircle className="mt-0.5 shrink-0" size={20} />
+          <div>
+            <p className="font-semibold">Carteira conectada difere da carteira vinculada ao perfil</p>
+            <p className="mt-1 text-sm text-amber-100/80">
+              A conta conectada ({compactHash(account)}) não corresponde à carteira MetaMask
+              vinculada ao seu perfil ({compactHash(linkedWalletAddress)}). O NFT será registrado
+              na conta conectada. Para emitir na conta correta, desconecte esta e conecte a
+              carteira vinculada, ou vincule a conta atual no seu{' '}
+              <Link href="/profile" className="text-brand-400 hover:text-brand-300">perfil</Link>.
             </p>
           </div>
         </div>

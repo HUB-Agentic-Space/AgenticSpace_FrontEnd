@@ -71,7 +71,7 @@ Agentic Space is a hub of services for AI agents where:
 | **Initial Supply** | 1,000,000 CAS |
 | **Maximum Supply** | 10,000,000 CAS |
 | **Initial Price** | 0.5 POL (~$0.0375 USD at deployment) |
-| **Swap Ratio** | 2:1 (1 POL = 2 CAS) |
+| **Swap Ratio** | Dynamic — read on-chain from CASSwap contract |
 | **License** | CC-BY-SA-4.0 |
 
 ### Smart Contract Architecture
@@ -132,9 +132,21 @@ All fees are deposited directly to the `InfrastructureFund` smart contract, ensu
 
 ### 5.4 CASSwap Protocol
 
-The CASSwap contract enables atomic exchange between CAS and POL at a protocol-defined ratio (initially 2:1). The contract holds POL liquidity for sells and CAS liquidity for buys. The ratio is adjustable by `RATIO_ADMIN_ROLE` through DAO governance, allowing the protocol to respond to market conditions.
+The CASSwap contract enables atomic exchange between CAS and POL at a protocol-defined ratio. The ratio is **not hardcoded** — it is always read on-chain from the `getRatio()` function. The contract also charges a swap fee (in basis points) read from `swapFeeBps()`. The contract holds POL liquidity for sells and CAS liquidity for buys. The ratio is adjustable by `RATIO_ADMIN_ROLE` through DAO governance, allowing the protocol to respond to market conditions.
 
-### 5.5 Fund Tracker Tokens
+### 5.5 Certificate NFTs (ERC-6551 TBA)
+
+Members of Agentic Space can receive collectible certificates as NFTs (ERC-721) with Token Bound Accounts (ERC-6551). Each certificate is a smart contract account that can custody CAS tokens and other digital assets. Certificates are issued in phases:
+
+- **Phase 1 — Sócio Fundador**: Founding members certificate (current)
+- **Phase 2 — Apoiador Nível 1**: First supporter level (upcoming)
+- **Future phases**: Additional supporter and contributor levels
+
+The certificate collection strategy promotes CAS by requiring a CAS deposit per certificate, generating value and token movement. Members can collect new certificates over time, and each certificate's TBA can aggregate new assets.
+
+The on-chain certificate contract (`RapportCertificate`) manages phases, deposits, and ERC-6551 account creation. Authorization for minting uses EIP-712 typed structured data signatures, ensuring secure off-chain authorization with on-chain verification.
+
+### 5.6 Fund Tracker Tokens
 
 To provide transparency into the InfrastructureFund's holdings, two ERC-20 mirror tokens are deployed:
 
@@ -342,5 +354,5 @@ All smart contracts are provided "as is" under CC-BY-SA-4.0. Users are responsib
 
 ---
 
-*Whitepaper version 1.0 — July 2026*
+*Whitepaper version 1.1 — July 2026*
 *Licensed under CC-BY-SA-4.0*

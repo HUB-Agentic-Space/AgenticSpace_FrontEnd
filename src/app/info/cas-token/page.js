@@ -12,7 +12,7 @@ import { ethers } from 'ethers';
 import {
   Coins, ExternalLink, TrendingUp, BarChart3, Zap, Shield,
   ArrowUpDown, Info, Database, Layers, Wallet, FileText,
-  AlertTriangle, RefreshCw,
+  AlertTriangle, RefreshCw, Award, BadgeCheck,
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
@@ -25,13 +25,13 @@ import { useFees, formatCas, formatFiat } from '@/lib/useFees';
 import CASSwapModal from '@/components/CASSwapModal';
 import AddTokenButton from '@/components/AddTokenButton';
 import CASLoginGate from '@/components/CASLoginGate';
+import GlossaryTooltip from '@/components/GlossaryTooltip';
 import {
   CAS_TOKEN_ADDRESS, CASSWAP_ADDRESS, DIAMOND_ADDRESS,
   INFRA_FUND_ADDRESS, EXPLORER_BASE, POLYGON_CHAIN_ID,
   POLYGON_RPC, CASSWAP_READ_ABI, CAS_TOKEN_READ_ABI,
   DIAMOND_READ_ABI,
   DEFAULT_RATIO, MAX_SUPPLY, INITIAL_SUPPLY,
-  PRICE_PHASES,
 } from '@/lib/cas-token-config';
 
 const COINGECKO_POL_CHART = 'https://api.coingecko.com/api/v3/coins/matic-network/market_chart?vs_currency=usd&days=1';
@@ -48,12 +48,16 @@ export default function CASTokenPage() {
     error: feesError,
     warning: feesWarning,
     refresh: refreshFees,
+    swapFeeBps,
+    totalSupply: onChainTotalSupply,
+    maxSupply: onChainMaxSupply,
+    certificatePhase,
+    certificatePhaseCount,
   } = useFees();
   const [swapOpen, setSwapOpen] = useState(false);
   const [loginGateOpen, setLoginGateOpen] = useState(false);
   const [polChange24h, setPolChange24h] = useState(null);
   const [chartData, setChartData] = useState([]);
-  const [totalSupply, setTotalSupply] = useState(null);
   const [loadingPrice, setLoadingPrice] = useState(true);
   const [priceError, setPriceError] = useState(false);
   const refreshTimer = useRef(null);
@@ -62,17 +66,8 @@ export default function CASTokenPage() {
   const ratioNum = Number(ratio.numerator) / Number(ratio.denominator);
   const polPrice = polPriceData?.usd ?? null;
   const casPriceUsd = polPrice ? polPrice / ratioNum : null;
-
-  const fetchTotalSupply = useCallback(async () => {
-    try {
-      const provider = new ethers.JsonRpcProvider(POLYGON_RPC);
-      const cas = new ethers.Contract(CAS_TOKEN_ADDRESS, CAS_TOKEN_READ_ABI, provider);
-      const supply = await cas.totalSupply();
-      setTotalSupply(Number(ethers.formatEther(supply)));
-    } catch (err) {
-      console.error('[cas-token] totalSupply fetch failed:', err.message);
-    }
-  }, []);
+  const totalSupply = onChainTotalSupply ? Number(ethers.formatEther(onChainTotalSupply)) : null;
+  const maxSupply = onChainMaxSupply ? Number(ethers.formatEther(onChainMaxSupply)) : MAX_SUPPLY;
 
   const fetchPriceChange = useCallback(async () => {
     try {
@@ -109,10 +104,10 @@ export default function CASTokenPage() {
 
   useEffect(() => {
     setLoadingPrice(true);
-    Promise.all([fetchTotalSupply(), fetchPriceChange()]).finally(() => {
+    fetchPriceChange().finally(() => {
       setLoadingPrice(false);
     });
-  }, [fetchTotalSupply, fetchPriceChange]);
+  }, [fetchPriceChange]);
 
   useEffect(() => {
     fetchChartData();
@@ -129,13 +124,15 @@ export default function CASTokenPage() {
   const specs = [
     { label: t('casToken.specs.name'), value: 'Agentic Space CAS Token v2.1' },
     { label: t('casToken.specs.symbol'), value: 'CAS' },
-    { label: t('casToken.specs.standard'), value: 'ERC-20 (UUPS)' },
-    { label: t('casToken.specs.network'), value: 'Polygon PoS (137)' },
+    { label: t('casToken.specs.standard'), value: 'ERC-20 (UUPS)', glossary: ['ERC-20', 'UUPS'] },
+    { label: t('casToken.specs.network'), value: 'Polygon PoS (137)', glossary: ['Polygon PoS'] },
     { label: t('casToken.specs.contract'), value: CAS_TOKEN_ADDRESS, mono: true },
     { label: t('casToken.specs.decimals'), value: '18' },
     { label: t('casToken.specs.initialSupply'), value: `${INITIAL_SUPPLY.toLocaleString()} CAS` },
-    { label: t('casToken.specs.maxSupply'), value: `${MAX_SUPPLY.toLocaleString()} CAS` },
+    { label: t('casToken.specs.maxSupply'), value: `${maxSupply.toLocaleString()} CAS` },
     { label: t('casToken.specs.swapRatio'), value: `1 POL = ${ratioNum} CAS` },
+    { label: 'Swap Fee', value: `${swapFeeBps} bps (${(swapFeeBps / 100).toFixed(2)}%)`, glossary: ['Swap Fee', 'BPS'] },
+    { label: 'Total Supply', value: totalSupply ? `${totalSupply.toLocaleString(undefined, { maximumFractionDigits: 0 })} CAS` : '—' },
   ];
 
   const feeLabels = {
@@ -174,7 +171,7 @@ export default function CASTokenPage() {
         <p className="text-xl text-slate-400 max-w-3xl mx-auto">{t('casToken.hero.subtitle')}</p>
         <div className="flex flex-wrap gap-3 justify-center">
           <span className="rounded-full bg-brand-600/20 px-4 py-1.5 text-sm font-medium text-brand-300 ring-1 ring-brand-500/30">
-            ERC-20 · Polygon PoS
+            <GlossaryTooltip term="ERC-20">ERC-20</GlossaryTooltip> · <GlossaryTooltip term="Polygon PoS">Polygon PoS</GlossaryTooltip>
           </span>
           <span className="rounded-full bg-slate-800 px-4 py-1.5 text-sm font-medium text-slate-300 ring-1 ring-slate-700">
             {t('casToken.hero.utilityToken')}
@@ -210,6 +207,11 @@ export default function CASTokenPage() {
               </span>
             </div>
           ))}
+          <div className="md:col-span-2 rounded-lg bg-slate-800/30 px-4 py-2.5 text-center">
+            <span className="text-xs text-slate-500">
+              {t('casToken.specs.onchainNote') || 'Ratio, swap fee e total supply lidos on-chain dos contratos CASSwap e CASToken.'}
+            </span>
+          </div>
         </div>
         <div className="flex flex-wrap gap-3 pt-2">
           <a href={`${EXPLORER_BASE}/token/${CAS_TOKEN_ADDRESS}`} target="_blank" rel="noopener noreferrer" className="btn-secondary flex items-center gap-2">
@@ -306,55 +308,72 @@ export default function CASTokenPage() {
         )}
       </section>
 
-      {/* Gráfico 2: Escalonamento por fases */}
-      <section className="card space-y-6">
+      {/* Certificados Colecionáveis */}
+      <section className="card space-y-6 border-2 border-brand-500/20">
         <div className="flex items-center gap-3">
-          <BarChart3 className="text-brand-400" size={28} />
-          <h2 className="text-3xl font-bold text-white">{t('casToken.phases.title')}</h2>
+          <Award className="text-brand-400" size={28} />
+          <h2 className="text-3xl font-bold text-white">Certificados Colecionáveis</h2>
         </div>
-        <p className="text-slate-400">{t('casToken.phases.description')}</p>
-
-        <div className="h-72 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={PRICE_PHASES}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-              <XAxis dataKey="phase" tickFormatter={(v) => `P${v}`} tick={{ fill: '#64748b', fontSize: 12 }} />
-              <YAxis tick={{ fill: '#64748b', fontSize: 11 }} />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
-                formatter={(value) => [`${value} POL`, t('casToken.phases.casPrice')]}
-                labelFormatter={(v) => `${t('casToken.phases.phase')} ${v}`}
-              />
-              <Bar dataKey="casPricePol" fill="#a78bfa" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+        <div className="space-y-4 text-slate-300">
+          <p>
+            Membros do Agentic Space recebem certificados como{' '}
+            <GlossaryTooltip term="NFT">NFTs</GlossaryTooltip> (<GlossaryTooltip term="ERC-721">ERC-721</GlossaryTooltip>)
+            com contas vinculadas via <GlossaryTooltip term="ERC-6551">ERC-6551</GlossaryTooltip>{' '}
+            (<GlossaryTooltip term="TBA">TBA</GlossaryTooltip> — Token Bound Account).
+            Cada certificado é uma conta inteligente que pode custodiar{' '}
+            <GlossaryTooltip term="CAS">CAS</GlossaryTooltip> e outros ativos digitais.
+          </p>
+          <p>
+            A coleção de certificados é uma estratégia de marketing para promover o CAS
+            e movimentá-lo de forma a gerar valor. Os membros poderão colecionar
+            certificados ao longo das fases de evolução do site, agregando novos
+            certificados ao seu <GlossaryTooltip term="TBA">TBA</GlossaryTooltip>.
+          </p>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-700 text-slate-400">
-                <th className="px-3 py-2 text-left">{t('casToken.phases.phase')}</th>
-                <th className="px-3 py-2 text-left">{t('casToken.phases.users')}</th>
-                <th className="px-3 py-2 text-left">{t('casToken.phases.agents')}</th>
-                <th className="px-3 py-2 text-right">{t('casToken.phases.casPrice')}</th>
-                <th className="px-3 py-2 text-right">USD</th>
-                <th className="px-3 py-2 text-right">{t('casToken.phases.marketCap')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {PRICE_PHASES.map((p) => (
-                <tr key={p.phase} className="border-b border-slate-800 text-slate-300">
-                  <td className="px-3 py-2 font-medium text-white">P{p.phase}</td>
-                  <td className="px-3 py-2">{p.users}</td>
-                  <td className="px-3 py-2">{p.agents}</td>
-                  <td className="px-3 py-2 text-right">{p.casPricePol} POL</td>
-                  <td className="px-3 py-2 text-right">${p.usdApprox}</td>
-                  <td className="px-3 py-2 text-right">${p.marketCap.toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        {certificatePhase ? (
+          <div className="rounded-lg bg-slate-800/50 p-5 space-y-3">
+            <div className="flex items-center gap-2">
+              <BadgeCheck className="text-brand-400" size={20} />
+              <h3 className="text-lg font-semibold text-white">Fase Atual: {certificatePhase.name}</h3>
+              {certificatePhase.active && (
+                <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-xs font-medium text-green-400 ring-1 ring-green-500/30">
+                  Ativa
+                </span>
+              )}
+            </div>
+            <div className="grid gap-3 md:grid-cols-3 text-sm">
+              <div>
+                <span className="text-slate-400">Depósito mínimo CAS:</span>
+                <p className="font-medium text-white">
+                  {Number(ethers.formatEther(certificatePhase.minCasDeposit)).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} CAS
+                </p>
+              </div>
+              <div>
+                <span className="text-slate-400">Certificados emitidos:</span>
+                <p className="font-medium text-white">{certificatePhase.minted}</p>
+              </div>
+              <div>
+                <span className="text-slate-400">Total de fases:</span>
+                <p className="font-medium text-white">{certificatePhaseCount}</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-lg bg-slate-800/30 p-4 text-sm text-slate-400">
+            {feesLoading
+              ? 'Carregando fase de certificados do contrato...'
+              : 'Contrato de certificados ainda não configurado ou sem fase ativa.'}
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-3">
+          <Link href="/certificado" className="btn-primary flex items-center gap-2">
+            <Award size={16} /> Emitir Certificado
+          </Link>
+          <Link href="/certificado/verificar" className="btn-secondary flex items-center gap-2">
+            <ExternalLink size={16} /> Verificar Certificado
+          </Link>
         </div>
       </section>
 
@@ -409,8 +428,14 @@ export default function CASTokenPage() {
               </div>
               <div className="flex justify-between border-t border-slate-700 pt-2">
                 <span className="text-slate-400">{t('casToken.tokenomics.supply.max')}</span>
-                <span className="font-bold text-brand-400">10.000.000 CAS</span>
+                <span className="font-bold text-brand-400">{maxSupply.toLocaleString()} CAS</span>
               </div>
+              {totalSupply != null && (
+                <div className="flex justify-between border-t border-slate-700 pt-2">
+                  <span className="text-slate-400">Total Supply (on-chain)</span>
+                  <span className="font-medium text-brand-300">{totalSupply.toLocaleString(undefined, { maximumFractionDigits: 0 })} CAS</span>
+                </div>
+              )}
             </div>
           </div>
           <div className="space-y-3">

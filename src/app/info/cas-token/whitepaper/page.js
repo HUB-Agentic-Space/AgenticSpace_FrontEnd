@@ -14,6 +14,7 @@ import Spinner from '@/components/Spinner';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
+import { glossaryTextRenderer } from '@/components/GlossaryText';
 
 export default function WhitepaperPage() {
   const [content, setContent] = useState('');
@@ -91,6 +92,10 @@ export default function WhitepaperPage() {
                   rel="noopener noreferrer"
                 />
               ),
+              p: glossaryTextRenderer,
+              li: glossaryTextRenderer,
+              td: glossaryTextRenderer,
+              th: glossaryTextRenderer,
               code: ({ node, inline, className, children, ...props }) => {
                 if (inline) {
                   return (

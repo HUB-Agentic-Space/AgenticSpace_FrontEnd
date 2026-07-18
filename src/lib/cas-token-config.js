@@ -2,8 +2,7 @@
  * @file cas-token-config.js
  * @description Configuração centralizada do CAS Token para a página institucional.
  *              Contém endereços de contrato na Polygon mainnet, ABIs mínimas
- *              para leitura de dados on-chain, e dados estáticos do modelo
- *              de escalonamento de preço por fases.
+ *              para leitura de dados on-chain, e constantes de protocolo.
  *
  * Padrão: Registry (configuração imutável de constantes de protocolo)
  */
@@ -15,6 +14,7 @@ export const CAS_TOKEN_ADDRESS = '0x5151A34EaC7bA08cd6B540b32cD30316218A2287';
 export const CASSWAP_ADDRESS = '0x9399878Ce33EA9D4859ab708a111fB3f274BACF4';
 export const DIAMOND_ADDRESS = '0x80BD976cB588cD2F9aD9Ac671FB19174E9F3172b';
 export const INFRA_FUND_ADDRESS = '0x190A9D2f206dbeb72Ce8b88Dc2603745fB5f50dB';
+export const CERTIFICATE_ADDRESS = process.env.NEXT_PUBLIC_CERTIFICATE_ADDRESS || '';
 
 export const EXPLORER_BASE = 'https://polygonscan.com';
 
@@ -30,6 +30,7 @@ export const CAS_TOKEN_READ_ABI = [
   'function balanceOf(address) external view returns (uint256)',
   'function symbol() external view returns (string)',
   'function decimals() external view returns (uint8)',
+  'function MAX_SUPPLY() external view returns (uint256)',
 ];
 
 export const DIAMOND_READ_ABI = [
@@ -37,21 +38,15 @@ export const DIAMOND_READ_ABI = [
   'function getAllFeeTypes() external view returns (uint256[] feeTypes, uint256[] amounts)',
 ];
 
+export const CERTIFICATE_READ_ABI = [
+  'function currentPhaseId() view returns (uint256)',
+  'function phaseCount() view returns (uint256)',
+  'function getPhase(uint256 phaseId) view returns (tuple(string name, bytes32 templateHash, uint256 minCasDeposit, uint256 startsAt, uint256 endsAt, uint256 minted, bool active))',
+];
+
 export const DEFAULT_RATIO = { numerator: 2, denominator: 1 };
 export const MAX_SUPPLY = 10_000_000;
 export const INITIAL_SUPPLY = 1_000_000;
-
-export const PRICE_PHASES = [
-  { phase: 0, users: '< 50', agents: '< 20', casPricePol: 0.5, usdApprox: 0.0375, marketCap: 37500 },
-  { phase: 1, users: '≥ 50', agents: '≥ 30', casPricePol: 0.75, usdApprox: 0.056, marketCap: 56250 },
-  { phase: 2, users: '≥ 200', agents: '≥ 100', casPricePol: 1.0, usdApprox: 0.075, marketCap: 75000 },
-  { phase: 3, users: '≥ 500', agents: '≥ 250', casPricePol: 1.5, usdApprox: 0.112, marketCap: 112500 },
-  { phase: 4, users: '≥ 1.000', agents: '≥ 500', casPricePol: 2.5, usdApprox: 0.187, marketCap: 187500 },
-  { phase: 5, users: '≥ 5.000', agents: '≥ 2.000', casPricePol: 5.0, usdApprox: 0.375, marketCap: 375000 },
-  { phase: 6, users: '≥ 10.000', agents: '≥ 5.000', casPricePol: 10.0, usdApprox: 0.75, marketCap: 750000 },
-  { phase: 7, users: '≥ 50.000', agents: '≥ 20.000', casPricePol: 25.0, usdApprox: 1.875, marketCap: 1875000 },
-  { phase: 8, users: '≥ 100.000', agents: '≥ 50.000', casPricePol: 50.0, usdApprox: 3.75, marketCap: 3750000 },
-];
 
 /**
  * Metadados dos quatro campos legados de getFees(). Os valores nunca ficam

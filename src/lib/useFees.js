@@ -15,8 +15,12 @@ import {
   POLYGON_RPC,
   CASSWAP_ADDRESS,
   DIAMOND_ADDRESS,
+  CAS_TOKEN_ADDRESS,
+  CERTIFICATE_ADDRESS,
   CASSWAP_READ_ABI,
   DIAMOND_READ_ABI,
+  CAS_TOKEN_READ_ABI,
+  CERTIFICATE_READ_ABI,
   DEFAULT_RATIO,
   CORE_OPERATIONAL_FEES,
   KNOWN_CUSTOM_FEE_OPERATIONS,
@@ -198,11 +202,31 @@ export function useFees() {
       const swap = new ethers.Contract(CASSWAP_ADDRESS, CASSWAP_READ_ABI, provider);
       const diamond = new ethers.Contract(DIAMOND_ADDRESS, DIAMOND_READ_ABI, provider);
 
-      const [ratioResult, coreFeesResult, customFeesResult, polPriceResult] = await Promise.allSettled([
+      const casToken = new ethers.Contract(CAS_TOKEN_ADDRESS, CAS_TOKEN_READ_ABI, provider);
+      const certificateContract = ethers.isAddress(CERTIFICATE_ADDRESS)
+        ? new ethers.Contract(CERTIFICATE_ADDRESS, CERTIFICATE_READ_ABI, provider)
+        : null;
+
+      const [
+        ratioResult,
+        coreFeesResult,
+        customFeesResult,
+        polPriceResult,
+        swapFeeResult,
+        totalSupplyResult,
+        maxSupplyResult,
+        certPhaseIdResult,
+        certPhaseCountResult,
+      ] = await Promise.allSettled([
         swap.getRatio(),
         diamond.getFees(),
         diamond.getAllFeeTypes(),
         fetchPolPrice(),
+        swap.swapFeeBps(),
+        casToken.totalSupply(),
+        casToken.MAX_SUPPLY(),
+        certificateContract?.currentPhaseId(),
+        certificateContract?.phaseCount(),
       ]);
 
       if (coreFeesResult.status === 'rejected') {
@@ -240,6 +264,41 @@ export function useFees() {
         currencyCode,
       });
 
+      const swapFeeBps = swapFeeResult.status === 'fulfilled'
+        ? Number(swapFeeResult.value)
+        : 0;
+
+      const totalSupply = totalSupplyResult.status === 'fulfilled'
+        ? totalSupplyResult.value.toString()
+        : null;
+
+      const maxSupply = maxSupplyResult.status === 'fulfilled'
+        ? maxSupplyResult.value.toString()
+        : null;
+
+      let certificatePhase = null;
+      let certificatePhaseCount = 0;
+      if (certPhaseIdResult.status === 'fulfilled' && certPhaseCountResult.status === 'fulfilled') {
+        certificatePhaseCount = Number(certPhaseCountResult.value);
+        const currentPhaseId = certPhaseIdResult.value;
+        if (currentPhaseId > 0n && certificateContract) {
+          try {
+            const phaseData = await certificateContract.getPhase(currentPhaseId);
+            certificatePhase = {
+              id: currentPhaseId.toString(),
+              name: phaseData.name,
+              minCasDeposit: phaseData.minCasDeposit.toString(),
+              startsAt: phaseData.startsAt.toString(),
+              endsAt: phaseData.endsAt.toString(),
+              minted: phaseData.minted.toString(),
+              active: phaseData.active,
+            };
+          } catch (phaseErr) {
+            console.error('[useFees] certificate phase fetch failed:', phaseErr.message);
+          }
+        }
+      }
+
       const result = {
         fees,
         feeList,
@@ -248,6 +307,11 @@ export function useFees() {
         casPrice: { usd: casPrices.USD, brl: casPrices.BRL, eur: casPrices.EUR },
         currencyCode,
         catalogAvailable,
+        swapFeeBps,
+        totalSupply,
+        maxSupply,
+        certificatePhase,
+        certificatePhaseCount,
         warning: catalogAvailable
           ? null
           : customFeesResult.reason?.message ?? 'Catálogo extensível indisponível.',
@@ -296,6 +360,11 @@ export function useFees() {
     error,
     warning: data?.warning ?? null,
     catalogAvailable: data?.catalogAvailable ?? false,
+    swapFeeBps: data?.swapFeeBps ?? 0,
+    totalSupply: data?.totalSupply ?? null,
+    maxSupply: data?.maxSupply ?? null,
+    certificatePhase: data?.certificatePhase ?? null,
+    certificatePhaseCount: data?.certificatePhaseCount ?? 0,
     refresh,
   };
 }

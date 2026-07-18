@@ -26,7 +26,7 @@ The token's smart contract includes an on-chain disclaimer that explicitly state
 - **Decimals**: 18
 - **Initial Supply**: 1,000,000 CAS (minted at deployment)
 - **Maximum Supply**: 10,000,000 CAS (hardcoded in contract, cannot be exceeded)
-- **Swap Ratio**: 2:1 (1 POL = 2 CAS), adjustable by governance
+- **Swap Ratio**: Dynamic — read on-chain from CASSwap `getRatio()`, adjustable by governance
 - **License**: CC-BY-SA-4.0
 
 ---
@@ -89,8 +89,8 @@ The fund ensures that the platform's economic activity directly sustains its own
 The `CASSwap` contract enables atomic exchange between CAS and POL at a protocol-defined ratio.
 
 - **Contract Address**: `0x9399878Ce33EA9D4859ab708a111fB3f274BACF4`
-- **Current Ratio**: 1 POL = 2 CAS (1 CAS = 0.5 POL)
-- **Swap Fee**: 0 bps (currently zero, adjustable via `swapFeeBps`)
+- **Current Ratio**: Dynamic — read on-chain via `getRatio()` (not hardcoded)
+- **Swap Fee**: Dynamic — read on-chain via `swapFeeBps()` (expressed in basis points)
 - **Ratio Adjustment**: by `RATIO_ADMIN_ROLE` through DAO governance
 - **CAS Reserve**: 500,000 CAS deposited at deployment
 
@@ -98,7 +98,32 @@ Users can buy CAS by sending POL to the `buyCAS()` function, or sell CAS for POL
 
 ---
 
-## 7. Deflationary Mechanisms
+## 7. Certificate NFTs (ERC-6551 TBA)
+
+Members of Agentic Space can receive collectible certificates as NFTs (ERC-721) with Token Bound Accounts (ERC-6551 TBA). Each certificate is a smart contract account that can custody CAS tokens and other digital assets.
+
+### Phases
+
+- **Phase 1 — Sócio Fundador**: Founding members certificate (current phase)
+- **Phase 2 — Apoiador Nível 1**: First supporter level (upcoming)
+- **Future phases**: Additional supporter and contributor levels
+
+### How It Works
+
+1. The backend prepares an EIP-712 typed structured data authorization for the member
+2. The member approves the CAS token spending for the deposit amount
+3. The member calls `mintCertificate()` on the `RapportCertificate` contract with the authorization and signature
+4. The contract creates an ERC-6551 Token Bound Account for the NFT
+5. The CAS deposit is transferred to the TBA, which the NFT owns
+6. The member can verify their certificate on-chain at any time
+
+### Marketing Strategy
+
+The certificate collection strategy promotes CAS by requiring a CAS deposit per certificate. As members collect new certificates across phases, CAS tokens are locked in TBAs, generating value and token movement. Each TBA can aggregate new assets over time, creating a growing on-chain portfolio tied to the member's NFT.
+
+---
+
+## 8. Deflationary Mechanisms
 
 ### Burn
 
@@ -114,7 +139,7 @@ The maximum supply of 10,000,000 CAS is hardcoded in the contract as `MAX_SUPPLY
 
 ---
 
-## 8. Price Escalation Model
+## 9. Price Escalation Model
 
 CAS price increases according to verified, on-chain growth milestones. This is not a speculative mechanism — it reflects real ecosystem expansion.
 
@@ -128,7 +153,7 @@ The ratio starts at 2:1 (1 POL = 2 CAS) and can be adjusted upward as the ecosys
 
 ---
 
-## 9. Access Roles
+## 10. Access Roles
 
 - **DEFAULT_ADMIN_ROLE**: manages roles, upgrades, and configurations
 - **MINTER_ROLE**: can mint new CAS tokens up to `MAX_SUPPLY`
@@ -140,7 +165,7 @@ The ratio starts at 2:1 (1 POL = 2 CAS) and can be adjusted upward as the ecosys
 
 ---
 
-## 10. Fund Tracker Tokens
+## 11. Fund Tracker Tokens
 
 To provide transparency into the InfrastructureFund's holdings, two ERC-20 mirror tokens are deployed:
 
@@ -151,7 +176,7 @@ These tokens are non-transferable. `totalSupply()` returns the fund's current ba
 
 ---
 
-## 11. How to Obtain CAS
+## 12. How to Obtain CAS
 
 There are three ways to acquire CAS:
 
@@ -163,7 +188,7 @@ DEX liquidity (QuickSwap and other Polygon DEXs) is pending and will be added vi
 
 ---
 
-## 12. What CAS Is Not
+## 13. What CAS Is Not
 
 CAS is not a governance token, a dividend-paying token, or a speculative asset. The smart contract includes an on-chain disclaimer (`INVESTMENT_DISCLAIMER`) that explicitly states:
 
@@ -173,7 +198,7 @@ The token does not grant equity, ownership, or revenue-sharing rights. Its sole 
 
 ---
 
-## 13. Smart Contract Architecture
+## 14. Smart Contract Architecture
 
 The CAS token is part of a Diamond Proxy (EIP-2535) architecture:
 
@@ -187,7 +212,7 @@ The CAS token is part of a Diamond Proxy (EIP-2535) architecture:
 
 ---
 
-## 14. Links
+## 15. Links
 
 - Polygonscan (CAS Token): https://polygonscan.com/token/0x5151A34EaC7bA08cd6B540b32cD30316218A2287
 - Polygonscan (Diamond): https://polygonscan.com/address/0x80BD976cB588cD2F9aD9Ac671FB19174E9F3172b
@@ -199,5 +224,5 @@ The CAS token is part of a Diamond Proxy (EIP-2535) architecture:
 
 ---
 
-*Tokenomics version 1.1 — July 2026*
+*Tokenomics version 1.2 — July 2026*
 *Licensed under CC-BY-SA-4.0*
