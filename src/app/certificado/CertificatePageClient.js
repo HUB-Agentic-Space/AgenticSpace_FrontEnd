@@ -32,7 +32,10 @@ import {
   buildDraftManifest,
   compactHash,
   confirmCertificateMint,
+  estimateMintGasCost,
   formatCasAmount,
+  formatPolAmount,
+  formatPolCost,
   getCasContract,
   getCertificateContract,
   getDiamondCertificateContract,
@@ -103,6 +106,8 @@ function CertificateContent() {
   const [certificatePhase, setCertificatePhase] = useState(null);
   const [certificateHistory, setCertificateHistory] = useState([]);
   const [casBalance, setCasBalance] = useState('0');
+  const [polBalance, setPolBalance] = useState('0');
+  const [gasEstimate, setGasEstimate] = useState(null);
   const [currentPhaseCasBalance, setCurrentPhaseCasBalance] = useState('0');
   const [currentCasBalance, setCurrentCasBalance] = useState('0');
   const [loading, setLoading] = useState(true);
@@ -210,15 +215,23 @@ function CertificateContent() {
         if (!rawProvider) return;
         const provider = new ethers.BrowserProvider(rawProvider);
         const cas = getCasContract(config.casTokenAddress, provider);
-        const balance = await cas.balanceOf(account);
-        if (!cancelled) setCasBalance(balance.toString());
+        const [casBal, polBal, gasEst] = await Promise.all([
+          cas.balanceOf(account),
+          provider.getBalance(account),
+          estimateMintGasCost(config, account, provider),
+        ]);
+        if (!cancelled) {
+          setCasBalance(casBal.toString());
+          setPolBalance(polBal.toString());
+          setGasEstimate(gasEst);
+        }
       } catch {
         // Silently ignore — the JsonRpcProvider fallback in loadCertificates already set a value.
       }
     }
     readWalletBalance();
     return () => { cancelled = true; };
-  }, [account, config?.casTokenAddress, config?.chainId, getProvider]);
+  }, [account, config?.casTokenAddress, config?.chainId, config?.diamondAddress, getProvider]);
 
   useEffect(() => {
     if (!session?.jwt) return;
@@ -280,6 +293,7 @@ function CertificateContent() {
 
   const requiredCas = phase?.minCasDeposit || DEFAULT_PHASE.minCasDeposit;
   const hasEnoughCas = BigInt(casBalance || 0) >= BigInt(requiredCas || 0);
+  const hasEnoughPol = !gasEstimate || BigInt(polBalance || 0) >= gasEstimate.estimatedCost;
 
   async function refresh() {
     if (!ethers.isAddress(config?.certificateAddress || '')) return;
@@ -641,11 +655,38 @@ function CertificateContent() {
                   <span className="font-mono text-slate-200">{compactHash(account)}</span>
                 </div>
                 <div className="mt-2 flex items-center justify-between gap-3">
-                  <span className="text-slate-400">Saldo</span>
+                  <span className="flex items-center gap-1.5 text-slate-400">
+                    <Coins size={14} /> Saldo CAS
+                  </span>
                   <span className={hasEnoughCas ? 'text-emerald-300' : 'text-amber-300'}>
                     {formatCasAmount(casBalance, 6)}
                   </span>
                 </div>
+                <div className="mt-2 flex items-center justify-between gap-3">
+                  <span className="flex items-center gap-1.5 text-slate-400">
+                    <Fuel size={14} /> Saldo POL
+                  </span>
+                  <span className={hasEnoughPol ? 'text-emerald-300' : 'text-amber-300'}>
+                    {formatPolAmount(polBalance)}
+                  </span>
+                </div>
+                {gasEstimate && !currentCertificate && (
+                  <div className="mt-2 border-t border-slate-800 pt-2">
+                    <div className="flex items-center justify-between gap-3 text-xs">
+                      <span className="text-slate-500">Gas estimado p/ emissão</span>
+                      <span className="text-slate-400">{formatPolCost(gasEstimate.estimatedCost)}</span>
+                    </div>
+                    <div className={`mt-1.5 flex items-center gap-1.5 text-xs font-medium ${
+                      hasEnoughPol ? 'text-emerald-400' : 'text-amber-400'
+                    }`}>
+                      {hasEnoughPol ? (
+                        <><CheckCircle2 size={12} /> POL suficiente para o gas</>
+                      ) : (
+                        <><AlertCircle size={12} /> POL insuficiente para o gas</>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -657,6 +698,19 @@ function CertificateContent() {
 
             {!currentCertificate ? (
               <>
+                {gasEstimate && !hasEnoughPol && account && (
+                  <div className="flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
+                    <Fuel className="mt-0.5 shrink-0" size={16} />
+                    <div>
+                      <p className="font-semibold">POL insuficiente para o gas</p>
+                      <p className="mt-1 text-amber-100/80">
+                        Seu saldo de POL ({formatPolAmount(polBalance)}) é inferior ao estimado
+                        para o gas da emissão ({formatPolCost(gasEstimate.estimatedCost)}).
+                        Adicione POL na sua carteira na rede Polygon para continuar.
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-3 text-xs text-blue-200/90">
                   <p className="font-semibold">ℹ️ Fluxo de emissão em 3 passos</p>
                   <p className="mt-1 text-blue-100/70">
@@ -672,7 +726,7 @@ function CertificateContent() {
                 </div>
                 <button
                   onClick={handleMint}
-                  disabled={minting || !profileName || !phase?.active || !config?.enabled}
+                  disabled={minting || !profileName || !phase?.active || !config?.enabled || (gasEstimate && !hasEnoughPol)}
                   className="btn-primary w-full"
                 >
                   {minting ? <Spinner size={17} /> : <Award size={17} />}

@@ -82,6 +82,55 @@ export function formatCasAmount(value, maximumFractionDigits = 2) {
   }
 }
 
+export function formatPolAmount(value, maximumFractionDigits = 6) {
+  try {
+    return `${Number(ethers.formatEther(BigInt(value || 0))).toLocaleString('pt-BR', {
+      maximumFractionDigits,
+    })} POL`;
+  } catch {
+    return '0 POL';
+  }
+}
+
+export function formatPolCost(value, maximumFractionDigits = 6) {
+  try {
+    return `${Number(ethers.formatEther(BigInt(value || 0))).toLocaleString('pt-BR', {
+      maximumFractionDigits,
+    })} POL`;
+  } catch {
+    return '0 POL';
+  }
+}
+
+/**
+ * Estima o custo de gas para a emissao do certificado.
+ * Retorna o custo estimado em wei (BigInt) e os componentes.
+ * O gas total considera o fluxo completo (approve + depositAndMint ou transfer + deposit + mint).
+ */
+export async function estimateMintGasCost(config, account, provider) {
+  if (!account || !provider) return null;
+  try {
+    const feeData = await provider.getFeeData();
+    const gasPrice = feeData.gasPrice || feeData.maxFeePerGas || 0n;
+    if (gasPrice === 0n) return null;
+
+    const useDiamond = ethers.isAddress(config.diamondAddress);
+    const typicalGasLimit = useDiamond
+      ? 550000n
+      : 650000n;
+
+    const estimatedCost = gasPrice * typicalGasLimit;
+    return {
+      gasPrice,
+      gasLimit: typicalGasLimit,
+      estimatedCost,
+      useDiamond,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export function compactHash(value, left = 8, right = 6) {
   if (!value) return '—';
   const text = String(value);
