@@ -182,9 +182,6 @@ function CertificateContent() {
         } else {
           setError(profileResponse.data?.error || 'Nao foi possivel carregar o nome do perfil.');
         }
-        if (ethers.isAddress(loadedConfig.certificateAddress || '')) {
-          await loadCertificates(loadedConfig, account, session?.jwt);
-        }
       } catch (loadError) {
         if (!cancelled) setError(walletError(loadError));
       } finally {
@@ -196,9 +193,9 @@ function CertificateContent() {
   }, [session?.jwt]);
 
   useEffect(() => {
-    if (!ethers.isAddress(config?.certificateAddress || '') || !account || loading) return;
+    if (!ethers.isAddress(config?.certificateAddress || '')) return;
     loadCertificates(config, account, session?.jwt).catch((loadError) => setError(walletError(loadError)));
-  }, [account, config?.certificateAddress, loading, loadCertificates, session?.jwt]);
+  }, [account, config, loadCertificates, session?.jwt]);
 
   const nameMatches = Boolean(
     certificate && profileName && hashCertificateName(profileName) === certificate.nameHash
@@ -672,7 +669,7 @@ function CertificateContent() {
           <div className="rounded-2xl border border-blue-500/20 bg-blue-500/5 p-5 text-sm text-slate-300">
             <h3 className="flex items-center gap-2 font-semibold text-white"><FileCheck2 size={18} className="text-blue-400" /> Assinatura gov.br</h3>
             <p className="mt-2">
-              O diploma reserva o campo visual para assinatura. Baixe o PDF, assine-o no portal gov.br e preserve o arquivo digital original. Não use “imprimir como PDF” depois de assinar, pois isso remove a assinatura eletrônica.
+              O diploma reserva o campo visual para assinatura. Baixe o PDF, e o envie para o número (85) 985205490 ou e-mail agenticspace@rapport.tec.br, com o assunto: Favor Assinar,  assim que for assinado digitalmente será retornado e o reembolso será realizado conforme a fase que o certificado pertencer. Preserve o arquivo digital original. Não use “imprimir como PDF” depois de assinar, pois isso remove a assinatura eletrônica.
             </p>
             <p className="mt-2">
               A assinatura PAdES precisa continuar sendo validada no VALIDAR do ITI. Esta aplicação comprova separadamente o vínculo do certificado e o hash do documento registrado on-chain; essa conferência não substitui a validação criptográfica da assinatura gov.br/ICP-Brasil.
