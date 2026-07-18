@@ -35,6 +35,7 @@ import {
   formatCasAmount,
   getCasContract,
   getCertificateContract,
+  getDiamondCertificateContract,
   hashCertificateName,
   listMyCertificateIssuances,
   loadCertificateConfig,
@@ -383,16 +384,34 @@ function CertificateContent() {
         );
       }
 
-      setStep(`Transferindo ${formatCasAmount(authorization.casAmount)} CAS para o contrato...`);
-      const transferTx = await cas.transfer(config.certificateAddress, authorization.casAmount);
-      await transferTx.wait();
+      let mintTx;
+      const useDiamond = ethers.isAddress(config.diamondAddress);
+      if (useDiamond) {
+        // Fluxo via Diamond Proxy: aprova o Diamond (contrato conhecido/verificado)
+        // para gastar exatamente o CAS necessario e emite em uma unica transacao.
+        // Evita transferir tokens diretamente para o contrato de certificados.
+        const diamond = getDiamondCertificateContract(config.diamondAddress, signer);
+        const currentAllowance = await cas.allowance(recipient, config.diamondAddress);
+        if (currentAllowance < BigInt(authorization.casAmount)) {
+          setStep(`Aprovando ${formatCasAmount(authorization.casAmount)} CAS para o Diamond...`);
+          const approveTx = await cas.approve(config.diamondAddress, authorization.casAmount);
+          await approveTx.wait();
+        }
 
-      setStep('Registrando o depósito CAS...');
-      const depositTx = await contract.depositCasForMint(authorization.phaseId);
-      await depositTx.wait();
+        setStep('Emitindo o NFT e criando a conta ERC-6551 (via Diamond)...');
+        mintTx = await diamond.depositAndMintCertificate(authorization, issuer, signature);
+      } else {
+        setStep(`Transferindo ${formatCasAmount(authorization.casAmount)} CAS para o contrato...`);
+        const transferTx = await cas.transfer(config.certificateAddress, authorization.casAmount);
+        await transferTx.wait();
 
-      setStep('Emitindo o NFT e criando a conta ERC-6551...');
-      const mintTx = await contract.mintCertificate(authorization, issuer, signature);
+        setStep('Registrando o depósito CAS...');
+        const depositTx = await contract.depositCasForMint(authorization.phaseId);
+        await depositTx.wait();
+
+        setStep('Emitindo o NFT e criando a conta ERC-6551...');
+        mintTx = await contract.mintCertificate(authorization, issuer, signature);
+      }
       setLastTxHash(mintTx.hash);
       setStep('Aguardando a confirmacao na Polygon...');
       const receipt = await mintTx.wait();

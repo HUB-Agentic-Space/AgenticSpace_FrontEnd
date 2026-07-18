@@ -31,6 +31,11 @@ export const CERTIFICATE_ABI = [
   'event CasDeposited(address indexed recipient, uint256 indexed phaseId, uint256 amount, uint256 newBalance)',
 ];
 
+export const DIAMOND_CERTIFICATE_ABI = [
+  'function depositAndMintCertificate((bytes32 issuanceId, address recipient, bytes32 nameHash, uint256 phaseId, bytes32 metadataHash, uint256 casAmount, uint256 nonce, uint256 deadline) auth, address issuer, bytes signature) returns (uint256 tokenId, address tokenBoundAccount_)',
+  'function getCertificateContract() view returns (address)',
+];
+
 export const CAS_CERTIFICATE_ABI = [
   'function balanceOf(address account) view returns (uint256)',
   'function transfer(address to, uint256 amount) returns (bool)',
@@ -42,6 +47,7 @@ export const CAS_CERTIFICATE_ABI = [
 
 const FALLBACK_CHAIN_ID = Number(process.env.NEXT_PUBLIC_CERTIFICATE_CHAIN_ID || 137);
 const FALLBACK_CERTIFICATE_ADDRESS = process.env.NEXT_PUBLIC_CERTIFICATE_ADDRESS || '';
+const FALLBACK_DIAMOND_ADDRESS = process.env.NEXT_PUBLIC_DIAMOND_ADDRESS || '';
 const FALLBACK_CAS_ADDRESS =
   process.env.NEXT_PUBLIC_CAS_TOKEN_ADDRESS || '0x5151A34EaC7bA08cd6B540b32cD30316218A2287';
 const FALLBACK_SWAP_ADDRESS =
@@ -89,6 +95,7 @@ export function getFallbackCertificateConfig() {
     enabled: ethers.isAddress(FALLBACK_CERTIFICATE_ADDRESS),
     chainId: FALLBACK_CHAIN_ID,
     certificateAddress: FALLBACK_CERTIFICATE_ADDRESS,
+    diamondAddress: FALLBACK_DIAMOND_ADDRESS,
     casTokenAddress: FALLBACK_CAS_ADDRESS,
     casSwapAddress: FALLBACK_SWAP_ADDRESS,
     rpcUrl: FALLBACK_RPC,
@@ -109,6 +116,7 @@ function normalizeConfig(data = {}) {
     enabled: Boolean(source.enabled ?? ethers.isAddress(certificateAddress)),
     chainId: Number(source.chainId || fallback.chainId),
     certificateAddress,
+    diamondAddress: source.diamondAddress || fallback.diamondAddress,
     casTokenAddress: source.casTokenAddress || fallback.casTokenAddress,
     casSwapAddress: source.casSwapAddress || fallback.casSwapAddress,
     rpcUrl: source.rpcUrl || fallback.rpcUrl,
@@ -164,6 +172,11 @@ export function getCertificateContract(address, runner) {
 export function getCasContract(address, runner) {
   if (!ethers.isAddress(address)) throw new Error('Contrato CAS nao configurado.');
   return new ethers.Contract(address, CAS_CERTIFICATE_ABI, runner);
+}
+
+export function getDiamondCertificateContract(address, runner) {
+  if (!ethers.isAddress(address)) throw new Error('Diamond de certificados nao configurado.');
+  return new ethers.Contract(address, DIAMOND_CERTIFICATE_ABI, runner);
 }
 
 export function phaseFromResult(result, phaseId) {
