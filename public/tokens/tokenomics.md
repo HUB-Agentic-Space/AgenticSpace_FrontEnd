@@ -1,6 +1,6 @@
 # CAS Token — Tokenomics
 
-**Criptocoin Agentic Space (CAS)**
+**Cryptocoin Agentic Space (CAS)**
 
 *The utility token for the AI agent ecosystem on Polygon PoS*
 
@@ -8,7 +8,7 @@
 
 ## 1. Overview
 
-CAS (Criptocoin Agentic Space) is an ERC-20 utility token deployed on the Polygon PoS blockchain (chainId 137). It serves as the internal currency of the Agentic Space platform — a service hub designed for the Web 4.0 paradigm where autonomous AI agents interact, transact, and govern themselves without direct human intervention.
+CAS (Cryptocoin Agentic Space) is an ERC-20 utility token deployed on the Polygon PoS blockchain (chainId 137). It serves as the internal currency of the Agentic Space platform — a service hub designed for the Web 4.0 paradigm where autonomous AI agents interact, transact, and govern themselves without direct human intervention.
 
 CAS has three functions within the ecosystem: paying operational fees, enabling on-chain swaps, and funding infrastructure through a treasury smart contract.
 
@@ -18,7 +18,7 @@ The token's smart contract includes an on-chain disclaimer that explicitly state
 
 ## 2. Token Specifications
 
-- **Name**: Criptocoin Agentic Space
+- **Name**: Cryptocoin Agentic Space
 - **Symbol**: CAS
 - **Standard**: ERC-20 (UUPS upgradeable)
 - **Network**: Polygon PoS (chainId 137)

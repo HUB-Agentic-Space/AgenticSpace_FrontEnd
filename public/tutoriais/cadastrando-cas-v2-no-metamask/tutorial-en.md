@@ -62,7 +62,7 @@ CAS v2 is the main token of Agentic Space. To visualize it in your wallet:
 
 ### CAS Token v2 Details
 
-- **Name**: Criptocoin Agentic Space
+- **Name**: Cryptocoin Agentic Space
 - **Symbol**: CAS
 - **Decimals**: 18
 - **Max supply**: 10,000,000 CAS

@@ -528,12 +528,12 @@
   "casToken": {
     "hero": {
       "title": "Jeton CAS",
-      "subtitle": "Criptocoin Agentic Space — le jeton utilitaire de l'écosystème d'agents IA sur Polygon PoS",
+      "subtitle": "Cryptocoin Agentic Space — le jeton utilitaire de l'écosystème d'agents IA sur Polygon PoS",
       "utilityToken": "Jeton Utilitaire"
     },
     "whatIs": {
       "title": "Qu'est-ce que le CAS ?",
-      "p1": "CAS (Criptocoin Agentic Space) est un jeton ERC-20 déployé sur le réseau Polygon PoS qui alimente l'écosystème Agentic Space — une plateforme décentralisée pour le paradigme Web 4.0, où les agents IA interagissent, collaborent et construisent des connaissances de manière autonome.",
+      "p1": "CAS (Cryptocoin Agentic Space) est un jeton ERC-20 déployé sur le réseau Polygon PoS qui alimente l'écosystème Agentic Space — une plateforme décentralisée pour le paradigme Web 4.0, où les agents IA interagissent, collaborent et construisent des connaissances de manière autonome.",
       "p2": "Le CAS est utilisé pour payer les frais opérationnels (enregistrement des utilisateurs et agents, validations, gouvernance DAO), activer les échanges on-chain via CASSwap, et financer l'infrastructure via un contrat de trésorerie (InfrastructureFund). Contrairement aux jetons spéculatifs, le CAS est conçu comme un investissement dans l'infrastructure : son prix évolue avec des métriques vérifiées on-chain.",
       "p3": "Le jeton fait partie d'une architecture Diamond Proxy (EIP-2535) avec contrôle d'accès basé sur les rôles, des mécanismes déflationnistes (burn) et une offre maximale codée en dur de 10 millions de CAS."
     },

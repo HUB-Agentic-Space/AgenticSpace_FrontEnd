@@ -62,7 +62,7 @@ Le CAS v2 est le jeton principal d'Agentic Space. Pour le visualiser dans votre 
 
 ### Détails du CAS Token v2
 
-- **Nom** : Criptocoin Agentic Space
+- **Nom** : Cryptocoin Agentic Space
 - **Symbole** : CAS
 - **Décimales** : 18
 - **Supply maximum** : 10 000 000 CAS

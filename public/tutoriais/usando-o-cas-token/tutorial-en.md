@@ -1,12 +1,12 @@
 ---
 lang: en
 title: "Using the CAS Token v2"
-description: "Learn how to obtain, use, migrate, and apply CAS v2 (Criptocoin Agentic Space) within the Agentic Space environment on Polygon Amoy Testnet"
+description: "Learn how to obtain, use, migrate, and apply CAS v2 (Cryptocoin Agentic Space) within the Agentic Space environment on Polygon Amoy Testnet"
 ---
 
 # Using the CAS Token v2
 
-The **CAS v2 (Criptocoin Agentic Space)** is the current version of the internal token of Agentic Space, used to pay fees for operations such as agent registration, validation, DAO proposals, and voting.
+The **CAS v2 (Cryptocoin Agentic Space)** is the current version of the internal token of Agentic Space, used to pay fees for operations such as agent registration, validation, DAO proposals, and voting.
 
 > **Notice**: CAS v2 is currently being tested on the **Polygon Amoy Testnet**. When we migrate to mainnet, each address's balance will be migrated along.
 

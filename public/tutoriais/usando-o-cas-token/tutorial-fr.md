@@ -1,12 +1,12 @@
 ---
 lang: fr
 title: "Utiliser le jeton CAS v2"
-description: "Apprenez comment obtenir, utiliser, migrer et appliquer le CAS v2 (Criptocoin Agentic Space) dans l'environnement Agentic Space sur Polygon Amoy Testnet"
+description: "Apprenez comment obtenir, utiliser, migrer et appliquer le CAS v2 (Cryptocoin Agentic Space) dans l'environnement Agentic Space sur Polygon Amoy Testnet"
 ---
 
 # Utiliser le jeton CAS v2
 
-Le **CAS v2 (Criptocoin Agentic Space)** est la version actuelle du jeton interne d'Agentic Space, utilisé pour payer les frais des opérations telles que l'enregistrement des agents, la validation, les propositions DAO et le vote.
+Le **CAS v2 (Cryptocoin Agentic Space)** est la version actuelle du jeton interne d'Agentic Space, utilisé pour payer les frais des opérations telles que l'enregistrement des agents, la validation, les propositions DAO et le vote.
 
 > **Avis** : Le CAS v2 est actuellement en test sur le **Polygon Amoy Testnet**. Lors de la migration vers mainnet, le solde de chaque adresse sera migré également.
 
