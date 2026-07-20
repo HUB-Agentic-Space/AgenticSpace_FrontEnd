@@ -112,25 +112,30 @@ export class MetaMaskSDKWalletProvider extends BaseWalletProvider {
     super();
     this._sdk = null;
     this._provider = null;
+    this._sdkInitPromise = null;
   }
 
-  /** Inicializa o SDK sob demanda. */
+  /** Inicializa o SDK sob demanda, com proteção contra race condition. */
   async _ensureSDK() {
     if (this._sdk) return;
-    const mod = await import('@metamask/sdk');
-    const MetaMaskSDK = mod.MetaMaskSDK || mod.default;
-    if (!MetaMaskSDK) {
-      throw new Error('MetaMask SDK não pôde ser carregado.');
-    }
-    this._sdk = new MetaMaskSDK({
-      dappMetadata: {
-        name: 'Agentic Space',
-        url: typeof window !== 'undefined' ? window.location.origin : '',
-      },
-      modal: { enabled: false },
-    });
-    await this._sdk.connect();
-    this._provider = this._sdk.getProvider();
+    if (this._sdkInitPromise) return this._sdkInitPromise;
+    this._sdkInitPromise = (async () => {
+      const mod = await import('@metamask/sdk');
+      const MetaMaskSDK = mod.MetaMaskSDK || mod.default;
+      if (!MetaMaskSDK) {
+        throw new Error('MetaMask SDK não pôde ser carregado.');
+      }
+      this._sdk = new MetaMaskSDK({
+        dappMetadata: {
+          name: 'Agentic Space',
+          url: typeof window !== 'undefined' ? window.location.origin : '',
+        },
+        modal: { enabled: false },
+      });
+      await this._sdk.connect();
+      this._provider = this._sdk.getProvider();
+    })();
+    return this._sdkInitPromise;
   }
 
   async request(args) {
@@ -179,26 +184,49 @@ export class WalletConnectWalletProvider extends BaseWalletProvider {
     super();
     this._opts = opts;
     this._provider = null;
+    this._initPromise = null;
+    this._connectPromise = null;
   }
 
   async _ensureProvider() {
     if (this._provider) return;
-    const EthereumProvider = await import('@walletconnect/ethereum-provider');
-    const Mod = EthereumProvider.default || EthereumProvider;
-    this._provider = await Mod.init({
-      projectId: this._opts.projectId,
-      chains: this._opts.chains,
-      optionalChains: this._opts.optionalChains,
-      showQrModal: true,
+    if (this._initPromise) return this._initPromise;
+    this._initPromise = (async () => {
+      const EthereumProvider = await import('@walletconnect/ethereum-provider');
+      const Mod = EthereumProvider.default || EthereumProvider;
+      this._provider = await Mod.init({
+        projectId: this._opts.projectId,
+        chains: this._opts.chains,
+        optionalChains: this._opts.optionalChains,
+        showQrModal: true,
+      });
+    })();
+    return this._initPromise;
+  }
+
+  async _ensureConnected() {
+    if (this._provider.connected) return;
+    if (this._connectPromise) return this._connectPromise;
+    this._connectPromise = this._provider.connect().finally(() => {
+      this._connectPromise = null;
     });
+    return this._connectPromise;
   }
 
   async request(args) {
     await this._ensureProvider();
-    if (!this._provider.connected) {
-      await this._provider.connect();
+    await this._ensureConnected();
+    try {
+      return await this._provider.request(args);
+    } catch (err) {
+      const msg = err?.message || '';
+      if (msg.includes('connect() must be called before request()')) {
+        this._connectPromise = null;
+        await this._provider.connect();
+        return this._provider.request(args);
+      }
+      throw err;
     }
-    return this._provider.request(args);
   }
 
   on(event, cb) {
