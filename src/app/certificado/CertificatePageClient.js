@@ -598,8 +598,8 @@ function CertificateContent() {
           <div>
             <p className="font-semibold">Carteira conectada difere da carteira vinculada ao perfil</p>
             <p className="mt-1 text-sm text-amber-100/80">
-              A conta conectada ({compactHash(account)}) não corresponde à carteira MetaMask
-              vinculada ao seu perfil ({compactHash(linkedWalletAddress)}). O NFT será registrado
+              A conta conectada (<a href={`${config?.explorerUrl || 'https://polygonscan.com'}/address/${account}`} target="_blank" rel="noopener noreferrer" className="text-brand-400 hover:text-brand-300">{compactHash(account)}</a>) não corresponde à carteira MetaMask
+              vinculada ao seu perfil (<a href={`${config?.explorerUrl || 'https://polygonscan.com'}/address/${linkedWalletAddress}`} target="_blank" rel="noopener noreferrer" className="text-brand-400 hover:text-brand-300">{compactHash(linkedWalletAddress)}</a>). O NFT será registrado
               na conta conectada. Para emitir na conta correta, desconecte esta e conecte a
               carteira vinculada, ou vincule a conta atual no seu{' '}
               <Link href="/profile" className="text-brand-400 hover:text-brand-300">perfil</Link>.
@@ -652,7 +652,7 @@ function CertificateContent() {
               <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-sm">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-slate-400">Carteira</span>
-                  <span className="font-mono text-slate-200">{compactHash(account)}</span>
+                  <a href={`${config?.explorerUrl || 'https://polygonscan.com'}/address/${account}`} target="_blank" rel="noopener noreferrer" className="font-mono text-slate-200 hover:text-brand-300">{compactHash(account)}</a>
                 </div>
                 <div className="mt-2 flex items-center justify-between gap-3">
                   <span className="flex items-center gap-1.5 text-slate-400">

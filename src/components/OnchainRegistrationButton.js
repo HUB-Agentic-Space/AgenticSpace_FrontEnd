@@ -515,7 +515,7 @@ function RegistrationConfirmModal({ onConfirm, onCancel, ownerType, paymentAsset
               <p className="text-xs text-slate-500">
                 Pagamento em CAS tokens. A taxa é transferida para o InfrastructureFund.
                 {infraFundAddress && (
-                  <> Endereço: <code className="font-mono text-slate-400">{infraFundAddress.slice(0, 10)}...{infraFundAddress.slice(-8)}</code></>
+                  <> Endereço: <a href={`${config?.explorerUrl || 'https://polygonscan.com'}/address/${infraFundAddress}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs text-brand-300 hover:underline">{infraFundAddress.slice(0, 10)}...{infraFundAddress.slice(-8)}</a></>
                 )}
               </p>
             </div>
@@ -647,9 +647,14 @@ function RegistrationDetailsModal({
               <span>Hash da Transação</span>
             </div>
             <div className="mt-1 flex items-center gap-2">
-              <code className="break-all font-mono text-xs text-slate-200">
+              <a
+                href={`${explorerUrl}/tx/${receipt.txHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="break-all font-mono text-xs text-brand-400 hover:text-brand-300"
+              >
                 {receipt.txHash}
-              </code>
+              </a>
               <button
                 onClick={() => copyToClipboard(receipt.txHash)}
                 className="shrink-0 text-slate-400 hover:text-white"
@@ -771,9 +776,14 @@ function RegistrationDetailsModal({
             <div className="rounded-lg border border-slate-800 p-3">
               <div className="text-slate-400">Carteira de Origem</div>
               <div className="mt-1 flex items-center gap-2">
-                <code className="break-all font-mono text-xs text-slate-200">
+                <a
+                  href={`${explorerUrl}/address/${receipt.fromAddress}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="break-all font-mono text-xs text-brand-400 hover:text-brand-300"
+                >
                   {receipt.fromAddress}
-                </code>
+                </a>
                 <button
                   onClick={() => copyToClipboard(receipt.fromAddress)}
                   className="shrink-0 text-slate-400 hover:text-white"
