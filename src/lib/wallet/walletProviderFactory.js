@@ -129,6 +129,7 @@ export class MetaMaskSDKWalletProvider extends BaseWalletProvider {
       },
       modal: { enabled: false },
     });
+    await this._sdk.connect();
     this._provider = this._sdk.getProvider();
   }
 
@@ -194,6 +195,9 @@ export class WalletConnectWalletProvider extends BaseWalletProvider {
 
   async request(args) {
     await this._ensureProvider();
+    if (!this._provider.connected) {
+      await this._provider.connect();
+    }
     return this._provider.request(args);
   }
 

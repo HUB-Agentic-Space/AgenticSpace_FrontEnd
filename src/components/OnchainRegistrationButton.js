@@ -234,7 +234,7 @@ export default function OnchainRegistrationButton({
           signer
         );
         const didHash = ethers.keccak256(ethers.toUtf8Bytes(did));
-        const publicIdHash = ethers.keccak256(ethers.toUtf8Bytes(did));
+        const publicIdHash = ethers.keccak256(ethers.toUtf8Bytes(account));
         const assetEnum = paymentAsset === 'CAS' ? 0 : paymentAsset === 'POL' ? 1 : 2;
 
         let txOverrides = { ...gasOverrides };

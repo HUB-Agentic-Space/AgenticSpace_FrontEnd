@@ -192,7 +192,15 @@
     "Swap Fee": "Taxa cobrada em cada troca CAS↔POL pelo contrato CASSwap, expressa em basis points.",
     "BPS": "Basis Points — 1 bps = 0,01%. Usado para expressar taxas percentuais com precisão.",
     "Verifiable Credential": "Credencial digital assinada criptograficamente que prova atributos sem revelar dados sensíveis.",
-    "RapportCertificate": "Contrato inteligente que emite certificados de membro como NFTs com contas vinculadas (TBA)."
+    "RapportCertificate": "Contrato inteligente que emite certificados de membro como NFTs com contas vinculadas (TBA).",
+    "Gini": "Índice de Gini — mede a desigualdade de distribuição de 0 (igualdade perfeita) a 1 (concentração máxima). Quanto mais próximo de 1, maior o risco do token ser percebido como controlado por poucos.",
+    "HHI": "Herfindahl-Hirschman Index — soma dos quadrados das participações percentuais (0–10000). Abaixo de 1500 = competitivo; acima de 2500 = altamente concentrado. Usado por reguladores para avaliar monopólio.",
+    "DEX": "Decentralized Exchange — exchange descentralizada onde tokens são negociados via pools de liquidez (AMM) sem intermediário. Liquidez em DEX é sinal de saúde do token.",
+    "FDV": "Fully Diluted Valuation — valor de mercado se todo o supply estivesse em circulação ao preço atual. Diferente do market cap, considera o supply máximo.",
+    "Lorenz": "Curva de Lorenz — visualiza a distribuição acumulada de riqueza. A distância entre a curva e a linha diagonal de igualdade perfeita indica o nível de concentração.",
+    "Circulante": "Supply circulante fora de contratos de infraestrutura e DEX. Indica quanto do token está efetivamente disponível para negociação.",
+    "OHLC": "Open-High-Low-Close — formato de candlestick onde Open = valor de abertura, High = maior valor, Low = menor valor, Close = valor de fechamento do período.",
+    "Whale": "Holder que possui mais de 30% do supply total. Carteiras externas (não-infra) nesse nível representam risco alto de manipulação de preço."
   },
   "about": {
     "title": "Sobre o Agentic Space",

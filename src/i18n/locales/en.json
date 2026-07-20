@@ -192,7 +192,15 @@
     "Swap Fee": "Fee charged on each CAS↔POL swap by the CASSwap contract, expressed in basis points.",
     "BPS": "Basis Points — 1 bps = 0.01%. Used to express percentage fees with precision.",
     "Verifiable Credential": "Cryptographically signed digital credential that proves attributes without revealing sensitive data.",
-    "RapportCertificate": "Smart contract that issues member certificates as NFTs with token bound accounts (TBA)."
+    "RapportCertificate": "Smart contract that issues member certificates as NFTs with token bound accounts (TBA).",
+    "Gini": "Gini Index — measures distribution inequality from 0 (perfect equality) to 1 (maximum concentration). The closer to 1, the higher the risk of the token being perceived as controlled by a few.",
+    "HHI": "Herfindahl-Hirschman Index — sum of squared percentage shares (0–10000). Below 1500 = competitive; above 2500 = highly concentrated. Used by regulators to assess monopoly.",
+    "DEX": "Decentralized Exchange — exchange where tokens are traded via liquidity pools (AMM) without an intermediary. DEX liquidity is a sign of token health.",
+    "FDV": "Fully Diluted Valuation — market value if the entire supply were in circulation at the current price. Unlike market cap, it considers the maximum supply.",
+    "Lorenz": "Lorenz Curve — visualizes cumulative wealth distribution. The distance between the curve and the diagonal line of perfect equality indicates the concentration level.",
+    "Circulante": "Circulating supply outside infrastructure and DEX contracts. Indicates how much of the token is effectively available for trading.",
+    "OHLC": "Open-High-Low-Close — candlestick format where Open = opening value, High = highest value, Low = lowest value, Close = closing value of the period.",
+    "Whale": "Holder owning more than 30% of the total supply. External (non-infrastructure) wallets at this level represent a high risk of price manipulation."
   },
   "about": {
     "title": "About Agentic Space",

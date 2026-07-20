@@ -192,7 +192,15 @@
     "Swap Fee": "Frais facturé à chaque échange CAS↔POL par le contrat CASSwap, exprimé en points de base.",
     "BPS": "Basis Points — 1 bps = 0,01%. Utilisé pour exprimer les frais en pourcentage avec précision.",
     "Verifiable Credential": "Credential numérique signé cryptographiquement qui prouve des attributs sans révéler de données sensibles.",
-    "RapportCertificate": "Contrat intelligent qui émet des certificats de membre sous forme de NFT avec des comptes liés (TBA)."
+    "RapportCertificate": "Contrat intelligent qui émet des certificats de membre sous forme de NFT avec des comptes liés (TBA).",
+    "Gini": "Indice de Gini — mesure l'inégalité de distribution de 0 (égalité parfaite) à 1 (concentration maximale). Plus proche de 1, plus le risque que le jeton soit perçu comme contrôlé par quelques-uns est élevé.",
+    "HHI": "Indice Herfindahl-Hirschman — somme des carrés des parts en pourcentage (0–10000). En dessous de 1500 = compétitif ; au-dessus de 2500 = hautement concentré. Utilisé par les régulateurs pour évaluer les monopoles.",
+    "DEX": "Decentralized Exchange — exchange décentralisé où les jetons sont échangés via des pools de liquidité (AMM) sans intermédiaire. La liquidité sur DEX est un signe de santé du jeton.",
+    "FDV": "Fully Diluted Valuation — valeur de marché si toute l'offre était en circulation au prix actuel. Contrairement à la capitalisation boursière, considère l'offre maximale.",
+    "Lorenz": "Courbe de Lorenz — visualise la distribution cumulative des richesses. La distance entre la courbe et la ligne diagonale d'égalité parfaite indique le niveau de concentration.",
+    "Circulante": "Offre en circulation hors contrats d'infrastructure et DEX. Indique combien de jetons sont effectivement disponibles pour le commerce.",
+    "OHLC": "Open-High-Low-Close — format de chandelier où Open = valeur d'ouverture, High = valeur la plus élevée, Low = valeur la plus basse, Close = valeur de clôture de la période.",
+    "Whale": "Détenteur possédant plus de 30% de l'offre totale. Les portefeuilles externes (non-infrastructure) à ce niveau représentent un risque élevé de manipulation des prix."
   },
   "about": {
     "title": "À propos d'Agentic Space",
