@@ -8,7 +8,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Vote, Loader2, AlertCircle, CheckCircle, XCircle, Clock, ArrowLeft, Info, Mail, MessageCircle } from 'lucide-react';
+import { Vote, Loader2, AlertCircle, CheckCircle, XCircle, Clock, ArrowLeft, Info, Mail, MessageCircle, ExternalLink } from 'lucide-react';
 import { API_BASE_URL, API_PREFIX, getStoredJwt } from '@/lib/api';
 import { useFees, formatFiat } from '@/lib/useFees';
 import { useLocaleContext } from '@/lib/LocaleProvider';
@@ -221,7 +221,15 @@ function VotacaoPageContent() {
                   <div>
                     <p>Voto registrado: {supportLabels[voteSuccess.support]}</p>
                     {voteSuccess.txHash && (
-                      <p className="mt-1 text-xs">TX: {voteSuccess.txHash.slice(0, 20)}...</p>
+                      <a
+                        href={`${process.env.NEXT_PUBLIC_CERTIFICATE_EXPLORER_URL || 'https://polygonscan.com'}/tx/${voteSuccess.txHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 text-xs text-brand-400 hover:text-brand-300 inline-flex items-center gap-1"
+                      >
+                        TX: {voteSuccess.txHash.slice(0, 20)}...
+                        <ExternalLink size={10} />
+                      </a>
                     )}
                     <p className="mt-1 text-xs">{voteSuccess.nextStep}</p>
                   </div>

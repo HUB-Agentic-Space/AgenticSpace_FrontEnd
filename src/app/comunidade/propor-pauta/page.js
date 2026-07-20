@@ -8,7 +8,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { FileText, Send, Loader2, AlertCircle, CheckCircle, Info, Mail, MessageCircle, ArrowLeft } from 'lucide-react';
+import { FileText, Send, Loader2, AlertCircle, CheckCircle, Info, Mail, MessageCircle, ArrowLeft, ExternalLink } from 'lucide-react';
 import { API_BASE_URL, API_PREFIX, getStoredJwt } from '@/lib/api';
 
 export default function ProporPautaPage() {
@@ -117,7 +117,15 @@ export default function ProporPautaPage() {
               <p className="font-semibold">Pauta enviada com sucesso!</p>
               <p className="mt-1">ID: #{success.pauta?.id}</p>
               {success.txHash && (
-                <p className="mt-1 text-xs">TX on-chain: {success.txHash.slice(0, 20)}...</p>
+                <a
+                  href={`${process.env.NEXT_PUBLIC_CERTIFICATE_EXPLORER_URL || 'https://polygonscan.com'}/tx/${success.txHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1 text-xs text-brand-400 hover:text-brand-300 inline-flex items-center gap-1"
+                >
+                  TX on-chain: {success.txHash.slice(0, 20)}...
+                  <ExternalLink size={10} />
+                </a>
               )}
               <p className="mt-2 text-xs">{success.nextStep}</p>
               <Link href="/comunidade" className="mt-2 inline-block text-brand-400 hover:text-brand-300">
