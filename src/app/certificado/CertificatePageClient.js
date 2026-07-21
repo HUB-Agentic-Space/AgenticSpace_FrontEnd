@@ -128,24 +128,31 @@ function CertificateContent() {
 
   const loadCertificates = useCallback(async (activeConfig, recipient, jwt) => {
     if (!ethers.isAddress(activeConfig?.certificateAddress || '')) return;
-    const [context, issuances] = await Promise.all([
+    const [contextResult, issuances] = await Promise.allSettled([
       readCertificateContext(activeConfig, recipient),
       listMyCertificateIssuances(jwt),
     ]);
-    if (context.phase) {
+    const context = contextResult.status === 'fulfilled' ? contextResult.value : null;
+    const issuanceList = issuances.status === 'fulfilled' ? issuances.value : [];
+
+    if (context?.phase) {
       setPhase(context.phase);
+    } else if (!context) {
+      // RPC falhou — manter a fase do config carregado, não zerar
     } else {
       setPhase((previous) => ({ ...previous, id: '0', active: false, minted: '0' }));
     }
-    setCurrentCertificate(context.certificate);
-    setCurrentPhaseCasBalance(context.currentCasBalance);
-    setCasBalance(context.casBalance);
-    const confirmed = issuances.filter(
+    if (context) {
+      setCurrentCertificate(context.certificate);
+      setCurrentPhaseCasBalance(context.currentCasBalance);
+      setCasBalance(context.casBalance);
+    }
+    const confirmed = issuanceList.filter(
       (issuance) => issuance.status === 'confirmed' && issuance.token?.tokenId
     );
     setCertificateHistory(confirmed);
 
-    if (context.certificate) {
+    if (context?.certificate) {
       setCertificate(context.certificate);
       setCertificatePhase(context.phase);
       setCurrentCasBalance(context.currentCasBalance);
@@ -154,11 +161,18 @@ function CertificateContent() {
 
     const latest = confirmed[0];
     if (latest?.token?.tokenId) {
-      const historical = await readCertificateByToken(activeConfig, latest.token.tokenId);
-      setCertificate(historical.certificate);
-      setCertificatePhase(historical.phase);
-      setCurrentCasBalance(historical.currentCasBalance);
-      setLastTxHash(latest.transaction?.txHash || '');
+      try {
+        const historical = await readCertificateByToken(activeConfig, latest.token.tokenId);
+        setCertificate(historical.certificate);
+        setCertificatePhase(historical.phase);
+        setCurrentCasBalance(historical.currentCasBalance);
+        setLastTxHash(latest.transaction?.txHash || '');
+      } catch {
+        // Falha ao ler token on-chain — ainda exibir dados da API
+        setCertificate(null);
+        setCertificatePhase(null);
+        setCurrentCasBalance('0');
+      }
     } else {
       setCertificate(null);
       setCertificatePhase(null);

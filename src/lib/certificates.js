@@ -20,7 +20,7 @@ export const CERTIFICATE_ABI = [
   'function certificateOf(address recipient, uint256 phaseId) view returns (uint256)',
   'function tokenBoundAccount(uint256 tokenId) view returns (address)',
   'function nonces(address recipient) view returns (uint256)',
-  'function getPhase(uint256 phaseId) view returns (tuple(string name, bytes32 templateHash, uint256 minCasDeposit, uint256 startsAt, uint256 endsAt, uint256 minted, bool active, string skillsDescription, string instructions))',
+  'function getPhase(uint256 phaseId) view returns (tuple(string name, bytes32 templateHash, uint256 minCasDeposit, uint256 startsAt, uint256 endsAt, uint256 minted, bool active))',
   'function getPhasePrerequisites(uint256 phaseId) view returns (uint256[])',
   'function isPhaseUnlocked(address user, uint256 phaseId) view returns (bool)',
   'function hasCertificateForPhase(address user, uint256 phaseId) view returns (bool)',
