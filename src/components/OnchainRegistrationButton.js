@@ -33,6 +33,8 @@ import {
 } from 'lucide-react';
 import Spinner from '@/components/Spinner';
 import { useWallet } from '@/lib/wallet/useWallet';
+import { parseWalletError } from '@/lib/wallet/walletErrorHandler';
+import WalletErrorModal from '@/components/WalletErrorModal';
 import {
   getOnchainConfig,
   getUserOnchainRegistration,
@@ -96,6 +98,7 @@ export default function OnchainRegistrationButton({
   const [showModal, setShowModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [error, setError] = useState('');
+  const [walletError, setWalletError] = useState(null);
   const [step, setStep] = useState('');
   const [paymentAsset, setPaymentAsset] = useState('CAS');
   const { connect: walletConnect, getProvider } = useWallet();
@@ -139,8 +142,12 @@ export default function OnchainRegistrationButton({
 
   async function handleRegister() {
     setError('');
+    setWalletError(null);
     setRegistering(true);
     setStep('');
+
+    let account = '';
+    let gasOverrides = null;
 
     try {
       setStep('Conectando carteira...');
@@ -149,7 +156,7 @@ export default function OnchainRegistrationButton({
         throw new Error('Nenhuma conta conectada.');
       }
 
-      const account = accounts[0];
+      account = accounts[0];
       const rawProvider = getProvider();
       if (!rawProvider) throw new Error('Carteira não conectada.');
 
@@ -190,7 +197,7 @@ export default function OnchainRegistrationButton({
       const provider = new ethers.BrowserProvider(rawProvider);
       const signer = await provider.getSigner();
 
-      const gasOverrides = await getGasOverrides(provider);
+      gasOverrides = await getGasOverrides(provider);
 
       const diamondAddress = config.diamondAddress;
       const casTokenAddress = config.casTokenAddress;
@@ -343,11 +350,12 @@ export default function OnchainRegistrationButton({
       setShowModal(true);
       setStep('');
     } catch (err) {
-      let message = err.message || 'Falha no registro on-chain.';
-      if (err.code === 'INSUFFICIENT_FUNDS' || (message || '').toLowerCase().includes('insufficient funds')) {
-        message = 'Saldo de POL insuficiente para cobrir a taxa e o gas da rede Polygon. Adicione POL à carteira ou escolha outro asset.';
+      const parsed = parseWalletError(err, { account, gasOverrides, config });
+      if (parsed.code === 'UNKNOWN') {
+        setError(parsed.message);
+      } else {
+        setWalletError(parsed);
       }
-      setError(message);
       setStep('');
     } finally {
       setRegistering(false);
@@ -456,6 +464,13 @@ export default function OnchainRegistrationButton({
           <AlertCircle size={16} className="mt-0.5 shrink-0" />
           <span>{error}</span>
         </div>
+      )}
+
+      {walletError && (
+        <WalletErrorModal
+          error={walletError}
+          onClose={() => setWalletError(null)}
+        />
       )}
 
       {showConfirmModal && (

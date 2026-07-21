@@ -23,10 +23,12 @@ import {
 import RequireAuth from '@/components/RequireAuth';
 import Spinner from '@/components/Spinner';
 import CASSwapModal from '@/components/CASSwapModal';
+import WalletErrorModal from '@/components/WalletErrorModal';
 import CertificateSvg from '@/components/certificates/CertificateSvg';
 import { useAuth } from '@/lib/auth-context';
 import { getProfile, listLinkedAccounts } from '@/lib/api';
 import { useWallet } from '@/lib/wallet/useWallet';
+import { parseWalletError } from '@/lib/wallet/walletErrorHandler';
 import {
   buildCertificateManifest,
   buildDraftManifest,
@@ -64,15 +66,9 @@ const DEFAULT_PHASE = {
   minted: '0',
 };
 
-function walletError(error) {
-  const message = error?.shortMessage || error?.reason || error?.message || 'Falha na operacao.';
-  if (error?.code === 4001 || /user rejected|user denied/i.test(message)) {
-    return 'A solicitacao foi cancelada na carteira.';
-  }
-  if (/insufficient funds/i.test(message)) {
-    return 'Saldo de POL insuficiente para pagar o gas da transacao.';
-  }
-  return message;
+function walletError(error, context) {
+  const parsed = parseWalletError(error, context);
+  return parsed.message;
 }
 
 function normalizeAuthorization(value) {
@@ -122,6 +118,7 @@ function CertificateContent() {
   const [success, setSuccess] = useState('');
   const [lastTxHash, setLastTxHash] = useState('');
   const [showSwap, setShowSwap] = useState(false);
+  const [walletErrorObj, setWalletErrorObj] = useState(null);
   const [linkedWalletAddress, setLinkedWalletAddress] = useState(null);
   const [linkedAccountsList, setLinkedAccountsList] = useState([]);
   const [accountsChecked, setAccountsChecked] = useState(false);
@@ -459,7 +456,8 @@ function CertificateContent() {
       await loadCertificates(config, recipient, session?.jwt);
       setSuccess(`Certificado #${minted.tokenId} emitido com sucesso.${confirmationWarning}`);
     } catch (mintError) {
-      setError(walletError(mintError));
+      const parsed = parseWalletError(mintError, { account, config });
+      setWalletErrorObj(parsed);
     } finally {
       setStep('');
       setMinting(false);
@@ -742,7 +740,7 @@ function CertificateContent() {
             </div>
 
             {!account ? (
-              <button onClick={() => connect().catch((connectError) => setError(walletError(connectError)))} disabled={isConnecting} className="btn-secondary w-full">
+              <button onClick={() => connect().catch((connectError) => setWalletErrorObj(parseWalletError(connectError, { account, config })))} disabled={isConnecting} className="btn-secondary w-full">
                 {isConnecting ? <Spinner size={16} /> : <Wallet size={17} />}
                 {isConnecting ? 'Conectando...' : 'Conectar carteira'}
               </button>
@@ -985,6 +983,13 @@ function CertificateContent() {
           casTokenAddress={config.casTokenAddress}
           explorerUrl={config.explorerUrl}
           chainId={config.chainId}
+        />
+      )}
+
+      {walletErrorObj && (
+        <WalletErrorModal
+          error={walletErrorObj}
+          onClose={() => setWalletErrorObj(null)}
         />
       )}
 
