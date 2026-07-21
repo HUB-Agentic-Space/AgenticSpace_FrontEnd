@@ -45,18 +45,18 @@ import {
 
 const METAMASK_MESSAGE = 'Register on Agentic Space Diamond';
 
-const MIN_PRIORITY_FEE = 25_000_000_000n;
+const MIN_PRIORITY_FEE = BigInt('25000000000');
 
 async function getGasOverrides(provider) {
   const feeData = await provider.getFeeData();
-  let maxPriorityFeePerGas = feeData.maxPriorityFeePerGas ?? 0n;
+  let maxPriorityFeePerGas = feeData.maxPriorityFeePerGas ?? BigInt('0');
   if (maxPriorityFeePerGas < MIN_PRIORITY_FEE) {
     maxPriorityFeePerGas = MIN_PRIORITY_FEE;
   }
   const baseFee = feeData.maxFeePerGas
-    ? feeData.maxFeePerGas - (feeData.maxPriorityFeePerGas ?? 0n)
-    : 0n;
-  const maxFeePerGas = baseFee + maxPriorityFeePerGas * 2n;
+    ? feeData.maxFeePerGas - (feeData.maxPriorityFeePerGas ?? BigInt('0'))
+    : BigInt('0');
+  const maxFeePerGas = baseFee + maxPriorityFeePerGas * BigInt('2');
   if (feeData.maxFeePerGas && feeData.maxFeePerGas > maxFeePerGas) {
     return { maxFeePerGas: feeData.maxFeePerGas, maxPriorityFeePerGas };
   }
@@ -203,11 +203,11 @@ export default function OnchainRegistrationButton({
       const casTokenAddress = config.casTokenAddress;
       const registrationFee = BigInt(config.registrationFee || '0');
       const userRegistrationFee = BigInt(config.userRegistrationFee || '0');
-      let requiredPol = 0n;
+      let requiredPol = BigInt('0');
 
       // Pre-check: verify CAS balance is sufficient before starting
       const requiredFee = ownerType === 'user' ? userRegistrationFee : registrationFee;
-      if (requiredFee > 0n && (paymentAsset === 'CAS' || ownerType === 'agent') && casTokenAddress && casTokenAddress !== ethers.ZeroAddress) {
+      if (requiredFee > BigInt('0') && (paymentAsset === 'CAS' || ownerType === 'agent') && casTokenAddress && casTokenAddress !== ethers.ZeroAddress) {
         const casContract = new ethers.Contract(casTokenAddress, config.abis.casToken, provider);
         const balance = await casContract.balanceOf(account);
         if (balance < requiredFee) {
@@ -220,7 +220,7 @@ export default function OnchainRegistrationButton({
       // Step 1: Prepare payment based on selected asset
       if (ownerType === 'user') {
         if (paymentAsset === 'CAS') {
-          if (userRegistrationFee > 0n && casTokenAddress && casTokenAddress !== ethers.ZeroAddress) {
+          if (userRegistrationFee > BigInt('0') && casTokenAddress && casTokenAddress !== ethers.ZeroAddress) {
             setStep('Aprovando tokens CAS...');
             const casContract = new ethers.Contract(
               casTokenAddress,
@@ -234,14 +234,14 @@ export default function OnchainRegistrationButton({
             }
           }
         } else if (paymentAsset === 'POL') {
-          if (userRegistrationFee > 0n) {
+          if (userRegistrationFee > BigInt('0')) {
             requiredPol = userRegistrationFee;
             if (config.casSwapAddress && config.casSwapAddress !== ethers.ZeroAddress) {
               try {
                 const swapAbi = ['function getRatio() view returns (uint256 numerator, uint256 denominator)'];
                 const swapContract = new ethers.Contract(config.casSwapAddress, swapAbi, provider);
                 const [numerator, denominator] = await swapContract.getRatio();
-                if (numerator > 0n && denominator > 0n) {
+                if (numerator > BigInt('0') && denominator > BigInt('0')) {
                   requiredPol = (userRegistrationFee * denominator) / numerator;
                 }
               } catch {
@@ -249,7 +249,7 @@ export default function OnchainRegistrationButton({
               }
             }
             const nativeBalance = await provider.getBalance(account);
-            const maxGasCost = gasOverrides.maxFeePerGas * 200000n;
+            const maxGasCost = gasOverrides.maxFeePerGas * BigInt('200000');
             const requiredTotal = requiredPol + maxGasCost;
             if (nativeBalance < requiredTotal) {
               const needStr = ethers.formatEther(requiredTotal);
@@ -275,7 +275,7 @@ export default function OnchainRegistrationButton({
         }
       } else {
         // Agent registration: always CAS
-        if (registrationFee > 0n && casTokenAddress && casTokenAddress !== ethers.ZeroAddress) {
+        if (registrationFee > BigInt('0') && casTokenAddress && casTokenAddress !== ethers.ZeroAddress) {
           setStep('Aprovando tokens CAS...');
           const casContract = new ethers.Contract(
             casTokenAddress,
@@ -305,7 +305,7 @@ export default function OnchainRegistrationButton({
         const assetEnum = paymentAsset === 'CAS' ? 0 : paymentAsset === 'POL' ? 1 : 2;
 
         let txOverrides = { ...gasOverrides };
-        if (paymentAsset === 'POL' && requiredPol > 0n) {
+        if (paymentAsset === 'POL' && requiredPol > BigInt('0')) {
           txOverrides.value = requiredPol;
         }
 

@@ -115,13 +115,13 @@ export async function estimateMintGasCost(config, account, provider) {
   if (!account || !provider) return null;
   try {
     const feeData = await provider.getFeeData();
-    const gasPrice = feeData.gasPrice || feeData.maxFeePerGas || 0n;
-    if (gasPrice === 0n) return null;
+    const gasPrice = feeData.gasPrice || feeData.maxFeePerGas || BigInt('0');
+    if (gasPrice === BigInt('0')) return null;
 
     const useDiamond = ethers.isAddress(config.diamondAddress);
     const typicalGasLimit = useDiamond
-      ? 550000n
-      : 650000n;
+      ? BigInt('550000')
+      : BigInt('650000');
 
     const estimatedCost = gasPrice * typicalGasLimit;
     return {
@@ -298,14 +298,14 @@ export async function readCertificateContext(config, recipient) {
   const provider = new ethers.JsonRpcProvider(config.rpcUrl, config.chainId, { staticNetwork: true });
   const contract = getCertificateContract(config.certificateAddress, provider);
   const phaseId = await contract.currentPhaseId();
-  const phase = phaseId > 0n
+  const phase = phaseId > BigInt('0')
     ? phaseFromResult(await contract.getPhase(phaseId), phaseId)
     : null;
   let certificate = null;
   let currentCasBalance = '0';
-  if (phaseId > 0n && recipient && ethers.isAddress(recipient)) {
+  if (phaseId > BigInt('0') && recipient && ethers.isAddress(recipient)) {
     const tokenId = await contract.certificateOf(recipient, phaseId);
-    if (tokenId > 0n) {
+    if (tokenId > BigInt('0')) {
       certificate = certificateFromResult(await contract.getCertificate(tokenId), tokenId);
       const verification = await contract.verifyCertificate(tokenId);
       currentCasBalance = verification.currentCasBalance.toString();
@@ -323,7 +323,7 @@ export async function readCertificateByToken(config, tokenId) {
     throw new Error('Contrato de certificados nao configurado.');
   }
   const numericTokenId = BigInt(tokenId || 0);
-  if (numericTokenId <= 0n) throw new Error('Token ID invalido.');
+  if (numericTokenId <= BigInt('0')) throw new Error('Token ID invalido.');
   const provider = new ethers.JsonRpcProvider(config.rpcUrl, config.chainId, { staticNetwork: true });
   const contract = getCertificateContract(config.certificateAddress, provider);
   const [rawCertificate, verification] = await Promise.all([
@@ -469,7 +469,7 @@ export async function verifyCertificateManifest(manifest, suppliedConfig) {
   }
 
   const tokenId = BigInt(manifest.certificate?.tokenId || 0);
-  if (tokenId <= 0n) throw new Error('Token ID ausente ou invalido.');
+  if (tokenId <= BigInt('0')) throw new Error('Token ID ausente ou invalido.');
   const provider = new ethers.JsonRpcProvider(config.rpcUrl, config.chainId, { staticNetwork: true });
   if ((await provider.getCode(config.certificateAddress)) === '0x') {
     throw new Error('O contrato oficial nao foi encontrado na rede configurada.');

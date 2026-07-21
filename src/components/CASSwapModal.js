@@ -21,18 +21,18 @@ import {
 import Spinner from '@/components/Spinner';
 import { useWallet } from '@/lib/wallet/useWallet';
 
-const MIN_PRIORITY_FEE = 25_000_000_000n;
+const MIN_PRIORITY_FEE = BigInt('25000000000');
 
 async function getGasOverrides(provider) {
   const feeData = await provider.getFeeData();
-  let maxPriorityFeePerGas = feeData.maxPriorityFeePerGas ?? 0n;
+  let maxPriorityFeePerGas = feeData.maxPriorityFeePerGas ?? BigInt('0');
   if (maxPriorityFeePerGas < MIN_PRIORITY_FEE) {
     maxPriorityFeePerGas = MIN_PRIORITY_FEE;
   }
   const baseFee = feeData.maxFeePerGas
-    ? feeData.maxFeePerGas - (feeData.maxPriorityFeePerGas ?? 0n)
-    : 0n;
-  const maxFeePerGas = baseFee + maxPriorityFeePerGas * 2n;
+    ? feeData.maxFeePerGas - (feeData.maxPriorityFeePerGas ?? BigInt('0'))
+    : BigInt('0');
+  const maxFeePerGas = baseFee + maxPriorityFeePerGas * BigInt('2');
   if (feeData.maxFeePerGas && feeData.maxFeePerGas > maxFeePerGas) {
     return { maxFeePerGas: feeData.maxFeePerGas, maxPriorityFeePerGas };
   }
@@ -258,7 +258,7 @@ export default function CASSwapModal({
       if (mode === 'buy') {
         const polAmount = ethers.parseEther(amount);
         const casExpected = ethers.parseEther(preview);
-        const minCasOut = (casExpected * 99n) / 100n;
+        const minCasOut = (casExpected * BigInt('99')) / BigInt('100');
 
         try {
           await swap.buyCAS.staticCall(minCasOut, deadline, { value: polAmount, from: account });
@@ -278,7 +278,7 @@ export default function CASSwapModal({
           await approveTx.wait();
         }
         const polExpected = ethers.parseEther(preview);
-        const minPolOut = (polExpected * 99n) / 100n;
+        const minPolOut = (polExpected * BigInt('99')) / BigInt('100');
 
         try {
           await swap.sellCAS.staticCall(casAmount, minPolOut, deadline, { from: account });
