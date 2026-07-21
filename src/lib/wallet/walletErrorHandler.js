@@ -56,15 +56,17 @@ function formatAddress(addr) {
 
 /**
  * Converte um valor em wei para uma string legível em POL.
- * @param {bigint|string|number} wei - Valor em wei.
+ * @param {string|number} wei - Valor em wei (como string ou número).
  * @returns {string}
  */
 function formatGasInPol(wei) {
   try {
-    const bigVal = BigInt(wei);
-    if (bigVal === 0n) return '0 POL';
-    const formatted = ethers.formatEther(bigVal);
-    return `${parseFloat(formatted).toFixed(6)} POL`;
+    const weiStr = String(wei);
+    if (weiStr === '0' || weiStr === '') return '0 POL';
+    const formatted = ethers.formatEther(weiStr);
+    const num = parseFloat(formatted);
+    if (num === 0) return '0 POL';
+    return `${num.toFixed(6)} POL`;
   } catch {
     return '';
   }
@@ -72,17 +74,20 @@ function formatGasInPol(wei) {
 
 /**
  * Estima o custo de gas a partir dos overrides e gas limit típico.
+ * Evita BigInt literais para compatibilidade com o analisador estático do Next.js.
  * @param {Object} gasOverrides - Overrides de gas (maxFeePerGas, maxPriorityFeePerGas).
- * @param {bigint} [gasLimit] - Gas limit estimado (default: 200000).
  * @returns {string}
  */
-function estimateGasCost(gasOverrides, gasLimit = 200000n) {
+function estimateGasCost(gasOverrides) {
   if (!gasOverrides) return '';
   try {
-    const maxFee = BigInt(gasOverrides.maxFeePerGas || 0n);
-    if (maxFee === 0n) return '';
-    const totalWei = maxFee * gasLimit;
-    return formatGasInPol(totalWei);
+    const maxFeeStr = gasOverrides.maxFeePerGas ? String(gasOverrides.maxFeePerGas) : '';
+    if (!maxFeeStr || maxFeeStr === '0') return '';
+    const maxFeePol = parseFloat(ethers.formatEther(maxFeeStr));
+    if (maxFeePol === 0) return '';
+    const gasLimit = 200000;
+    const totalPol = maxFeePol * gasLimit;
+    return `${totalPol.toFixed(6)} POL`;
   } catch {
     return '';
   }
@@ -116,9 +121,12 @@ function extractGasEstimate(error, context) {
   const txParams = error?.info?.payload?.params?.[0];
   if (txParams?.gas && txParams?.maxFeePerGas) {
     try {
-      const gas = BigInt(txParams.gas);
-      const fee = BigInt(txParams.maxFeePerGas);
-      return formatGasInPol(gas * fee);
+      const gasPol = parseFloat(ethers.formatEther(String(txParams.maxFeePerGas)));
+      const gasLimit = parseInt(String(txParams.gas), 16) || parseInt(String(txParams.gas), 10) || 0;
+      if (gasPol > 0 && gasLimit > 0) {
+        const totalPol = gasPol * gasLimit;
+        return `${totalPol.toFixed(6)} POL`;
+      }
     } catch {
       // ignore
     }
