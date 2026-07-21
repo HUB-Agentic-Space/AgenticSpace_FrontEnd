@@ -273,6 +273,14 @@ export function unlinkAccount(provider, jwt) {
   });
 }
 
+export function requestUnlinkAccount(provider, reason, jwt) {
+  return apiRequest('/auth/accounts/unlink-request', {
+    method: 'POST',
+    body: { provider, reason },
+    jwt
+  });
+}
+
 export function getProfile(jwt) {
   return apiRequest('/profile', { jwt });
 }

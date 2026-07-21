@@ -50,12 +50,15 @@ import {
   confirmAccountLink,
   getGoogleRedirectUri,
   getProfile,
+  getUserOnchainRegistration,
   linkMetaMaskAccount,
   listLinkedAccounts,
   unlinkAccount,
+  requestUnlinkAccount,
   regenerateApiKey,
   updateProfile
 } from '@/lib/api';
+import { listMyCertificateIssuances } from '@/lib/certificates';
 
 /** Chave de persistencia local do perfil humano. */
 const PROFILE_KEY = 'agentic_space_profile';
@@ -105,7 +108,11 @@ function ProfileContent() {
   const [showNewsletterModal, setShowNewsletterModal] = useState(false);
   const [onchainConfig, setOnchainConfig] = useState(null);
   const [showSwapModal, setShowSwapModal] = useState(false);
-  const { connect: walletConnect, getProvider: getWalletProvider } = useWallet();
+  const [hasRegistrationAndCertificate, setHasRegistrationAndCertificate] = useState(false);
+  const [showUnlinkRequestModal, setShowUnlinkRequestModal] = useState(false);
+  const [unlinkReason, setUnlinkReason] = useState('');
+  const [unlinkRequestBusy, setUnlinkRequestBusy] = useState(false);
+  const { connect: walletConnect, getProvider: getWalletProvider, account } = useWallet();
 
   const did = session?.subject?.id || '';
   const provider = session?.subject?.authenticationMethod || session?.subject?.provider || '—';
@@ -192,6 +199,27 @@ function ProfileContent() {
   useEffect(() => {
     refreshLinkedAccounts();
   }, [refreshLinkedAccounts]);
+
+  useEffect(() => {
+    if (!session?.jwt) return;
+    let cancelled = false;
+    async function checkRegistrationAndCertificate() {
+      try {
+        const [regRes, issuances] = await Promise.all([
+          getUserOnchainRegistration(session.jwt),
+          listMyCertificateIssuances(session.jwt),
+        ]);
+        if (cancelled) return;
+        const hasReg = regRes.status < 400 && (regRes.data?.registered || regRes.data?.receipt) && !regRes.data?.invalidated;
+        const hasCert = Array.isArray(issuances) && issuances.some((i) => i.status === 'confirmed');
+        setHasRegistrationAndCertificate(Boolean(hasReg && hasCert));
+      } catch {
+        if (!cancelled) setHasRegistrationAndCertificate(false);
+      }
+    }
+    checkRegistrationAndCertificate();
+    return () => { cancelled = true; };
+  }, [session?.jwt]);
 
   /** Atualiza um campo do formulario. */
   function update(field, value) {
@@ -377,6 +405,23 @@ function ProfileContent() {
     }
   }
 
+  async function handleRequestUnlink() {
+    if (!mergedAccount || !unlinkReason.trim() || unlinkReason.trim().length < 10) return;
+    setUnlinkRequestBusy(true);
+    setLinkMessage('');
+    try {
+      const { status, data } = await requestUnlinkAccount(mergeProvider, unlinkReason.trim(), session.jwt);
+      if (status >= 400) throw new Error(data.error || data.message || 'Falha ao solicitar desvinculação.');
+      setShowUnlinkRequestModal(false);
+      setUnlinkReason('');
+      setLinkMessage('Solicitação de desvinculação enviada. Aguarde a aprovação do administrador.');
+    } catch (error) {
+      setLinkMessage(error.message);
+    } finally {
+      setUnlinkRequestBusy(false);
+    }
+  }
+
   function startMerge() {
     if (mergeProvider === 'google') startGoogleLink();
     else startMetaMaskLink(false);
@@ -427,6 +472,8 @@ function ProfileContent() {
                 jwt={session?.jwt}
                 did={did}
                 walletAddress={normalizedProvider === 'metamask' ? did.replace('did:ethr:', '') : undefined}
+                isMergeComplete={Boolean(mergedAccount)}
+                isWalletConnected={Boolean(account)}
               />
               {onchainConfig?.enabled && onchainConfig?.casSwapAddress && (
                 <button
@@ -450,15 +497,17 @@ function ProfileContent() {
               </span>
               <button
                 type="button"
-                onClick={mergedAccount ? handleUnlink : startMerge}
-                disabled={linkBusy !== null || accountsLoading}
+                onClick={mergedAccount
+                  ? (hasRegistrationAndCertificate ? () => setShowUnlinkRequestModal(true) : handleUnlink)
+                  : startMerge}
+                disabled={linkBusy !== null || accountsLoading || unlinkRequestBusy}
                 className="btn-secondary"
               >
                 {mergedAccount ? <Unlink size={16} /> : <LinkIcon size={16} />}
                 {accountsLoading
                   ? 'Consultando...'
                   : mergedAccount
-                    ? 'Desconectar conta'
+                    ? (hasRegistrationAndCertificate ? 'Solicitar desvinculação' : 'Desconectar conta')
                     : 'Mesclar conta'}
               </button>
             </dd>
@@ -752,6 +801,77 @@ function ProfileContent() {
                 className="btn-primary"
               >
                 Entendi
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {showUnlinkRequestModal && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-4"
+          onClick={() => !unlinkRequestBusy && setShowUnlinkRequestModal(false)}
+        >
+          <div
+            className="card max-w-md space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between">
+              <h2 className="text-lg font-semibold text-white">
+                Solicitar Desvinculação
+              </h2>
+              <button
+                onClick={() => !unlinkRequestBusy && setShowUnlinkRequestModal(false)}
+                className="text-slate-400 hover:text-white"
+                aria-label="Fechar"
+                disabled={unlinkRequestBusy}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="space-y-3 text-sm text-slate-300">
+              <p className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-amber-100">
+                <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+                <span>
+                  Esta ação é <strong>irreversível</strong>. O administrador irá
+                  invalidar seu registro on-chain e revogar seu certificado.
+                  Para obter um novo certificado, será necessário pagar novas
+                  taxas de registro e emissão.
+                </span>
+              </p>
+              <p>
+                Justifique o motivo da solicitação de desvinculação da conta{' '}
+                <strong>{mergeProvider === 'google' ? 'Google' : 'MetaMask'}</strong>:
+              </p>
+              <textarea
+                className="input min-h-[100px] resize-y"
+                value={unlinkReason}
+                onChange={(e) => setUnlinkReason(e.target.value)}
+                placeholder="Descreva o motivo com no mínimo 10 caracteres..."
+                disabled={unlinkRequestBusy}
+                minLength={10}
+              />
+              <p className="text-xs text-slate-500">
+                {unlinkReason.trim().length}/10 caracteres mínimos
+              </p>
+            </div>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowUnlinkRequestModal(false)}
+                className="btn-secondary"
+                disabled={unlinkRequestBusy}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleRequestUnlink}
+                className="btn-primary"
+                disabled={unlinkRequestBusy || unlinkReason.trim().length < 10}
+              >
+                {unlinkRequestBusy ? 'Enviando...' : 'Enviar solicitação'}
               </button>
             </div>
           </div>

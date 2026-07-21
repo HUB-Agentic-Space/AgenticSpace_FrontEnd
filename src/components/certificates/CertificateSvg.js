@@ -160,6 +160,15 @@ export default function CertificateSvg({ manifest, draft = false, className = ''
         Raport Tecnologia Inova Simples • CNPJ: 67.904.299/0001-80
       </text>
 
+      {certificate.skillsDescription && (
+        <g transform="translate(300 740)">
+          <rect width="1000" height="28" rx="6" fill="#f8f1df" fillOpacity="0.6" />
+          <text x="500" y="19" textAnchor="middle" fill="#b87408" fontFamily="Arial, Helvetica, sans-serif" fontSize="16" fontWeight="600">
+            Habilidades: {certificate.skillsDescription}
+          </text>
+        </g>
+      )}
+
       <g transform="translate(115 776)">
         <rect width="640" height="142" rx="18" fill="#00011e" />
         <circle cx="65" cy="71" r="42" fill="none" stroke="url(#certificate-space)" strokeWidth="7" />

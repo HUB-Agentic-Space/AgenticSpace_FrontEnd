@@ -61,8 +61,23 @@ async function getGasOverrides(provider) {
   return { maxFeePerGas, maxPriorityFeePerGas };
 }
 
+async function waitForChain(provider, targetChainId, timeoutMs = 10000) {
+  const targetHex = '0x' + targetChainId.toString(16);
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    try {
+      const current = await provider.request({ method: 'eth_chainId' });
+      if (current?.toLowerCase() === targetHex.toLowerCase()) return;
+    } catch {
+      // ignore
+    }
+    await new Promise((resolve) => setTimeout(resolve, 300));
+  }
+  throw new Error(`Não foi possível confirmar a troca para a rede chainId=${targetChainId}. Tente novamente.`);
+}
+
 /**
- * @param {{ ownerType: 'user'|'agent', publicId?: string, jwt: string, walletAddress?: string, did: string, agent?: Object|null }} props
+ * @param {{ ownerType: 'user'|'agent', publicId?: string, jwt: string, walletAddress?: string, did: string, agent?: Object|null, isMergeComplete?: boolean, isWalletConnected?: boolean }} props
  */
 export default function OnchainRegistrationButton({
   ownerType,
@@ -70,7 +85,9 @@ export default function OnchainRegistrationButton({
   jwt,
   walletAddress,
   did,
-  agent
+  agent,
+  isMergeComplete = true,
+  isWalletConnected = true
 }) {
   const [config, setConfig] = useState(null);
   const [registration, setRegistration] = useState(null);
@@ -126,6 +143,7 @@ export default function OnchainRegistrationButton({
     setStep('');
 
     try {
+      setStep('Conectando carteira...');
       const { accounts } = await walletConnect();
       if (!accounts || accounts.length === 0) {
         throw new Error('Nenhuma conta conectada.');
@@ -134,29 +152,51 @@ export default function OnchainRegistrationButton({
       const account = accounts[0];
       const rawProvider = getProvider();
       if (!rawProvider) throw new Error('Carteira não conectada.');
+
+      // Garante a rede correta antes de criar o BrowserProvider, evitando
+      // NETWORK_ERROR causado por troca de rede durante chamadas pendentes.
+      if (config.chainId) {
+        setStep('Verificando rede da carteira...');
+        const currentChainHex = await rawProvider.request({ method: 'eth_chainId' });
+        const currentChainId = currentChainHex ? parseInt(currentChainHex, 16) : null;
+
+        if (currentChainId !== config.chainId) {
+          setStep('Trocando para a rede Polygon...');
+          try {
+            await rawProvider.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: '0x' + config.chainId.toString(16) }],
+            });
+          } catch (switchErr) {
+            if (switchErr.code === 4902) {
+              await rawProvider.request({
+                method: 'wallet_addEthereumChain',
+                params: [{
+                  chainId: '0x' + config.chainId.toString(16),
+                  chainName: config.chainId === 137 ? 'Polygon Mainnet' : `Chain ${config.chainId}`,
+                  nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
+                  rpcUrls: [config.rpcUrl || 'https://polygon-rpc.com'],
+                  blockExplorerUrls: [config.explorerUrl || 'https://polygonscan.com'],
+                }],
+              });
+            } else {
+              throw new Error(`Conecte-se à rede ${config.chainId === 137 ? 'Polygon' : `chainId=${config.chainId}`} na carteira.`);
+            }
+          }
+          await waitForChain(rawProvider, config.chainId);
+        }
+      }
+
       const provider = new ethers.BrowserProvider(rawProvider);
       const signer = await provider.getSigner();
 
       const gasOverrides = await getGasOverrides(provider);
 
-      // Verificar chain ID
-      const network = await provider.getNetwork();
-      if (config.chainId && Number(network.chainId) !== config.chainId) {
-        setStep('Trocando rede na carteira...');
-        try {
-          await rawProvider.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: '0x' + config.chainId.toString(16) }],
-          });
-        } catch {
-          throw new Error(`Conecte-se à rede chainId=${config.chainId} na carteira.`);
-        }
-      }
-
       const diamondAddress = config.diamondAddress;
       const casTokenAddress = config.casTokenAddress;
       const registrationFee = BigInt(config.registrationFee || '0');
       const userRegistrationFee = BigInt(config.userRegistrationFee || '0');
+      let requiredPol = 0n;
 
       // Pre-check: verify CAS balance is sufficient before starting
       const requiredFee = ownerType === 'user' ? userRegistrationFee : registrationFee;
@@ -187,9 +227,29 @@ export default function OnchainRegistrationButton({
             }
           }
         } else if (paymentAsset === 'POL') {
-          // POL payment: msg.value will be sent with registerUser call
-          // No approve needed, but we need to calculate the required POL amount
-          // The contract validates msg.value against CASSwap ratio
+          if (userRegistrationFee > 0n) {
+            requiredPol = userRegistrationFee;
+            if (config.casSwapAddress && config.casSwapAddress !== ethers.ZeroAddress) {
+              try {
+                const swapAbi = ['function getRatio() view returns (uint256 numerator, uint256 denominator)'];
+                const swapContract = new ethers.Contract(config.casSwapAddress, swapAbi, provider);
+                const [numerator, denominator] = await swapContract.getRatio();
+                if (numerator > 0n && denominator > 0n) {
+                  requiredPol = (userRegistrationFee * denominator) / numerator;
+                }
+              } catch {
+                // fallback para 1:1
+              }
+            }
+            const nativeBalance = await provider.getBalance(account);
+            const maxGasCost = gasOverrides.maxFeePerGas * 200000n;
+            const requiredTotal = requiredPol + maxGasCost;
+            if (nativeBalance < requiredTotal) {
+              const needStr = ethers.formatEther(requiredTotal);
+              const haveStr = ethers.formatEther(nativeBalance);
+              throw new Error(`Saldo de POL insuficiente. Necessário: ~${needStr} POL (taxa + gas estimado), disponível: ${haveStr} POL.`);
+            }
+          }
         } else if (paymentAsset === 'WETH') {
           if (!config.wethTokenAddress || config.wethTokenAddress === ethers.ZeroAddress) {
             throw new Error('WETH não disponível nesta rede. Use CAS ou POL.');
@@ -238,12 +298,8 @@ export default function OnchainRegistrationButton({
         const assetEnum = paymentAsset === 'CAS' ? 0 : paymentAsset === 'POL' ? 1 : 2;
 
         let txOverrides = { ...gasOverrides };
-        if (paymentAsset === 'POL' && userRegistrationFee > 0n) {
-          // Calculate required POL using CASSwap ratio (if available)
-          // The contract will validate the exact amount; we send an estimate
-          // For simplicity, the user sends the fee equivalent in POL
-          // The contract reverts if msg.value doesn't match exactly
-          txOverrides.value = userRegistrationFee; // Approximate — contract validates
+        if (paymentAsset === 'POL' && requiredPol > 0n) {
+          txOverrides.value = requiredPol;
         }
 
         tx = await userRegistry.registerUser(didHash, publicIdHash, assetEnum, txOverrides);
@@ -287,7 +343,11 @@ export default function OnchainRegistrationButton({
       setShowModal(true);
       setStep('');
     } catch (err) {
-      setError(err.message || 'Falha no registro on-chain.');
+      let message = err.message || 'Falha no registro on-chain.';
+      if (err.code === 'INSUFFICIENT_FUNDS' || (message || '').toLowerCase().includes('insufficient funds')) {
+        message = 'Saldo de POL insuficiente para cobrir a taxa e o gas da rede Polygon. Adicione POL à carteira ou escolha outro asset.';
+      }
+      setError(message);
       setStep('');
     } finally {
       setRegistering(false);
@@ -374,8 +434,14 @@ export default function OnchainRegistrationButton({
       <button
         onClick={() => setShowConfirmModal(true)}
         className="btn-primary"
-        disabled={registering}
-        title="Registrar perfil na blockchain via MetaMask"
+        disabled={registering || !isMergeComplete || !isWalletConnected}
+        title={
+          !isMergeComplete
+            ? 'Conecte e mesclue a conta Google/MetaMask antes de registrar.'
+            : !isWalletConnected
+              ? 'Conecte a carteira MetaMask antes de registrar.'
+              : 'Registrar perfil na blockchain via MetaMask'
+        }
       >
         {registering ? (
           <Spinner size={16} />
@@ -454,6 +520,15 @@ function RegistrationConfirmModal({ onConfirm, onCancel, ownerType, paymentAsset
         </div>
 
         <div className="space-y-3 text-sm text-slate-300">
+          <div className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-amber-100">
+            <AlertCircle size={16} className="mt-0.5 shrink-0 text-amber-400" />
+            <span>
+              A MetaMask deve estar na rede <strong>Polygon (chain 137)</strong>.
+              Se estiver em outra rede, solicitaremos a troca automaticamente
+              antes do registro. Certifique-se de ter POL suficiente para taxa + gas.
+            </span>
+          </div>
+
           {ownerType === 'user' && (
             <div className="space-y-2">
               <label className="text-slate-400 font-medium">Forma de Pagamento da Taxa de Registro</label>

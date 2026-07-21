@@ -15,11 +15,15 @@ export const ISSUER = Object.freeze({
 export const CERTIFICATE_ABI = [
   'function currentPhaseId() view returns (uint256)',
   'function phaseCount() view returns (uint256)',
+  'function activePhases(uint256 phaseId) view returns (bool)',
   'function casToken() view returns (address)',
   'function certificateOf(address recipient, uint256 phaseId) view returns (uint256)',
   'function tokenBoundAccount(uint256 tokenId) view returns (address)',
   'function nonces(address recipient) view returns (uint256)',
-  'function getPhase(uint256 phaseId) view returns (tuple(string name, bytes32 templateHash, uint256 minCasDeposit, uint256 startsAt, uint256 endsAt, uint256 minted, bool active))',
+  'function getPhase(uint256 phaseId) view returns (tuple(string name, bytes32 templateHash, uint256 minCasDeposit, uint256 startsAt, uint256 endsAt, uint256 minted, bool active, string skillsDescription, string instructions))',
+  'function getPhasePrerequisites(uint256 phaseId) view returns (uint256[])',
+  'function isPhaseUnlocked(address user, uint256 phaseId) view returns (bool)',
+  'function hasCertificateForPhase(address user, uint256 phaseId) view returns (bool)',
   'function getCertificate(uint256 tokenId) view returns (tuple(uint256 phaseId, address recipient, address tokenBoundAccount, bytes32 issuanceId, bytes32 nameHash, bytes32 metadataHash, uint256 casDeposited, uint256 issuedAt, bool revoked, bytes32 revocationReasonHash, uint256 revokedAt, bytes32 documentHash))',
   'function mintCertificate((bytes32 issuanceId, address recipient, bytes32 nameHash, uint256 phaseId, bytes32 metadataHash, uint256 casAmount, uint256 nonce, uint256 deadline) auth, address issuer, bytes signature) returns (uint256 tokenId, address tokenBoundAccount_)',
   'function depositCasForMint(uint256 phaseId)',
@@ -213,6 +217,34 @@ export async function listMyCertificateIssuances(jwt) {
   }
 }
 
+export async function loadChallenges(jwt) {
+  try {
+    const response = await apiRequest('/challenges', { jwt });
+    if (response.status >= 400) return [];
+    return Array.isArray(response.data?.challenges) ? response.data.challenges : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function requestChallengeCertificate(challengeId, { proofLink, userName, userEmail }, jwt) {
+  return apiRequest(`/challenges/${encodeURIComponent(challengeId)}/request-certificate`, {
+    method: 'POST',
+    body: { proofLink, userName, userEmail },
+    jwt,
+  });
+}
+
+export async function listMyIssuanceRequests(jwt) {
+  try {
+    const response = await apiRequest('/challenges/requests', { jwt });
+    if (response.status >= 400) return [];
+    return Array.isArray(response.data?.requests) ? response.data.requests : [];
+  } catch {
+    return [];
+  }
+}
+
 export function getCertificateContract(address, runner) {
   if (!ethers.isAddress(address)) throw new Error('Contrato de certificados nao configurado.');
   return new ethers.Contract(address, CERTIFICATE_ABI, runner);
@@ -329,6 +361,7 @@ export function buildCertificateManifest({ config, phase, certificate, recipient
       tokenId: certificate.tokenId,
       phaseId: certificate.phaseId,
       phaseTitle: phase.name,
+      skillsDescription: phase.skillsDescription || '',
       recipientName: normalizedName,
       recipient: certificate.recipient,
       nameHash: certificate.nameHash,
@@ -362,6 +395,7 @@ export function buildDraftManifest({ config, phase, recipientName, recipient = '
       tokenId: '0',
       phaseId: phase?.id || '1',
       phaseTitle: phase?.name || 'Sócio Fundador',
+      skillsDescription: phase?.skillsDescription || '',
       recipientName: normalizedName,
       recipient: recipient || '—',
       nameHash: hashCertificateName(normalizedName, recipient),

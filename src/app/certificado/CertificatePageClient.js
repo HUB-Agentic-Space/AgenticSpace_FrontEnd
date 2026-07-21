@@ -41,6 +41,9 @@ import {
   getDiamondCertificateContract,
   hashCertificateName,
   listMyCertificateIssuances,
+  loadChallenges,
+  requestChallengeCertificate,
+  listMyIssuanceRequests,
   loadCertificateConfig,
   normalizeCertificateName,
   parseCertificateMinted,
@@ -122,6 +125,9 @@ function CertificateContent() {
   const [linkedWalletAddress, setLinkedWalletAddress] = useState(null);
   const [linkedAccountsList, setLinkedAccountsList] = useState([]);
   const [accountsChecked, setAccountsChecked] = useState(false);
+  const [challenges, setChallenges] = useState([]);
+  const [selectedChallengeId, setSelectedChallengeId] = useState(null);
+  const [issuanceRequests, setIssuanceRequests] = useState([]);
 
   const loadCertificates = useCallback(async (activeConfig, recipient, jwt) => {
     if (!ethers.isAddress(activeConfig?.certificateAddress || '')) return;
@@ -169,12 +175,20 @@ function CertificateContent() {
       setLoading(true);
       setError('');
       try {
-        const [loadedConfig, profileResponse] = await Promise.all([
+        const [loadedConfig, profileResponse, challengesResponse, requestsResponse] = await Promise.all([
           loadCertificateConfig(session?.jwt),
           getProfile(session?.jwt),
+          loadChallenges(session?.jwt),
+          listMyIssuanceRequests(session?.jwt),
         ]);
         if (cancelled) return;
         setConfig(loadedConfig);
+        if (challengesResponse?.length > 0) {
+          setChallenges(challengesResponse);
+        }
+        if (requestsResponse?.length > 0) {
+          setIssuanceRequests(requestsResponse);
+        }
         if (loadedConfig.currentPhase?.id) {
           setPhase({
             id: String(loadedConfig.currentPhase.id),
@@ -622,6 +636,90 @@ function CertificateContent() {
                 {phase?.active ? 'Ativa' : 'Encerrada'}
               </span>
             </div>
+
+            {challenges.length > 0 && (
+              <div>
+                <label className="label">Desafios disponíveis</label>
+                <select
+                  value={selectedChallengeId || ''}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    setSelectedChallengeId(id || null);
+                    const ch = challenges.find((c) => String(c.id) === id || String(c.onchainPhaseId) === id);
+                    if (ch) {
+                      setPhase({
+                        id: String(ch.onchainPhaseId || ch.id),
+                        name: ch.name || 'Desafio',
+                        minCasDeposit: String(ch.minCasDeposit || DEFAULT_PHASE.minCasDeposit),
+                        active: ch.status === 'active' || ch.active === true,
+                        minted: String(ch.minted || '0'),
+                        skillsDescription: ch.skillsDescription || '',
+                      });
+                    }
+                  }}
+                  className="input"
+                >
+                  <option value="">Selecione um desafio...</option>
+                  {challenges.map((ch) => {
+                    const id = String(ch.onchainPhaseId || ch.id);
+                    const unlocked = ch.unlocked !== false;
+                    const hasCert = ch.hasCertificate === true;
+                    return (
+                      <option key={id} value={id} disabled={!unlocked}>
+                        {ch.name}{!unlocked ? ' (bloqueado)' : hasCert ? ' (concluído)' : ''}
+                      </option>
+                    );
+                  })}
+                </select>
+                {(() => {
+                  const ch = challenges.find(
+                    (c) => String(c.onchainPhaseId || c.id) === String(selectedChallengeId)
+                  );
+                  if (!ch) return null;
+                  return (
+                    <div className="mt-2 space-y-1">
+                      {ch.skillsDescription && (
+                        <p className="text-xs text-slate-400">
+                          <span className="text-slate-500">Habilidades:</span> {ch.skillsDescription}
+                        </p>
+                      )}
+                      {ch.instructions && (
+                        <p className="text-xs text-slate-400">
+                          <span className="text-slate-500">Instruções:</span> {ch.instructions}
+                        </p>
+                      )}
+                      {ch.prerequisitePhaseIds?.length > 0 && (
+                        <p className="text-xs text-amber-300">
+                          Requer: {ch.prerequisitePhaseIds.map((id) => {
+                            const prereq = challenges.find((c) => Number(c.onchainPhaseId) === id);
+                            return prereq?.name || `#${id}`;
+                          }).join(', ')}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
+            {issuanceRequests.length > 0 && (
+              <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+                <p className="text-xs font-semibold text-slate-400 mb-2">Minhas solicitações</p>
+                {issuanceRequests.map((req) => (
+                  <div key={req.id} className="flex items-center justify-between text-xs py-1">
+                    <span className="text-slate-300">Desafio #{req.challengeId}</span>
+                    <span className={`rounded-full px-2 py-0.5 font-medium ${
+                      req.status === 'approved' ? 'bg-emerald-500/15 text-emerald-300' :
+                      req.status === 'rejected' ? 'bg-red-500/15 text-red-300' :
+                      'bg-amber-500/15 text-amber-300'
+                    }`}>
+                      {req.status === 'approved' ? 'Aprovado' :
+                       req.status === 'rejected' ? 'Rejeitado' : 'Pendente'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div>
               <label className="label">Nome no certificado</label>
