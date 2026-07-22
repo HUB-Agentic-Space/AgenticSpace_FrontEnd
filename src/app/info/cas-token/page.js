@@ -12,7 +12,7 @@ import { ethers } from 'ethers';
 import {
   Coins, ExternalLink, TrendingUp, BarChart3, Zap, Shield,
   ArrowUpDown, Info, Database, Layers, Wallet, FileText,
-  AlertTriangle, RefreshCw, Award, BadgeCheck,
+  AlertTriangle, RefreshCw, Award, BadgeCheck, Copy,
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
@@ -571,6 +571,16 @@ export default function CASTokenPage() {
       <section className="card space-y-6 border-2 border-brand-500/30 text-center">
         <h2 className="text-3xl font-bold text-white">{t('casToken.cta.title')}</h2>
         <p className="text-lg text-slate-400 max-w-2xl mx-auto">{t('casToken.cta.description')}</p>
+        <button
+          type="button"
+          onClick={() => navigator.clipboard?.writeText?.(CAS_TOKEN_ADDRESS)}
+          className="inline-flex items-center gap-2 rounded-lg bg-slate-800/70 px-4 py-2 font-mono text-sm text-slate-300 ring-1 ring-slate-700 transition-colors hover:bg-slate-800 hover:text-white"
+          aria-label="Copiar endereço do token"
+          title="Copiar endereço do token"
+        >
+          {CAS_TOKEN_ADDRESS}
+          <Copy size={18} className="text-brand-300" />
+        </button>
         <div className="flex flex-wrap gap-4 justify-center pt-2">
           <button
             onClick={() => {
