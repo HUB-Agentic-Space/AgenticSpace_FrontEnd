@@ -225,7 +225,7 @@ function addExternalLinkAnnotation(pdf, page, PDFString, { x, y, width, height, 
  * Acrescenta uma pagina documental separada da arte do diploma. As URLs ficam
  * visiveis para a copia impressa e tambem recebem anotacoes de link no PDF.
  */
-async function addSignatureGuidancePage(pdf, pdfLib) {
+async function addSignatureGuidancePage(pdf, pdfLib, manifest) {
   const { PDFString, StandardFonts, rgb } = pdfLib;
   const page = pdf.addPage([841.8898, 595.2756]);
   const width = page.getWidth();
@@ -239,6 +239,8 @@ async function addSignatureGuidancePage(pdf, pdfLib) {
   const paleBlue = rgb(0.937, 0.965, 1);
   const border = rgb(0.797, 0.835, 0.882);
   const paper = rgb(0.973, 0.98, 0.988);
+  const gold = rgb(0.722, 0.435, 0.024);
+  const paleGold = rgb(0.973, 0.945, 0.875);
   const margin = 48;
   const contentWidth = width - (margin * 2);
 
@@ -267,6 +269,40 @@ async function addSignatureGuidancePage(pdf, pdfLib) {
     font: regular,
     color: rgb(0.797, 0.835, 0.882),
   });
+
+  const skillsText = manifest?.certificate?.skillsDescription || '';
+  if (skillsText) {
+    const skillsBoxY = height - 300;
+    const skillsBoxHeight = 140;
+
+    page.drawRectangle({
+      x: margin,
+      y: skillsBoxY - skillsBoxHeight,
+      width: contentWidth,
+      height: skillsBoxHeight,
+      color: paleGold,
+      borderColor: gold,
+      borderWidth: 1,
+    });
+
+    page.drawText('HABILIDADES CONQUISTADAS', {
+      x: margin + 20,
+      y: skillsBoxY - 28,
+      size: 13,
+      font: bold,
+      color: gold,
+    });
+
+    drawWrappedText(page, skillsText, {
+      x: margin + 20,
+      y: skillsBoxY - 52,
+      maxWidth: contentWidth - 40,
+      size: 11.5,
+      lineHeight: 16,
+      font: regular,
+      color: slate,
+    });
+  }
 
   page.drawRectangle({
     x: margin,
@@ -385,7 +421,7 @@ export async function downloadCertificatePdf(svgElement, manifest) {
   const page = pdf.addPage([841.8898, 595.2756]);
   const artwork = await pdf.embedPng(pngBytes);
   page.drawImage(artwork, { x: 0, y: 0, width: page.getWidth(), height: page.getHeight() });
-  await addSignatureGuidancePage(pdf, pdfLib);
+  await addSignatureGuidancePage(pdf, pdfLib, manifest);
 
   const payload = `${CERTIFICATE_PDF_MARKER}${encodeCertificateManifest(manifest)}`;
   pdf.setTitle(`Certificado ${manifest.certificate.phaseTitle} - ${manifest.certificate.recipientName}`);

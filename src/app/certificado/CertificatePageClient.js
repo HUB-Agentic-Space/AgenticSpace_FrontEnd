@@ -228,8 +228,13 @@ function CertificateContent() {
 
   useEffect(() => {
     if (!ethers.isAddress(config?.certificateAddress || '')) return;
-    loadCertificates(config, account, session?.jwt).catch((loadError) => setError(walletError(loadError)));
-  }, [account, config, loadCertificates, session?.jwt]);
+    if (!account || !ethers.isAddress(account)) return;
+    let cancelled = false;
+    loadCertificates(config, account, session?.jwt).catch((loadError) => {
+      if (!cancelled) setError(walletError(loadError));
+    });
+    return () => { cancelled = true; };
+  }, [account, config?.certificateAddress, config?.casTokenAddress, config?.chainId, loadCertificates, session?.jwt]);
 
   useEffect(() => {
     if (!account || !config?.casTokenAddress || !getProvider()) return;
@@ -319,6 +324,43 @@ function CertificateContent() {
   const requiredCas = phase?.minCasDeposit || DEFAULT_PHASE.minCasDeposit;
   const hasEnoughCas = BigInt(casBalance || 0) >= BigInt(requiredCas || 0);
   const hasEnoughPol = !gasEstimate || BigInt(polBalance || 0) >= gasEstimate.estimatedCost;
+  const hasExtraFee = Boolean(phase?.extraFeeTypeId && phase.extraFeeTypeId !== '0');
+  const extraFeeNote = hasExtraFee
+    ? ` + taxa extra (tipo #${phase.extraFeeTypeId})`
+    : '';
+
+  const selectedChallengeRequest = useMemo(() => {
+    if (!selectedChallengeId) return null;
+    return issuanceRequests.find(
+      (r) => String(r.challengeId) === String(selectedChallengeId),
+    ) || null;
+  }, [issuanceRequests, selectedChallengeId]);
+
+  const isApproved = selectedChallengeRequest?.status === 'approved';
+  const isPending = selectedChallengeRequest?.status === 'pending';
+  const isRejected = selectedChallengeRequest?.status === 'rejected';
+  const needsApproval = Boolean(selectedChallengeId) && !isApproved;
+
+  async function handleRequestCertificate() {
+    if (!selectedChallengeId || !session?.jwt) return;
+    setError('');
+    setSuccess('');
+    try {
+      const res = await requestChallengeCertificate(
+        selectedChallengeId,
+        { userName: profileName || undefined },
+        session.jwt,
+      );
+      if (res.status >= 400) {
+        throw new Error(res.data?.error || res.data?.message || 'Falha ao solicitar certificado.');
+      }
+      setSuccess('Solicitação enviada. Aguarde a aprovação do administrador.');
+      const updated = await listMyIssuanceRequests(session.jwt);
+      setIssuanceRequests(updated || []);
+    } catch (reqErr) {
+      setError(reqErr.message || 'Erro ao solicitar certificado.');
+    }
+  }
 
   async function refresh() {
     if (!ethers.isAddress(config?.certificateAddress || '')) return;
@@ -427,13 +469,15 @@ function CertificateContent() {
       const useDiamond = ethers.isAddress(config.diamondAddress);
       if (useDiamond) {
         // Fluxo via Diamond Proxy: aprova o Diamond (contrato conhecido/verificado)
-        // para gastar exatamente o CAS necessario e emite em uma unica transacao.
-        // Evita transferir tokens diretamente para o contrato de certificados.
+        // para gastar o CAS necessario (deposito + taxa extra) e emite em uma unica transacao.
+        // O CertificateFacet puxa casAmount para o contrato de certificados e extraFee
+        // para o InfrastructureFund, ambos via safeTransferFrom.
         const diamond = getDiamondCertificateContract(config.diamondAddress, signer);
+        const totalNeeded = BigInt(authorization.casAmount);
         const currentAllowance = await cas.allowance(recipient, config.diamondAddress);
-        if (currentAllowance < BigInt(authorization.casAmount)) {
-          setStep(`Aprovando ${formatCasAmount(authorization.casAmount)} CAS para o Diamond...`);
-          const approveTx = await cas.approve(config.diamondAddress, authorization.casAmount);
+        if (currentAllowance < totalNeeded) {
+          setStep(`Aprovando ${formatCasAmount(totalNeeded)} CAS para o Diamond...`);
+          const approveTx = await cas.approve(config.diamondAddress, totalNeeded);
           await approveTx.wait();
         }
 
@@ -834,14 +878,50 @@ function CertificateContent() {
                     >Polygonscan</a>.
                   </p>
                 </div>
+                {needsApproval && selectedChallengeId && (
+                  <div className="space-y-3">
+                    {isPending && (
+                      <div className="flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
+                        <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                        <p>Sua solicitação está em análise. Aguarde a aprovação do administrador para depositar CAS e finalizar a emissão.</p>
+                      </div>
+                    )}
+                    {isRejected && (
+                      <div className="flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-200">
+                        <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                        <p>Sua solicitação foi rejeitada. Revise as instruções do desafio e solicite novamente.</p>
+                      </div>
+                    )}
+                    {!selectedChallengeRequest && (
+                      <div className="flex items-start gap-2 rounded-xl border border-blue-500/30 bg-blue-500/10 p-3 text-xs text-blue-200">
+                        <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                        <p>Para emitir o certificado, primeiro solicite a aprovação do administrador. Após a aprovação, você poderá depositar CAS e finalizar a emissão.</p>
+                      </div>
+                    )}
+                    {!selectedChallengeRequest && (
+                      <button
+                        onClick={handleRequestCertificate}
+                        disabled={!profileName || minting}
+                        className="btn-secondary w-full"
+                      >
+                        <FileCheck2 size={17} /> Solicitar Certificado
+                      </button>
+                    )}
+                  </div>
+                )}
                 <button
                   onClick={handleMint}
-                  disabled={minting || !profileName || !phase?.active || !config?.enabled || (gasEstimate && !hasEnoughPol)}
+                  disabled={minting || !profileName || !phase?.active || !config?.enabled || (gasEstimate && !hasEnoughPol) || needsApproval}
                   className="btn-primary w-full"
                 >
                   {minting ? <Spinner size={17} /> : <Award size={17} />}
-                  {minting ? (step || 'Processando...') : 'Emitir certificado'}
+                  {minting ? (step || 'Processando...') : needsApproval ? 'Aguardando aprovação' : 'Emitir certificado'}
                 </button>
+                {hasExtraFee && (
+                  <p className="mt-2 text-xs text-amber-300">
+                    Esta fase inclui uma taxa extra de emissão (tipo #{phase.extraFeeTypeId}) além do aporte CAS.
+                  </p>
+                )}
               </>
             ) : (
               <div className={`rounded-xl border p-4 ${
