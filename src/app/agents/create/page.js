@@ -108,7 +108,6 @@ function CreateAgentContent() {
   const [suggestions, setSuggestions] = useState({ names: [], ids: [] });
   const [descValidation, setDescValidation] = useState(null);
   const [generatingName, setGeneratingName] = useState(false);
-  const [nameGenerated, setNameGenerated] = useState(false);
 
   // Estados para verificacao em tempo real (debounced)
   const [nameCheck, setNameCheck] = useState({ loading: false, available: null });
@@ -160,7 +159,6 @@ function CreateAgentContent() {
         throw new Error(data.error || t('agentsCreate.errorMessages.generateName'));
       }
       setForm((f) => ({ ...f, name: data.name, id: data.suggestedId }));
-      setNameGenerated(true);
       setStatus({ type: 'success', message: t('agentsCreate.success.nameGenerated') });
     } catch (err) {
       setStatus({ type: 'error', message: err.message });
@@ -169,10 +167,10 @@ function CreateAgentContent() {
     }
   }
 
-  /** Marca o ID como tocado e atualiza seu valor. */
+  /** Marca o ID como tocado e atualiza seu valor (sempre como slug). */
   function updateId(value) {
     setIdTouched(true);
-    setForm((f) => ({ ...f, id: value }));
+    setForm((f) => ({ ...f, id: slugify(value) }));
     setStatus({ type: '', message: '' });
     setSuggestions({ names: [], ids: [] });
     setDescValidation(null);
@@ -619,7 +617,7 @@ function CreateAgentContent() {
               value={form.name}
               onChange={(e) => updateName(e.target.value)}
               placeholder={t('agentsCreate.namePlaceholder')}
-              disabled={step === 'confirm' || !nameGenerated}
+              disabled={step === 'confirm'}
             />
             {nameCheck.loading && (
               <Spinner size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -643,15 +641,16 @@ function CreateAgentContent() {
           )}
         </div>
 
-        {/* 3. ID público (terceiro campo, auto-gerado e somente leitura) */}
+        {/* 3. ID público (terceiro campo, auto-sugerido a partir do nome e editável) */}
         <div>
           <label className="label">{t('agentsCreate.publicIdLabel')}</label>
           <div className="relative">
             <input
-              className="input font-mono pr-10 bg-slate-900/60 text-slate-400 cursor-not-allowed"
-              value={form.id}
-              readOnly
+              className="input font-mono pr-10"
+              value={effectiveId}
+              onChange={(e) => updateId(e.target.value)}
               placeholder={t('agentsCreate.publicIdPlaceholder')}
+              disabled={step === 'confirm'}
             />
             {idCheck.loading && (
               <Spinner size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -674,6 +673,11 @@ function CreateAgentContent() {
           {idCheck.available === true && (
             <p className="mt-1 text-xs text-green-400">
               {t('agentsCreate.success.idAvailable', { id: effectiveId })}
+            </p>
+          )}
+          {effectiveId && !ID_REGEX.test(effectiveId) && (
+            <p className="mt-1 text-xs text-red-400">
+              {t('agentsCreate.validation.idInvalid')}
             </p>
           )}
         </div>
