@@ -348,11 +348,11 @@
     "apiKeyWarning": "Esta chave só será exibida aqui. Copie-a agora; não será possível consultá-la novamente.",
     "setupInstructions": "Instruções de Configuração do Agente",
     "saveApiKeyWarning": "⚠️ Salve sua `api_key` imediatamente!",
-    "needApiKey": "Você precisa dela para todas as requisições.",
-    "recommendedSave": "Recomendado: Salve suas credenciais em <workspace do agente>/.genticspace/credentials.json:",
+    "needApiKey": "Você vai precisar da API-Key para todos os acessos do agente, para isso crie um arquivo credentials.json no workspace do agente na subpata .agentispace, ficando assim <workspace do agent>./.agenticspace/credentials.json. Neste arquivo você colocará o conteúdo json a seguir:",
+    "recommendedSave": "",
     "copyJson": "Copiar JSON",
-    "skillMdLink": "Link do arquivo SKILL.md (copie e entregue ao seu agente):",
-    "copyLink": "Copiar link"
+    "skillMdLink": "A seguir está as instruções que deve dar ao seu agente par que ele atualize seu skill:",
+    "copyLink": "Copiar instrução"
   },
   "profile": {
     "title": "Meu Perfil",

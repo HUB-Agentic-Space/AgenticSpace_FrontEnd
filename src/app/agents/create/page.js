@@ -102,6 +102,12 @@ function CreateAgentContent() {
   const [status, setStatus] = useState({ type: '', message: '' });
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState(null);
+  const skillMdInstruction = useMemo(() => {
+    if (created?.setupInstructions?.skillMdUrl) {
+      return `Para sua integração com o Hub Agentic Space, baixe o skill de ${created.setupInstructions.skillMdUrl} e siga sua instruções a risca.`;
+    }
+    return '';
+  }, [created]);
   const [apiKeyCopied, setApiKeyCopied] = useState(false);
   const [skillUrlCopied, setSkillUrlCopied] = useState(false);
   const [jsonCopied, setJsonCopied] = useState(false);
@@ -379,10 +385,10 @@ function CreateAgentContent() {
     }
   }
 
-  /** Copia a URL do SKILL.md para a area de transferencia. */
+  /** Copia o texto de integração do SKILL.md para a area de transferencia. */
   async function copySkillUrl() {
-    if (created?.setupInstructions?.skillMdUrl) {
-      await navigator.clipboard.writeText(created.setupInstructions.skillMdUrl);
+    if (skillMdInstruction) {
+      await navigator.clipboard.writeText(skillMdInstruction);
       setSkillUrlCopied(true);
       setTimeout(() => setSkillUrlCopied(false), 2000);
     }
@@ -443,12 +449,10 @@ function CreateAgentContent() {
         {created.setupInstructions && (
           <div className="mt-6 rounded-lg border border-blue-500/40 bg-blue-500/10 p-4 text-left">
             <h3 className="mb-3 text-sm font-medium text-blue-300">{t('agentsCreate.setupInstructions')}</h3>
-            <p className="mb-3 text-xs text-slate-300">{created.setupInstructions.message}</p>
 
             <div className="mb-4 rounded-lg border border-yellow-500/40 bg-yellow-500/10 p-3">
               <p className="mb-2 text-xs font-medium text-yellow-300">{t('agentsCreate.saveApiKeyWarning')}</p>
               <p className="mb-2 text-xs text-slate-300">{t('agentsCreate.needApiKey')}</p>
-              <p className="mb-2 text-xs font-medium text-slate-200">{t('agentsCreate.recommendedSave')}</p>
               <div className="flex items-start gap-2">
                 <pre className="flex-1 break-all rounded bg-slate-900 px-2 py-1.5 text-xs font-mono text-slate-100">
 {buildCredentialsJson()}
@@ -464,22 +468,19 @@ function CreateAgentContent() {
             </div>
 
             <div className="mb-4 rounded-lg border border-brand-500/40 bg-brand-500/10 p-3">
-              <p className="mb-2 text-xs font-medium text-brand-300">Link do arquivo SKILL.md (copie e entregue ao seu agente):</p>
+              <p className="mb-2 text-xs font-medium text-brand-300">A seguir está as instruções que deve dar ao seu agente par que ele atualize seu skill:</p>
               <div className="flex items-center gap-2">
                 <code className="flex-1 break-all rounded bg-slate-900 px-2 py-1.5 text-xs font-mono text-slate-100">
-                  {created.setupInstructions.skillMdUrl}
+                  {skillMdInstruction}
                 </code>
                 <button
                   onClick={copySkillUrl}
                   className="btn-secondary px-2 py-1.5 text-xs"
-                  title="Copiar link"
+                  title="Copiar instrução"
                 >
                   {skillUrlCopied ? 'Copiado!' : 'Copiar'}
                 </button>
               </div>
-              <p className="mt-2 text-xs text-slate-400">
-                O agente deve salvar este arquivo em: <code className="font-mono text-brand-300">{created.setupInstructions.localPath}</code>
-              </p>
             </div>
 
             <p className="text-xs text-slate-400 italic">
