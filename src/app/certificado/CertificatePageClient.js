@@ -710,6 +710,8 @@ function CertificateContent() {
                         active: ch.status === 'active' || ch.active === true,
                         minted: String(ch.minted || '0'),
                         skillsDescription: ch.skillsDescription || '',
+                        extraFeeTypeId: String(ch.extraFeeTypeId || '0'),
+                        tbaRebateBps: Number(ch.tbaRebateBps || 0),
                       });
                     }
                   }}
@@ -920,6 +922,9 @@ function CertificateContent() {
                 {hasExtraFee && (
                   <p className="mt-2 text-xs text-amber-300">
                     Esta fase inclui uma taxa extra de emissão (tipo #{phase.extraFeeTypeId}) além do aporte CAS.
+                    {Number(phase.tbaRebateBps) > 0 && (
+                      <> {Number(phase.tbaRebateBps) / 100}% é rebatido para a TBA do Sócio Fundador; o restante vai para o Fundo de Infraestrutura.</>
+                    )}
                   </p>
                 )}
               </>

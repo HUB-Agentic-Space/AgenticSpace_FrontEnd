@@ -20,7 +20,7 @@ export const CERTIFICATE_ABI = [
   'function certificateOf(address recipient, uint256 phaseId) view returns (uint256)',
   'function tokenBoundAccount(uint256 tokenId) view returns (address)',
   'function nonces(address recipient) view returns (uint256)',
-  'function getPhase(uint256 phaseId) view returns (tuple(string name, bytes32 templateHash, uint256 minCasDeposit, uint256 startsAt, uint256 endsAt, uint256 minted, bool active, string skillsDescription, string instructions, uint256 extraFeeTypeId))',
+  'function getPhase(uint256 phaseId) view returns (tuple(string name, bytes32 templateHash, uint256 minCasDeposit, uint256 startsAt, uint256 endsAt, uint256 minted, bool active, string skillsDescription, string instructions, uint256 extraFeeTypeId, uint256 tbaRebateBps))',
   'function getPhasePrerequisites(uint256 phaseId) view returns (uint256[])',
   'function isPhaseUnlocked(address user, uint256 phaseId) view returns (bool)',
   'function hasCertificateForPhase(address user, uint256 phaseId) view returns (bool)',
@@ -39,7 +39,7 @@ export const CERTIFICATE_ABI = [
   'event CasDeposited(address indexed recipient, uint256 indexed phaseId, uint256 amount, uint256 newBalance)',
   'event MerkleRootAttested(uint256 indexed tokenId, bytes32 indexed merkleRoot, address indexed attestedBy)',
   'event MerkleRootProofAttested(uint256 indexed tokenId, bytes32 indexed merkleRootProof, address indexed attestedBy)',
-  'event PhaseExtraFeeTypeUpdated(uint256 indexed phaseId, uint256 extraFeeTypeId)',
+  'event PhaseExtraFeeTypeUpdated(uint256 indexed phaseId, uint256 extraFeeTypeId, uint256 tbaRebateBps)',
 ];
 
 export const DIAMOND_CERTIFICATE_ABI = [
@@ -280,6 +280,7 @@ export function phaseFromResult(result, phaseId) {
     skillsDescription: result.skillsDescription || '',
     instructions: result.instructions || '',
     extraFeeTypeId: result.extraFeeTypeId?.toString() || '0',
+    tbaRebateBps: result.tbaRebateBps != null ? Number(result.tbaRebateBps) : 0,
   };
 }
 

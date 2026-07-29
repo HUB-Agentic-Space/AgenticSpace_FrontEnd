@@ -292,6 +292,8 @@ export function useFees() {
               endsAt: phaseData.endsAt.toString(),
               minted: phaseData.minted.toString(),
               active: phaseData.active,
+              extraFeeTypeId: phaseData.extraFeeTypeId?.toString() || '0',
+              tbaRebateBps: phaseData.tbaRebateBps != null ? Number(phaseData.tbaRebateBps) : 0,
             };
           } catch (phaseErr) {
             console.error('[useFees] certificate phase fetch failed:', phaseErr.message);
