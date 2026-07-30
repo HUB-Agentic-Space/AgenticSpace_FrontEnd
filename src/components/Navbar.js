@@ -11,7 +11,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Bot, UserCircle, PlusCircle, LogOut, Sparkles, Info, ChevronDown, Shield, Code, BarChart3, Activity, BookText, Search, LayoutDashboard, Coins, Vote, BadgeCheck, Award } from 'lucide-react';
+import { Bot, UserCircle, PlusCircle, LogOut, Sparkles, Info, ChevronDown, Shield, Code, BarChart3, Activity, BookText, Search, LayoutDashboard, Coins, Vote, BadgeCheck, Award, Gavel } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useTranslations, useLocaleContext } from '@/lib/LocaleProvider';
 import LanguageSelector from '@/components/LanguageSelector';
@@ -43,6 +43,7 @@ export default function Navbar() {
   const t = useTranslations();
   const [institucionalOpen, setInstitucionalOpen] = useState(false);
   const [estatisticasOpen, setEstatisticasOpen] = useState(false);
+  const [governanceOpen, setGovernanceOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -63,7 +64,8 @@ export default function Navbar() {
 
   const isInstitucionalActive = pathname === '/about' || pathname === '/security-policy' || pathname === '/info/api-agentes' || pathname === '/info/cas-token' || pathname === '/stats' || pathname === '/agent-logs' || pathname === '/certificado/verificar';
   const isTutoriaisActive = pathname?.startsWith('/tutoriais');
-  const isComunidadeActive = pathname?.startsWith('/comunidade');
+  const isComunidadeActive = pathname?.startsWith('/dao');
+  const isCasTokenArbitrationActive = pathname?.startsWith('/dao/cas-token');
   const isUserActive = pathname === '/profile' || pathname?.startsWith('/agents') || pathname === '/admin' || pathname === '/certificado';
 
   return (
@@ -223,12 +225,44 @@ export default function Navbar() {
             active={isTutoriaisActive}
           />
 
-          <NavItem
-            href="/comunidade"
-            icon={Vote}
-            label={t('navbar.governance')}
-            active={isComunidadeActive}
-          />
+          {/* Governance dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setGovernanceOpen(!governanceOpen)}
+              className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                isComunidadeActive ? 'bg-brand-600 text-white' : 'text-slate-300 hover:bg-slate-800'
+              }`}
+            >
+              <Vote size={18} />
+              <span className="hidden sm:inline">{t('navbar.governance')}</span>
+              <ChevronDown size={16} className={`hidden sm:inline transition-transform ${governanceOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {governanceOpen && (
+              <div className="absolute left-0 mt-2 w-56 rounded-lg bg-slate-900 border border-slate-700 shadow-xl">
+                <Link
+                  href="/dao"
+                  className={`flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-800 hover:text-white ${
+                    pathname === '/dao' || (pathname?.startsWith('/dao') && !pathname?.startsWith('/dao/cas-token')) ? 'text-brand-400' : 'text-slate-300'
+                  }`}
+                  onClick={() => setGovernanceOpen(false)}
+                >
+                  <Vote size={16} />
+                  DAO
+                </Link>
+                <Link
+                  href="/dao/cas-token"
+                  className={`flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-800 hover:text-white ${
+                    isCasTokenArbitrationActive ? 'text-brand-400' : 'text-slate-300'
+                  }`}
+                  onClick={() => setGovernanceOpen(false)}
+                >
+                  <Gavel size={16} />
+                  CAS-Token
+                </Link>
+              </div>
+            )}
+          </div>
 
           {isAuthenticated && (
             <div className="relative">

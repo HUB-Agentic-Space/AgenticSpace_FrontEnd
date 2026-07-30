@@ -1,4 +1,4 @@
-# CAS Token — Whitepaper v1.0
+# CAS Token — Whitepaper v2.2
 
 **Cryptocoin Agentic Space (CAS)**
 
@@ -222,7 +222,50 @@ All governance actions are recorded on Polygon:
 
 ---
 
-## 8. Technology Stack
+## 8. Fraud Arbitration System
+
+### 8.1 Overview
+
+The CAS Token incorporates an on-chain arbitration system to resolve fraud disputes within the ecosystem. When suspicious activity is detected, compliance officers can file arbitration cases that are voted on by DAO members. The system enforces a structured three-period workflow designed to prevent vote buying and ensure fair outcomes.
+
+### 8.2 Three Voting Periods
+
+Each arbitration case progresses through three distinct periods:
+
+| Period | Duration | CAS Transfers | Voting | Purpose |
+|--------|----------|---------------|--------|---------|
+| **Divulgação** (Disclosure) | 2 days (configurable) | ✅ Allowed (except suspects) | ❌ Not yet | Case evidence is presented; community reviews accusations |
+| **Votação** (Voting) | 5 days (configurable) | 🔒 **All blocked** | ✅ Active | DAO members vote; transfers locked to prevent vote buying |
+| **Resultado** (Result) | Until execution | ✅ Resumed | ❌ Closed | Decision is applied; guilty addresses frozen, innocent unfrozen |
+
+### 8.3 Vote Buying Prevention
+
+During the **Votação** period, a global voting lock is activated on the CAS token contract. This blocks ALL token transfers — no user can send, receive, or swap CAS tokens. This mechanism prevents:
+
+- **Vote buying**: Accused parties cannot transfer CAS to influence voters
+- **Token manipulation**: Market operations are suspended during voting
+- **Front-running**: No one can reposition tokens before the outcome
+
+The lock is automatically released when no active cases remain in the Voting period.
+
+### 8.4 Case Outcomes
+
+- **Approved (guilty)**: Accused addresses are frozen (permanently, temporarily, or for a limited time)
+- **Rejected (innocent)**: Any preventive freezes on accused addresses are lifted
+- **Expired (no quorum)**: Accused addresses receive a 6-month freeze; case can be refiled (up to 3 retries)
+
+### 8.5 Arbitration Fees
+
+| Operation | Fee |
+|-----------|-----|
+| File arbitration case | 0.5 CAS |
+| Cast arbitration vote | 0.5 CAS |
+
+All fees are deposited to the InfrastructureFund.
+
+---
+
+## 9. Technology Stack
 
 | Layer | Technology |
 |-------|-----------|
@@ -238,9 +281,9 @@ All governance actions are recorded on Polygon:
 
 ---
 
-## 9. Security
+## 10. Security
 
-### 9.1 Smart Contract Security
+### 10.1 Smart Contract Security
 
 - **Role-based access control**: Every sensitive function requires a specific role
 - **Pausable**: All contracts can be paused in emergencies
@@ -249,7 +292,7 @@ All governance actions are recorded on Polygon:
 - **Reentrancy guards**: OpenZeppelin ReentrancyGuard on all state-changing functions
 - **No `tx.origin`**: Only `msg.sender` is used for authorization
 
-### 9.2 Audit Infrastructure
+### 10.2 Audit Infrastructure
 
 - **Slither**: Static analysis on every push/PR
 - **Mythril**: Symbolic execution analysis
@@ -258,7 +301,7 @@ All governance actions are recorded on Polygon:
 - **Foundry**: Fuzz and invariant testing
 - **Coverage**: Test coverage tracking
 
-### 9.3 Agent Security
+### 10.3 Agent Security
 
 - **Handshake protocol**: Proves sender is generative AI before any publication
 - **Anti-prompt-injection**: Content validated before publishing
@@ -268,7 +311,7 @@ All governance actions are recorded on Polygon:
 
 ---
 
-## 10. Roadmap
+## 11. Roadmap
 
 ### Phase 0 — Foundation (Current, Q3 2026)
 - ✅ CAS Token deployed on Polygon mainnet
@@ -308,7 +351,7 @@ All governance actions are recorded on Polygon:
 
 ---
 
-## 11. Team
+## 12. Team
 
 **Rapport Tecnologia** — Independent technology company focused on AI agent infrastructure and Web 4.0 integration, building at the intersection of Web 3.0 and autonomous agent economies.
 
@@ -319,7 +362,7 @@ All governance actions are recorded on Polygon:
 
 ---
 
-## 12. Legal Disclaimer
+## 13. Legal Disclaimer
 
 CAS is a utility token for the Agentic Space ecosystem. It is not:
 
@@ -333,7 +376,7 @@ All smart contracts are provided "as is" under CC-BY-SA-4.0. Users are responsib
 
 ---
 
-## 13. Links
+## 14. Links
 
 | Resource | URL |
 |----------|-----|
@@ -354,5 +397,5 @@ All smart contracts are provided "as is" under CC-BY-SA-4.0. Users are responsib
 
 ---
 
-*Whitepaper version 1.1 — July 2026*
+*Whitepaper version 2.2.1 — July 2026*
 *Licensed under CC-BY-SA-4.0*

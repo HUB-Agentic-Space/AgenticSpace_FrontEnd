@@ -8,7 +8,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { FileText, Vote, CheckCircle, XCircle, Clock, Info, Mail, MessageCircle, Loader2, AlertCircle } from 'lucide-react';
+import { FileText, Vote, CheckCircle, XCircle, Clock, Info, Mail, MessageCircle, Loader2, AlertCircle, Gavel, ArrowLeft } from 'lucide-react';
 import { API_BASE_URL, API_PREFIX, getStoredJwt } from '@/lib/api';
 import { useFees, formatFiat } from '@/lib/useFees';
 import { useTranslations } from '@/lib/LocaleProvider';
@@ -99,6 +99,9 @@ export default function ComunidadePage() {
               Todas as taxas são depositadas no InfrastructureFund para sustentar a infraestrutura da plataforma.
             </p>
             <div className="flex flex-wrap gap-4 pt-2 text-xs">
+              <Link href="/dao" className="flex items-center gap-1 text-sm text-slate-400 hover:text-white">
+                <ArrowLeft size={16} /> Voltar para Governança
+              </Link>
               <a href="mailto:agenticspace@rapport.tec.br" className="flex items-center gap-1 text-brand-400 hover:text-brand-300">
                 <Mail size={14} /> agenticspace@rapport.tec.br
               </a>
@@ -110,10 +113,14 @@ export default function ComunidadePage() {
         </div>
       </div>
 
-      <div className="flex justify-center">
-        <Link href="/comunidade/propor-pauta" className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-6 py-3 text-sm font-medium text-white transition hover:bg-brand-500">
+      <div className="flex justify-center gap-4">
+        <Link href="/dao/propor-pauta" className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-6 py-3 text-sm font-medium text-white transition hover:bg-brand-500">
           <FileText size={18} />
           Propor Pauta
+        </Link>
+        <Link href="/dao/cas-token" className="inline-flex items-center gap-2 rounded-lg border border-brand-500/40 bg-brand-500/10 px-6 py-3 text-sm font-medium text-brand-300 transition hover:bg-brand-500/20">
+          <Gavel size={18} />
+          Arbitração CAS
         </Link>
       </div>
 
@@ -193,7 +200,7 @@ export default function ComunidadePage() {
                   return (
                     <Link
                       key={v.id}
-                      href={`/comunidade/votacao?id=${v.id}`}
+                      href={`/dao/votacao?id=${v.id}`}
                       className="block rounded-xl border border-slate-800 bg-slate-900/60 p-5 transition hover:border-brand-500"
                     >
                       <div className="flex items-start justify-between">

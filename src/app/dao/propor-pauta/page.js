@@ -63,7 +63,7 @@ export default function ProporPautaPage() {
 
   return (
     <div className="space-y-6">
-      <Link href="/comunidade" className="flex items-center gap-1 text-sm text-slate-400 hover:text-white">
+      <Link href="/dao" className="flex items-center gap-1 text-sm text-slate-400 hover:text-white">
         <ArrowLeft size={16} /> Voltar para Governança
       </Link>
 
@@ -128,7 +128,7 @@ export default function ProporPautaPage() {
                 </a>
               )}
               <p className="mt-2 text-xs">{success.nextStep}</p>
-              <Link href="/comunidade" className="mt-2 inline-block text-brand-400 hover:text-brand-300">
+              <Link href="/dao" className="mt-2 inline-block text-brand-400 hover:text-brand-300">
                 Ver pautas →
               </Link>
             </div>

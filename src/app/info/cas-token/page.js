@@ -12,7 +12,7 @@ import { ethers } from 'ethers';
 import {
   Coins, ExternalLink, TrendingUp, BarChart3, Zap, Shield,
   ArrowUpDown, Info, Database, Layers, Wallet, FileText,
-  AlertTriangle, RefreshCw, Award, BadgeCheck, Copy,
+  AlertTriangle, RefreshCw, Award, BadgeCheck, Copy, Gavel,
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
@@ -563,6 +563,76 @@ export default function CASTokenPage() {
                 </span>
               </div>
             </div>
+          </Link>
+        </div>
+      </section>
+
+      {/* Arbitration System */}
+      <section className="card space-y-4">
+        <div className="flex items-center gap-3">
+          <Gavel className="text-brand-400" size={24} />
+          <h2 className="text-2xl font-bold text-white">
+            {locale === 'pt' ? 'Sistema de Arbitragem' : locale === 'fr' ? "Système d'Arbitrage" : 'Arbitration System'}
+          </h2>
+        </div>
+        <p className="text-sm text-slate-400">
+          {locale === 'pt'
+            ? 'O CAS Token possui um sistema de arbitragem on-chain para resolver disputas de fraude. Cada caso passa por 3 períodos distintos com regras específicas de operação:'
+            : locale === 'fr'
+            ? "Le jeton CAS dispose d'un système d'arbitrage on-chain pour résoudre les litiges de fraude. Chaque cas passe par 3 périodes distinctes avec des règles d'opération spécifiques:"
+            : 'The CAS Token has an on-chain arbitration system to resolve fraud disputes. Each case goes through 3 distinct periods with specific operation rules:'}
+        </p>
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5">
+            <div className="flex items-center gap-2 text-brand-400">
+              <Info size={18} />
+              <h3 className="font-semibold">
+                {locale === 'pt' ? '1. Divulgação' : locale === 'fr' ? '1. Divulgation' : '1. Disclosure'}
+              </h3>
+            </div>
+            <p className="mt-2 text-xs text-slate-400">
+              {locale === 'pt'
+                ? 'O caso é apresentado à comunidade. Todos podem operar com CAS normalmente, exceto os endereços suspeitos que podem ser congelados preventivamente.'
+                : locale === 'fr'
+                ? "Le cas est présenté à la communauté. Tout le monde peut opérer avec CAS normalement, sauf les adresses suspectes qui peuvent être gelées préventivement."
+                : 'The case is presented to the community. Everyone can operate with CAS normally, except suspected addresses which may be preventively frozen.'}
+            </p>
+          </div>
+          <div className="rounded-xl border border-brand-500/30 bg-brand-500/5 p-5">
+            <div className="flex items-center gap-2 text-brand-400">
+              <Shield size={18} />
+              <h3 className="font-semibold">
+                {locale === 'pt' ? '2. Votação' : locale === 'fr' ? '2. Vote' : '2. Voting'}
+              </h3>
+            </div>
+            <p className="mt-2 text-xs text-slate-400">
+              {locale === 'pt'
+                ? 'Durante a votação, TODAS as transferências de CAS são bloqueadas para evitar compra de votos. Apenas votos podem ser depositados no contrato de arbitragem.'
+                : locale === 'fr'
+                ? "Pendant le vote, TOUS les transferts de CAS sont bloqués pour empêcher l'achat de votes. Seuls les votes peuvent être déposés sur le contrat d'arbitrage."
+                : 'During voting, ALL CAS transfers are blocked to prevent vote buying. Only votes can be cast on the arbitration contract.'}
+            </p>
+          </div>
+          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5">
+            <div className="flex items-center gap-2 text-brand-400">
+              <BadgeCheck size={18} />
+              <h3 className="font-semibold">
+                {locale === 'pt' ? '3. Resultado' : locale === 'fr' ? '3. Résultat' : '3. Result'}
+              </h3>
+            </div>
+            <p className="mt-2 text-xs text-slate-400">
+              {locale === 'pt'
+                ? 'As operações com CAS voltam ao normal. A decisão é aplicada: endereços culpados são congelados, inocentes são descongelados.'
+                : locale === 'fr'
+                ? "Les opérations avec CAS reprennent normalement. La décision est appliquée: les adresses coupables sont gelées, les innocentes sont dégélées."
+                : 'CAS operations resume normally. The decision is applied: guilty addresses are frozen, innocent ones are unfrozen.'}
+            </p>
+          </div>
+        </div>
+        <div className="flex justify-center pt-2">
+          <Link href="/dao/cas-token" className="inline-flex items-center gap-2 rounded-lg border border-brand-500/40 bg-brand-500/10 px-6 py-3 text-sm font-medium text-brand-300 transition hover:bg-brand-500/20">
+            <Gavel size={18} />
+            {locale === 'pt' ? 'Ver Casos de Arbitragem' : locale === 'fr' ? "Voir les Cas d'Arbitrage" : 'View Arbitration Cases'}
           </Link>
         </div>
       </section>

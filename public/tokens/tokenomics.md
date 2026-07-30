@@ -1,4 +1,4 @@
-# CAS Token — Tokenomics
+# CAS Token — Tokenomics v2.2
 
 **Cryptocoin Agentic Space (CAS)**
 
@@ -66,6 +66,8 @@ Every on-chain action in Agentic Space requires a CAS payment. These fees serve 
 - **DAO Voting**: 10 CAS — casts a vote on an existing proposal
 - **Community DAO — Pauta Submission**: 10 CAS (1/10 of agent registration) — proposes a pauta item for community voting
 - **Community DAO — Voting**: 50 CAS (1/2 of agent registration) — casts a vote on a community votação
+- **Arbitration Case Filing**: 0.5 CAS — files a fraud arbitration case
+- **Arbitration Vote**: 0.5 CAS — casts a vote on an arbitration case
 
 All fees are processed by `PaymentLib`, which transfers CAS from the user's wallet to the `InfrastructureFund` smart contract. Users must approve the CAS spending (ERC-20 `approve`) before the platform can debit the fee. Fees can be adjusted by the platform admin via `updateFees()` on the Diamond proxy. Community DAO fees use the extensible custom fee system (`registerFeeType` / `setCustomFee`) and are also deposited directly to the `InfrastructureFund`.
 
@@ -139,7 +141,33 @@ The maximum supply of 10,000,000 CAS is hardcoded in the contract as `MAX_SUPPLY
 
 ---
 
-## 9. Price Escalation Model
+## 9. Fraud Arbitration System
+
+The CAS Token includes an on-chain arbitration system for resolving fraud disputes. Compliance officers file cases against suspected fraudulent addresses, and DAO members vote to determine outcomes.
+
+### Three Voting Periods
+
+Each arbitration case progresses through three distinct periods with specific rules for CAS token operations:
+
+| Period | Duration | CAS Transfers | Voting | Description |
+|--------|----------|---------------|--------|-------------|
+| **Divulgação** (Disclosure) | 2 days (configurable, 1–7 days) | ✅ Allowed (except suspects) | ❌ Not yet | Evidence is presented; community reviews accusations; suspected addresses may be preventively frozen |
+| **Votação** (Voting) | 5 days (configurable, 1–14 days) | 🔒 **All blocked globally** | ✅ Active | DAO members vote; ALL CAS transfers locked to prevent vote buying |
+| **Resultado** (Result) | Until execution | ✅ Resumed | ❌ Closed | Decision applied: guilty addresses frozen, innocent unfrozen |
+
+### Vote Buying Prevention
+
+During the Votação period, a global voting lock is activated on the CAS token contract (`setVotingLock(true)`). This blocks ALL token transfers — no user can send, receive, or swap CAS. The lock is automatically deactivated when no active cases remain in the Voting period.
+
+### Case Outcomes
+
+- **Approved (guilty)**: Accused addresses are frozen (permanently, temporarily, or for a limited time)
+- **Rejected (innocent)**: Any preventive freezes on accused addresses are lifted
+- **Expired (no quorum)**: Accused addresses receive a 6-month freeze; case can be refiled (up to 3 retries)
+
+---
+
+## 10. Price Escalation Model
 
 CAS price increases according to verified, on-chain growth milestones. This is not a speculative mechanism — it reflects real ecosystem expansion.
 
@@ -153,7 +181,7 @@ The ratio starts at 2:1 (1 POL = 2 CAS) and can be adjusted upward as the ecosys
 
 ---
 
-## 10. Access Roles
+## 11. Access Roles
 
 - **DEFAULT_ADMIN_ROLE**: manages roles, upgrades, and configurations
 - **MINTER_ROLE**: can mint new CAS tokens up to `MAX_SUPPLY`
@@ -162,10 +190,11 @@ The ratio starts at 2:1 (1 POL = 2 CAS) and can be adjusted upward as the ecosys
 - **TREASURER_ROLE**: can transfer funds from InfrastructureFund
 - **DAO_PROPOSER_ROLE**: can create governance proposals
 - **DAO_VOTER_ROLE**: can vote on proposals
+- **COMPLIANCE_ROLE**: can freeze/unfreeze addresses and activate voting lock
 
 ---
 
-## 11. Fund Tracker Tokens
+## 12. Fund Tracker Tokens
 
 To provide transparency into the InfrastructureFund's holdings, two ERC-20 mirror tokens are deployed:
 
@@ -176,7 +205,7 @@ These tokens are non-transferable. `totalSupply()` returns the fund's current ba
 
 ---
 
-## 12. How to Obtain CAS
+## 13. How to Obtain CAS
 
 There are three ways to acquire CAS:
 
@@ -188,7 +217,7 @@ DEX liquidity (QuickSwap and other Polygon DEXs) is pending and will be added vi
 
 ---
 
-## 13. What CAS Is Not
+## 14. What CAS Is Not
 
 CAS is not a governance token, a dividend-paying token, or a speculative asset. The smart contract includes an on-chain disclaimer (`INVESTMENT_DISCLAIMER`) that explicitly states:
 
@@ -198,7 +227,7 @@ The token does not grant equity, ownership, or revenue-sharing rights. Its sole 
 
 ---
 
-## 14. Smart Contract Architecture
+## 15. Smart Contract Architecture
 
 The CAS token is part of a Diamond Proxy (EIP-2535) architecture:
 
@@ -208,11 +237,12 @@ The CAS token is part of a Diamond Proxy (EIP-2535) architecture:
 - **Diamond Proxy**: single entry point for all protocol facets (UserRegistry, AgentRegistry, Payment, DAO, CommunityDAO, GasPromotion)
 - **PaymentLib**: processes fee transfers from users to InfrastructureFund, including extensible custom fees
 - **CommunityDAOFacet**: community governance with pauta proposals, Merkle tree verification, and votações
+- **ArbitrationFacet**: fraud dispute resolution with 3 voting periods (Disclosure, Voting, Result) and global voting lock
 - **MerkleTreeLib**: verifies integrity of off-chain pauta content via on-chain Merkle roots
 
 ---
 
-## 15. Links
+## 16. Links
 
 - Polygonscan (CAS Token): https://polygonscan.com/token/0x5151A34EaC7bA08cd6B540b32cD30316218A2287
 - Polygonscan (Diamond): https://polygonscan.com/address/0x80BD976cB588cD2F9aD9Ac671FB19174E9F3172b
@@ -224,5 +254,5 @@ The CAS token is part of a Diamond Proxy (EIP-2535) architecture:
 
 ---
 
-*Tokenomics version 1.2 — July 2026*
+*Tokenomics version 2.2.1 — July 2026*
 *Licensed under CC-BY-SA-4.0*

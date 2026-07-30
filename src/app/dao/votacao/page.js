@@ -123,7 +123,7 @@ function VotacaoPageContent() {
   if (!votacao) {
     return (
       <div className="space-y-4">
-        <Link href="/comunidade" className="flex items-center gap-1 text-sm text-slate-400 hover:text-white">
+        <Link href="/dao" className="flex items-center gap-1 text-sm text-slate-400 hover:text-white">
           <ArrowLeft size={16} /> Voltar para Governança
         </Link>
         <div className="text-center">
@@ -140,7 +140,7 @@ function VotacaoPageContent() {
 
   return (
     <div className="space-y-6">
-      <Link href="/comunidade" className="flex items-center gap-1 text-sm text-slate-400 hover:text-white">
+      <Link href="/dao" className="flex items-center gap-1 text-sm text-slate-400 hover:text-white">
         <ArrowLeft size={16} /> Voltar para Governança
       </Link>
 
