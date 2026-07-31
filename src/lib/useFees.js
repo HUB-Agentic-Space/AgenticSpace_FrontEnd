@@ -283,7 +283,7 @@ export function useFees() {
         const currentPhaseId = certPhaseIdResult.value;
         if (currentPhaseId > 0n && certificateContract) {
           try {
-            const phaseData = await certificateContract.getPhase(currentPhaseId);
+            const phaseData = await certificateContract.phases(currentPhaseId);
             certificatePhase = {
               id: currentPhaseId.toString(),
               name: phaseData.name,

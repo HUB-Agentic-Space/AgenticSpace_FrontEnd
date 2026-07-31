@@ -490,26 +490,21 @@ export async function verifyCertificateManifest(manifest, suppliedConfig) {
   }
   const contract = getCertificateContract(config.certificateAddress, provider);
 
-  let result;
   let rawRecord;
   try {
-    [result, rawRecord] = await Promise.all([
-      contract.verifyCertificate(tokenId),
-      contract.getCertificate(tokenId),
-    ]);
+    rawRecord = await contract.certificates(tokenId);
   } catch {
     throw new Error('O token informado nao existe no contrato oficial.');
   }
   const record = certificateFromResult(rawRecord, tokenId);
-  const phase = phaseFromResult(await contract.getPhase(record.phaseId), record.phaseId);
+  const phase = phaseFromResult(await contract.phases(record.phaseId), record.phaseId);
   const verification = {
-    valid: result.valid,
-    recipient: result.recipient,
-    phaseId: result.phaseId.toString(),
-    account: result.account,
-    currentCasBalance: result.currentCasBalance.toString(),
-    metadataHash: result.metadataHash,
-    documentHash: result.documentHash,
+    valid: !rawRecord.revoked,
+    recipient: rawRecord.recipient,
+    phaseId: rawRecord.phaseId.toString(),
+    account: rawRecord.tokenBoundAccount,
+    metadataHash: rawRecord.metadataHash,
+    documentHash: rawRecord.documentHash,
   };
   const checks = compareManifest(manifest, record, phase, verification);
   const valid = Object.values(checks).every(Boolean);
@@ -520,7 +515,6 @@ export async function verifyCertificateManifest(manifest, suppliedConfig) {
     phase,
     record,
     verification,
-    currentCasBalanceFormatted: formatCasAmount(verification.currentCasBalance, 6),
   };
 }
 
@@ -532,23 +526,18 @@ export async function verifyCertificateReference({ chainId, contractAddress, tok
   }
   const provider = new ethers.JsonRpcProvider(config.rpcUrl, config.chainId, { staticNetwork: true });
   const contract = getCertificateContract(config.certificateAddress, provider);
-  const [result, rawRecord] = await Promise.all([
-    contract.verifyCertificate(tokenId),
-    contract.getCertificate(tokenId),
-  ]);
+  const rawRecord = await contract.certificates(tokenId);
   const record = certificateFromResult(rawRecord, tokenId);
-  const phase = phaseFromResult(await contract.getPhase(record.phaseId), record.phaseId);
+  const phase = phaseFromResult(await contract.phases(record.phaseId), record.phaseId);
   return {
-    valid: Boolean(result.valid) && !record.revoked,
+    valid: !rawRecord.revoked,
     config,
     phase,
     record,
     verification: {
-      valid: result.valid,
-      currentCasBalance: result.currentCasBalance.toString(),
-      documentHash: result.documentHash,
+      valid: !rawRecord.revoked,
+      documentHash: rawRecord.documentHash,
     },
-    currentCasBalanceFormatted: formatCasAmount(result.currentCasBalance.toString(), 6),
   };
 }
 

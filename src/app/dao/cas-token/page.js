@@ -14,11 +14,18 @@ import Link from 'next/link';
 
 const ARBITRATION_ABI = [
   'function getCaseCount() view returns (uint256)',
-  'function getCase(uint256 caseId) view returns (tuple(uint256 caseId, address filer, address[] accused, string[] reasons, bytes32 evidenceHash, uint8 freezeType, uint256 freezeUntilTime, uint256 createdAt, uint256 disclosureDeadline, uint256 votingDeadline, uint256 executedAt, uint8 state, uint8 votingPeriod, uint256 forVotes, uint256 againstVotes, uint256 abstainVotes, uint256 retryCount))',
+  'function getCase(uint256 caseId) view returns (tuple(uint256 caseId, address filer, address[] accused, string[] reasons, bytes32 evidenceHash, uint8 freezeType, uint256 freezeUntilTime, uint256 createdAt, uint256 disclosureDeadline, uint256 votingDeadline, uint256 executedAt, uint8 state, uint8 votingPeriod, uint256 forVotes, uint256 againstVotes, uint256 abstainVotes, uint256 totalPowerCast, uint256 retryCount, uint256 revoteCount, uint256 challengeDeadline, address challenger, bool technicalCouncilVeto))',
   'function getCaseState(uint256 caseId) view returns (uint8)',
   'function getVotingPeriod(uint256 caseId) view returns (uint8)',
   'function isFrozenByArbitration(address account) view returns (bool)',
   'function isVotingLockActive() view returns (bool)',
+  'function getRevoteCount(uint256 caseId) view returns (uint256)',
+  'function getChallengeDeadline(uint256 caseId) view returns (uint256)',
+  'function getAppealCount(uint256 caseId) view returns (uint256)',
+  'function getVotingPower(address voter) view returns (uint256)',
+  'function delegateArbitrationVote(address delegatee) external',
+  'function clearArbitrationDelegation() external',
+  'function getArbitrationDelegatee(address delegator) view returns (address)',
 ];
 
 const CAS_TOKEN_ABI = [
@@ -27,14 +34,14 @@ const CAS_TOKEN_ABI = [
   'function isVotingLockActive() view returns (bool)',
 ];
 
-const STATE_LABELS = ['Pending', 'Active', 'Executed', 'Canceled', 'Expired', 'RetryPending'];
-const STATE_COLORS = ['#fcc650', '#F05F40', '#4ade80', '#eb3812', '#ce6e6d', '#cc7501'];
+const STATE_LABELS = ['Pending', 'Active', 'Executed', 'Canceled', 'Expired', 'RetryPending', 'RevotePending', 'Challenged'];
+const STATE_COLORS = ['#fcc650', '#F05F40', '#4ade80', '#eb3812', '#ce6e6d', '#cc7501', '#d4502e', '#ce6e6d'];
 
-const PERIOD_LABELS = ['Divulgação', 'Votação', 'Resultado'];
-const PERIOD_LABELS_EN = ['Disclosure', 'Voting', 'Result'];
-const PERIOD_LABELS_FR = ['Divulgation', 'Vote', 'Résultat'];
-const PERIOD_COLORS = ['#fcc650', '#eb3812', '#4ade80'];
-const PERIOD_ICONS = [Megaphone, Lock, Unlock];
+const PERIOD_LABELS = ['Divulgação', 'Votação', 'Resultado', 'Contestação'];
+const PERIOD_LABELS_EN = ['Disclosure', 'Voting', 'Result', 'Challenge'];
+const PERIOD_LABELS_FR = ['Divulgation', 'Vote', 'Résultat', 'Contestation'];
+const PERIOD_COLORS = ['#fcc650', '#eb3812', '#4ade80', '#ce6e6d'];
+const PERIOD_ICONS = [Megaphone, Lock, Unlock, AlertTriangle];
 
 const TRANSLATIONS = {
   pt: {
@@ -235,7 +242,11 @@ export default function ArbitrationPage() {
           forVotes: Number(arbCase.forVotes),
           againstVotes: Number(arbCase.againstVotes),
           abstainVotes: Number(arbCase.abstainVotes),
+          totalPowerCast: Number(arbCase.totalPowerCast),
           retryCount: Number(arbCase.retryCount),
+          revoteCount: Number(arbCase.revoteCount),
+          challengeDeadline: arbCase.challengeDeadline,
+          challenger: arbCase.challenger,
         };
         newCases.push(caseObj);
 
