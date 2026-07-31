@@ -152,12 +152,41 @@ Each arbitration case progresses through three distinct periods with specific ru
 | Period | Duration | CAS Transfers | Voting | Description |
 |--------|----------|---------------|--------|-------------|
 | **Divulgação** (Disclosure) | 2 days (configurable, 1–7 days) | ✅ Allowed (except suspects) | ❌ Not yet | Evidence is presented; community reviews accusations; suspected addresses may be preventively frozen |
-| **Votação** (Voting) | 5 days (configurable, 1–14 days) | 🔒 **All blocked globally** | ✅ Active | DAO members vote; ALL CAS transfers locked to prevent vote buying |
+| **Votação** (Voting) | 5 days (configurable, 1–14 days) | 🔒 **Blocked globally** (except COMPLIANCE_ROLE) | ✅ Active | DAO members vote; CAS transfers locked to prevent vote buying; voting fees allowed |
 | **Resultado** (Result) | Until execution | ✅ Resumed | ❌ Closed | Decision applied: guilty addresses frozen, innocent unfrozen |
+| **Contestação** (Challenge) | 3 days (configurable) | ✅ Allowed | ❌ Closed | Contestation period before definitive execution |
+
+### Weighted Voting Power
+
+The arbitration system uses **weighted voting power** combining multiple criteria instead of token balance alone:
+
+| Criterion | Default Weight | Description |
+|-----------|---------------|-------------|
+| **Token balance** | 40% | Based on CAS holdings (logarithmic scale) |
+| **Staking duration** | 30% | Time tokens held without movement (up to 30 days) |
+| **Reputation** | 30% | Reputation score (0–10000), based on role and participation |
+
+- **Quadratic voting**: `sqrt(raw_power)` reduces large-holder impact (toggleable)
+- **Power cap**: 1000 units max per wallet (configurable)
+- **Vote delegation**: Users can delegate voting power (`delegateVote`)
+- **Minimum quorum**: 20% of total power must be exercised
+
+### Challenge Period & Technical Council
+
+- After voting result, a 3-day challenge period allows contesting the outcome
+- The **Technical Council** (designated via `setTechnicalCouncilMember`) resolves challenges
+- If upheld: original result executes; if overturned: new voting round triggered
+- Uncontested cases finalize automatically (`finalizeCase`)
+
+### Appeal Mechanism
+
+- After execution, registered users can file appeals (`fileAppeal`)
+- Appeals reopen the case for a new voting round
+- Maximum 2 appeals (configurable); after that, results are final
 
 ### Vote Buying Prevention
 
-During the Votação period, a global voting lock is activated on the CAS token contract (`setVotingLock(true)`). This blocks ALL token transfers — no user can send, receive, or swap CAS. The lock is automatically deactivated when no active cases remain in the Voting period.
+During the Votação period, a global voting lock is activated on the CAS token contract (`setVotingLock(true)`). This blocks token transfers — no user can send, receive, or swap CAS, **except transfers to addresses with `COMPLIANCE_ROLE`**, ensuring voting fee payments can be processed. The lock is automatically deactivated when no active cases remain in the Voting period.
 
 ### Case Outcomes
 

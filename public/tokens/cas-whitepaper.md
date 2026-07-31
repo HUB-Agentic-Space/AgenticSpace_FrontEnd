@@ -235,12 +235,31 @@ Each arbitration case progresses through three distinct periods:
 | Period | Duration | CAS Transfers | Voting | Purpose |
 |--------|----------|---------------|--------|---------|
 | **Divulgação** (Disclosure) | 2 days (configurable) | ✅ Allowed (except suspects) | ❌ Not yet | Case evidence is presented; community reviews accusations |
-| **Votação** (Voting) | 5 days (configurable) | 🔒 **All blocked** | ✅ Active | DAO members vote; transfers locked to prevent vote buying |
+| **Votação** (Voting) | 5 days (configurable) | 🔒 **Blocked** (except COMPLIANCE_ROLE) | ✅ Active | DAO members vote; transfers locked to prevent vote buying; voting fees allowed |
 | **Resultado** (Result) | Until execution | ✅ Resumed | ❌ Closed | Decision is applied; guilty addresses frozen, innocent unfrozen |
+| **Contestação** (Challenge) | 3 days (configurable) | ✅ Allowed | ❌ Closed | Contestation period before definitive execution |
 
-### 8.3 Vote Buying Prevention
+### 8.3 Weighted Voting Power
 
-During the **Votação** period, a global voting lock is activated on the CAS token contract. This blocks ALL token transfers — no user can send, receive, or swap CAS tokens. This mechanism prevents:
+The arbitration system uses **weighted voting power** that combines multiple criteria instead of relying solely on token balance:
+
+| Criterion | Default Weight | Description |
+|-----------|---------------|-------------|
+| **Token balance** | 40% | Based on CAS holdings (logarithmic scale for diminishing returns) |
+| **Staking duration** | 30% | Time tokens held without movement (up to 30 days for full bonus) |
+| **Reputation** | 30% | Reputation score (0–10000), based on role and historical participation |
+
+**Additional features:**
+
+- **Quadratic voting**: `sqrt(raw_power)` to reduce the impact of large holdings (toggleable)
+- **Maximum power cap**: Configurable per-wallet cap (default: 1000 units)
+- **Vote delegation**: Users can delegate their voting power to another address (`delegateVote`)
+- **Minimum quorum**: 20% of total power must be exercised for a valid result
+- Admin functions: `setVotingPowerConfig`, `setReputation`, `getVotingPower`
+
+### 8.4 Vote Buying Prevention
+
+During the **Votação** period, a global voting lock is activated on the CAS token contract. This blocks token transfers — no user can send, receive, or swap CAS tokens, **except transfers to addresses with `COMPLIANCE_ROLE`**, ensuring voting fee payments can be processed. This mechanism prevents:
 
 - **Vote buying**: Accused parties cannot transfer CAS to influence voters
 - **Token manipulation**: Market operations are suspended during voting
@@ -248,20 +267,39 @@ During the **Votação** period, a global voting lock is activated on the CAS to
 
 The lock is automatically released when no active cases remain in the Voting period.
 
-### 8.4 Case Outcomes
+### 8.5 Case Outcomes
 
 - **Approved (guilty)**: Accused addresses are frozen (permanently, temporarily, or for a limited time)
 - **Rejected (innocent)**: Any preventive freezes on accused addresses are lifted
 - **Inconclusive (no majority)**: If neither option achieves >50% of valid votes, the case returns to Disclosure for a new voting round (up to 3 revotes, configurable)
 - **Expired (no quorum)**: Accused addresses receive a 6-month freeze; case can be refiled (up to 3 retries)
 
-### 8.5 Majority Rule & Registered Voters
+### 8.6 Majority Rule & Registered Voters
 
 - **Strict majority**: A definitive result requires one option (for or against) to receive **more than 50% of valid votes** (excluding abstentions). If no majority is reached, the case automatically re-enters the Disclosure period for a new voting round.
 - **No anonymous votes**: Only registered users with `USER_ROLE` or `AGENT_ROLE` can cast votes. Unregistered addresses receive a `VoterNotRegistered` error.
 - **Revote mechanism**: Each revote resets vote counts and deadlines. The `hasVotedRound` mapping tracks which revote round each voter participated in, allowing all eligible voters to vote again. Maximum revotes are configurable via `setMaxRevotes` (default: 3).
 
-### 8.6 Arbitration Fees
+### 8.7 Challenge Period & Technical Council
+
+After the voting result, the case enters a **challenge period** (default: 3 days) before definitive execution:
+
+- Any registered user can challenge the result by paying a fee (`challengeResult`)
+- The **Technical Council** (members designated via `setTechnicalCouncilMember`) evaluates the challenge:
+  - If **upheld** (`uphold = true`): the original result is executed
+  - If **overturned** (`uphold = false`): a new voting round is triggered
+- If no one challenges, the case is finalized automatically after the deadline (`finalizeCase`)
+
+### 8.8 Appeal Mechanism
+
+After definitive execution, users can still appeal:
+
+- Any registered user can file an appeal (`fileAppeal`) by paying a fee
+- The appeal reopens the case for a new voting round
+- Maximum appeals: 2 (configurable)
+- After the limit, the result is final
+
+### 8.9 Arbitration Fees
 
 | Operation | Fee |
 |-----------|-----|
