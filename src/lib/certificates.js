@@ -17,22 +17,16 @@ export const CERTIFICATE_ABI = [
   'function phaseCount() view returns (uint256)',
   'function activePhases(uint256 phaseId) view returns (bool)',
   'function casToken() view returns (address)',
-  'function certificateOf(address recipient, uint256 phaseId) view returns (uint256)',
-  'function tokenBoundAccount(uint256 tokenId) view returns (address)',
+  'function certificatesByRecipientAndPhase(address recipient, uint256 phaseId) view returns (uint256)',
   'function nonces(address recipient) view returns (uint256)',
-  'function getPhase(uint256 phaseId) view returns (tuple(string name, bytes32 templateHash, uint256 minCasDeposit, uint256 startsAt, uint256 endsAt, uint256 minted, bool active, string skillsDescription, string instructions, uint256 extraFeeTypeId, uint256 tbaRebateBps))',
-  'function getPhasePrerequisites(uint256 phaseId) view returns (uint256[])',
-  'function isPhaseUnlocked(address user, uint256 phaseId) view returns (bool)',
-  'function hasCertificateForPhase(address user, uint256 phaseId) view returns (bool)',
-  'function getCertificate(uint256 tokenId) view returns (tuple(uint256 phaseId, address recipient, address tokenBoundAccount, bytes32 issuanceId, bytes32 nameHash, bytes32 metadataHash, uint256 casDeposited, uint256 issuedAt, bool revoked, bytes32 revocationReasonHash, uint256 revokedAt, bytes32 documentHash))',
+  'function phases(uint256 phaseId) view returns (tuple(string name, bytes32 templateHash, uint256 minCasDeposit, uint256 startsAt, uint256 endsAt, uint256 minted, bool active, string skillsDescription, string instructions, uint256 extraFeeTypeId, uint256 tbaRebateBps))',
+  'function phasePrerequisites(uint256 phaseId) view returns (uint256[])',
+  'function certificates(uint256 tokenId) view returns (tuple(uint256 phaseId, address recipient, address tokenBoundAccount, bytes32 issuanceId, bytes32 nameHash, bytes32 metadataHash, uint256 casDeposited, uint256 issuedAt, bool revoked, bytes32 revocationReasonHash, uint256 revokedAt, bytes32 documentHash))',
   'function mintCertificate((bytes32 issuanceId, address recipient, bytes32 nameHash, uint256 phaseId, bytes32 metadataHash, uint256 casAmount, uint256 nonce, uint256 deadline) auth, address issuer, bytes signature) returns (uint256 tokenId, address tokenBoundAccount_)',
   'function depositCasForMint(uint256 phaseId)',
   'function withdrawCasDeposit(uint256 phaseId)',
-  'function casDepositBalance(address recipient, uint256 phaseId) view returns (uint256)',
-  'function verifyCertificate(uint256 tokenId) view returns (bool valid, address recipient, uint256 phaseId, address account, uint256 currentCasBalance, bytes32 metadataHash, bytes32 documentHash, bytes32 merkleRootProof)',
-  'function verifyDocument(bytes32 documentHash) view returns (bool valid, uint256 tokenId)',
-  'function getMerkleRoot(uint256 tokenId) view returns (bytes32)',
-  'function getMerkleRootProof(uint256 tokenId) view returns (bytes32)',
+  'function casDeposits(address recipient, uint256 phaseId) view returns (uint256)',
+  'function tokensByDocumentHash(bytes32 documentHash) view returns (uint256)',
   'function certificateMerkleRoots(uint256 tokenId) view returns (bytes32)',
   'function certificateMerkleRootProofs(uint256 tokenId) view returns (bytes32)',
   'event CertificateMinted(uint256 indexed tokenId, uint256 indexed phaseId, address indexed recipient, address tokenBoundAccount, bytes32 issuanceId, bytes32 nameHash, bytes32 metadataHash, uint256 casAmount)',
@@ -310,21 +304,19 @@ export async function readCertificateContext(config, recipient) {
   const contract = getCertificateContract(config.certificateAddress, provider);
   const phaseId = await contract.currentPhaseId();
   const phase = phaseId > BigInt('0')
-    ? phaseFromResult(await contract.getPhase(phaseId), phaseId)
+    ? phaseFromResult(await contract.phases(phaseId), phaseId)
     : null;
   let certificate = null;
   let currentCasBalance = '0';
   if (phaseId > BigInt('0') && recipient && ethers.isAddress(recipient)) {
-    const tokenId = await contract.certificateOf(recipient, phaseId);
+    const tokenId = await contract.certificatesByRecipientAndPhase(recipient, phaseId);
     if (tokenId > BigInt('0')) {
-      const [rawCert, verification, merkleRoot, merkleRootProof] = await Promise.all([
-        contract.getCertificate(tokenId),
-        contract.verifyCertificate(tokenId),
-        contract.getMerkleRoot(tokenId).catch(() => ethers.ZeroHash),
-        contract.getMerkleRootProof(tokenId).catch(() => ethers.ZeroHash),
+      const [rawCert, merkleRoot, merkleRootProof] = await Promise.all([
+        contract.certificates(tokenId),
+        contract.certificateMerkleRoots(tokenId).catch(() => ethers.ZeroHash),
+        contract.certificateMerkleRootProofs(tokenId).catch(() => ethers.ZeroHash),
       ]);
       certificate = { ...certificateFromResult(rawCert, tokenId), merkleRoot, merkleRootProof };
-      currentCasBalance = verification.currentCasBalance.toString();
     }
   }
   const cas = getCasContract(config.casTokenAddress, provider);
@@ -342,11 +334,10 @@ export async function readCertificateByToken(config, tokenId) {
   if (numericTokenId <= BigInt('0')) throw new Error('Token ID invalido.');
   const provider = new ethers.JsonRpcProvider(config.rpcUrl, config.chainId, { staticNetwork: true });
   const contract = getCertificateContract(config.certificateAddress, provider);
-  const [rawCertificate, verification, merkleRoot, merkleRootProof] = await Promise.all([
-    contract.getCertificate(numericTokenId),
-    contract.verifyCertificate(numericTokenId),
-    contract.getMerkleRoot(numericTokenId).catch(() => ethers.ZeroHash),
-    contract.getMerkleRootProof(numericTokenId).catch(() => ethers.ZeroHash),
+  const [rawCertificate, merkleRoot, merkleRootProof] = await Promise.all([
+    contract.certificates(numericTokenId),
+    contract.certificateMerkleRoots(numericTokenId).catch(() => ethers.ZeroHash),
+    contract.certificateMerkleRootProofs(numericTokenId).catch(() => ethers.ZeroHash),
   ]);
   const certificate = {
     ...certificateFromResult(rawCertificate, numericTokenId),
@@ -354,13 +345,12 @@ export async function readCertificateByToken(config, tokenId) {
     merkleRootProof,
   };
   const phase = phaseFromResult(
-    await contract.getPhase(certificate.phaseId),
+    await contract.phases(certificate.phaseId),
     certificate.phaseId
   );
   return {
     certificate,
     phase,
-    currentCasBalance: verification.currentCasBalance.toString(),
   };
 }
 
