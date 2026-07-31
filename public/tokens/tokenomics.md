@@ -163,7 +163,14 @@ During the Votação period, a global voting lock is activated on the CAS token 
 
 - **Approved (guilty)**: Accused addresses are frozen (permanently, temporarily, or for a limited time)
 - **Rejected (innocent)**: Any preventive freezes on accused addresses are lifted
+- **Inconclusive (no majority)**: If neither option achieves >50% of valid votes, the case returns to Disclosure for a new voting round (up to 3 revotes, configurable)
 - **Expired (no quorum)**: Accused addresses receive a 6-month freeze; case can be refiled (up to 3 retries)
+
+### Majority Rule & Registered Voters
+
+- **Strict majority**: A definitive result requires one option (for or against) to receive **more than 50% of valid votes** (excluding abstentions). If no majority is reached, the case automatically re-enters the Disclosure period for a new voting round.
+- **No anonymous votes**: Only registered users with `USER_ROLE` or `AGENT_ROLE` can cast votes. Unregistered addresses receive a `VoterNotRegistered` error.
+- **Revote mechanism**: Each revote resets vote counts and deadlines. The `hasVotedRound` mapping tracks which revote round each voter participated in, allowing all eligible voters to vote again. Maximum revotes are configurable via `setMaxRevotes` (default: 3).
 
 ---
 

@@ -12,7 +12,7 @@ import { ethers } from 'ethers';
 import {
   Coins, ExternalLink, TrendingUp, BarChart3, Zap, Shield,
   ArrowUpDown, Info, Database, Layers, Wallet, FileText,
-  AlertTriangle, RefreshCw, Award, BadgeCheck, Copy, Gavel,
+  AlertTriangle, RefreshCw, Award, BadgeCheck, Copy, Gavel, Vote, UserCircle,
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
@@ -626,6 +626,38 @@ export default function CASTokenPage() {
                 : locale === 'fr'
                 ? "Les opérations avec CAS reprennent normalement. La décision est appliquée: les adresses coupables sont gelées, les innocentes sont dégélées."
                 : 'CAS operations resume normally. The decision is applied: guilty addresses are frozen, innocent ones are unfrozen.'}
+            </p>
+          </div>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2 pt-2">
+          <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-4">
+            <div className="flex items-center gap-2 text-brand-400">
+              <Vote size={16} />
+              <h4 className="text-sm font-semibold">
+                {locale === 'pt' ? 'Maioria Absoluta' : locale === 'fr' ? 'Majorité Absolue' : 'Strict Majority'}
+              </h4>
+            </div>
+            <p className="mt-1 text-xs text-slate-400">
+              {locale === 'pt'
+                ? 'O resultado só é definitivo se uma opção obtiver mais de 50% dos votos válidos. Sem maioria, o caso retorna para nova votação (até 3 revotes).'
+                : locale === 'fr'
+                ? "Le résultat n'est définitif que si une option obtient plus de 50% des votes valides. Sans majorité, le cas retourne à un nouveau vote (jusqu'à 3 revotes)."
+                : 'A result is only definitive if one option receives more than 50% of valid votes. Without majority, the case returns for a new vote (up to 3 revotes).'}
+            </p>
+          </div>
+          <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-4">
+            <div className="flex items-center gap-2 text-brand-400">
+              <UserCircle size={16} />
+              <h4 className="text-sm font-semibold">
+                {locale === 'pt' ? 'Votantes Cadastrados' : locale === 'fr' ? 'Votants Inscrits' : 'Registered Voters Only'}
+              </h4>
+            </div>
+            <p className="mt-1 text-xs text-slate-400">
+              {locale === 'pt'
+                ? 'Apenas usuários cadastrados (USER_ROLE ou AGENT_ROLE) podem votar. Não há votos anônimos no sistema de arbitragem.'
+                : locale === 'fr'
+                ? "Seuls les utilisateurs inscrits (USER_ROLE ou AGENT_ROLE) peuvent voter. Pas de votes anonymes dans le système d'arbitrage."
+                : 'Only registered users (USER_ROLE or AGENT_ROLE) can vote. No anonymous votes in the arbitration system.'}
             </p>
           </div>
         </div>
