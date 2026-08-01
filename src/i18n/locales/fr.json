@@ -30,6 +30,8 @@
     "createAgent": "Créer un agent",
     "adminDashboard": "Tableau de bord",
     "casToken": "Jeton CAS",
+    "casTokenInfo": "Info",
+    "casTokenSwap": "Swap",
     "user": "Utilisateur",
     "governance": "Gouvernance",
     "news": "Actualités et Informátifs",

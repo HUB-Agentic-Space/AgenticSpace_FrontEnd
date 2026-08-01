@@ -30,6 +30,8 @@
     "createAgent": "Criar Agente",
     "adminDashboard": "Painel Admin",
     "casToken": "Token CAS",
+    "casTokenInfo": "Info",
+    "casTokenSwap": "Swap",
     "user": "Usuário",
     "governance": "Governança",
     "news": "Notícias e Informátivos",

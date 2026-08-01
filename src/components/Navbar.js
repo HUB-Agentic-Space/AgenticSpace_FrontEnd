@@ -11,7 +11,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Bot, UserCircle, PlusCircle, LogOut, Sparkles, Info, ChevronDown, Shield, Code, BarChart3, Activity, BookText, Search, LayoutDashboard, Coins, Vote, BadgeCheck, Award, Gavel, Newspaper, AlertCircle } from 'lucide-react';
+import { Bot, UserCircle, PlusCircle, LogOut, Sparkles, Info, ChevronDown, Shield, Code, BarChart3, Activity, BookText, Search, LayoutDashboard, Coins, Vote, BadgeCheck, Award, Gavel, Newspaper, AlertCircle, ArrowUpDown } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useTranslations, useLocaleContext } from '@/lib/LocaleProvider';
 import LanguageSelector from '@/components/LanguageSelector';
@@ -42,6 +42,7 @@ export default function Navbar() {
   const { locale } = useLocaleContext();
   const t = useTranslations();
   const [institucionalOpen, setInstitucionalOpen] = useState(false);
+  const [casTokenMenuOpen, setCasTokenMenuOpen] = useState(false);
   const [estatisticasOpen, setEstatisticasOpen] = useState(false);
   const [newsOpen, setNewsOpen] = useState(false);
   const [governanceOpen, setGovernanceOpen] = useState(false);
@@ -63,7 +64,7 @@ export default function Navbar() {
     }
   };
 
-  const isInstitucionalActive = pathname === '/about' || pathname === '/security-policy' || pathname === '/info/api-agentes' || pathname === '/info/cas-token' || pathname === '/stats' || pathname === '/agent-logs' || pathname === '/certificado/verificar' || pathname?.startsWith('/news');
+  const isInstitucionalActive = pathname === '/about' || pathname === '/security-policy' || pathname === '/info/api-agentes' || pathname?.startsWith('/info/cas-token') || pathname === '/stats' || pathname === '/agent-logs' || pathname === '/certificado/verificar' || pathname?.startsWith('/news');
   const isTutoriaisActive = pathname?.startsWith('/tutoriais');
   const isComunidadeActive = pathname?.startsWith('/dao');
   const isCasTokenArbitrationActive = pathname?.startsWith('/dao/cas-token');
@@ -154,14 +155,56 @@ export default function Navbar() {
                     <Code size={16} />
                     {t('navbar.apiAgents')}
                   </Link>
-                  <Link
-                    href="/info/cas-token"
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
-                    onClick={() => setInstitucionalOpen(false)}
-                  >
-                    <Coins size={16} />
-                    {t('navbar.casToken')}
-                  </Link>
+                  {/* Submenu CAS Token */}
+                  <div className="relative">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCasTokenMenuOpen(!casTokenMenuOpen);
+                      }}
+                      className={`flex w-full items-center justify-between px-4 py-2 text-sm hover:bg-slate-800 hover:text-white ${
+                        pathname?.startsWith('/info/cas-token') ? 'text-brand-400' : 'text-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Coins size={16} />
+                        {t('navbar.casToken')}
+                      </div>
+                      <ChevronDown size={14} className={`transition-transform ${casTokenMenuOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {casTokenMenuOpen && (
+                      <div className="absolute left-full top-0 ml-1 w-48 rounded-lg bg-slate-900 border border-slate-700 shadow-xl">
+                        <Link
+                          href="/info/cas-token"
+                          className={`flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-800 hover:text-white rounded-t-lg ${
+                            pathname === '/info/cas-token' ? 'text-brand-400' : 'text-slate-300'
+                          }`}
+                          onClick={() => {
+                            setCasTokenMenuOpen(false);
+                            setInstitucionalOpen(false);
+                          }}
+                        >
+                          <Info size={14} />
+                          {t('navbar.casTokenInfo')}
+                        </Link>
+                        <Link
+                          href="/info/cas-token/swap"
+                          className={`flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-800 hover:text-white rounded-b-lg ${
+                            pathname === '/info/cas-token/swap' ? 'text-brand-400' : 'text-slate-300'
+                          }`
+                          }
+                          onClick={() => {
+                            setCasTokenMenuOpen(false);
+                            setInstitucionalOpen(false);
+                          }}
+                        >
+                          <ArrowUpDown size={14} />
+                          {t('navbar.casTokenSwap')}
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                   <Link
                     href="/certificado/verificar"
                     className="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"

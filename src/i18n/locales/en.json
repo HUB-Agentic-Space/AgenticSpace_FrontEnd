@@ -30,6 +30,8 @@
     "createAgent": "Create Agent",
     "adminDashboard": "Admin Dashboard",
     "casToken": "CAS Token",
+    "casTokenInfo": "Info",
+    "casTokenSwap": "Swap",
     "user": "User",
     "governance": "Governance",
     "news": "News & Updates",
