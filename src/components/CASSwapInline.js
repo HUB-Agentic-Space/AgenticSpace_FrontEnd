@@ -62,6 +62,122 @@ const ERC20_ABI = [
 const BPS_DENOMINATOR = 10000;
 const USDC_DECIMALS = 6;
 
+const SWAP_ERRORS_ABI = [
+  'error ZeroAmount()',
+  'error InvalidRatio()',
+  'error InsufficientCASBalance(uint256 available, uint256 required)',
+  'error InsufficientPOLBalance(uint256 available, uint256 required)',
+  'error InsufficientUSDCBalance(uint256 available, uint256 required)',
+  'error SlippageExceeded(uint256 minExpected, uint256 actual)',
+  'error POLTransferFailed()',
+  'error ReentrantCall()',
+  'error SwapPaused()',
+  'error DeadlineExpired(uint256 deadline, uint256 nowTs)',
+  'error ZeroAddress()',
+  'error InvalidRatioArg()',
+  'error InvalidCurrency(uint8 currency)',
+  'error MsgValueMismatch(uint256 expected, uint256 sent)',
+  'error BudgetExceeded(uint256 requested, uint256 remaining)',
+  'error InsufficientReserve(uint256 available, uint256 required)',
+  'error SafeTransferFailed()',
+  'error SafeTransferFromFailed()',
+];
+
+const swapErrorsIface = new ethers.Interface(SWAP_ERRORS_ABI);
+
+function decodeSwapError(err) {
+  const rawErr = err?.data || err?.error?.data || err?.info?.error?.data;
+  if (!rawErr || typeof rawErr !== 'string') return null;
+
+  try {
+    const decoded = swapErrorsIface.parseError(rawErr);
+    if (!decoded) return null;
+
+    const fmt = ethers.formatEther;
+    const fmtU = (v) => ethers.formatUnits(v, USDC_DECIMALS);
+
+    switch (decoded.name) {
+      case 'ZeroAmount':
+        return { user: 'Quantidade insuficiente para swap.', detail: 'ZeroAmount()' };
+      case 'InvalidRatio':
+        return { user: 'O ratio de swap ainda não foi configurado. Tente novamente em alguns instantes.', detail: 'InvalidRatio()' };
+      case 'InsufficientCASBalance':
+        return {
+          user: 'O contrato não tem CAS suficiente para esta compra.',
+          detail: `InsufficientCASBalance(available=${fmt(decoded.args[0])}, required=${fmt(decoded.args[1])})`,
+        };
+      case 'InsufficientPOLBalance':
+        return {
+          user: 'O contrato não tem POL suficiente para esta venda.',
+          detail: `InsufficientPOLBalance(available=${fmt(decoded.args[0])}, required=${fmt(decoded.args[1])})`,
+        };
+      case 'InsufficientUSDCBalance':
+        return {
+          user: 'O contrato não tem USDC suficiente para esta venda.',
+          detail: `InsufficientUSDCBalance(available=${fmtU(decoded.args[0])}, required=${fmtU(decoded.args[1])})`,
+        };
+      case 'SlippageExceeded':
+        return {
+          user: 'O valor recebido ficaria abaixo do mínimo aceitável (slippage). Tente com um valor menor.',
+          detail: `SlippageExceeded(minExpected=${decoded.args[0]}, actual=${decoded.args[1]})`,
+        };
+      case 'POLTransferFailed':
+        return { user: 'Falha ao transferir POL do contrato.', detail: 'POLTransferFailed()' };
+      case 'ReentrantCall':
+        return { user: 'Erro de reentrância no contrato.', detail: 'ReentrantCall()' };
+      case 'SwapPaused':
+        return { user: 'O swap está pausado no momento.', detail: 'SwapPaused()' };
+      case 'DeadlineExpired':
+        return { user: 'A transação expirou. Tente novamente.', detail: `DeadlineExpired(deadline=${decoded.args[0]}, now=${decoded.args[1]})` };
+      case 'ZeroAddress':
+        return { user: 'Endereço inválido no contrato.', detail: 'ZeroAddress()' };
+      case 'InvalidRatioArg':
+        return { user: 'Parâmetros de ratio inválidos.', detail: 'InvalidRatioArg()' };
+      case 'InvalidCurrency':
+        return { user: 'Moeda de swap inválida.', detail: `InvalidCurrency(currency=${decoded.args[0]})` };
+      case 'MsgValueMismatch':
+        return { user: 'O valor de POL enviado não corresponde ao informado.', detail: `MsgValueMismatch(expected=${decoded.args[0]}, sent=${decoded.args[1]})` };
+      case 'BudgetExceeded':
+        return { user: 'Orçamento de suporte de preço excedido.', detail: `BudgetExceeded(requested=${decoded.args[0]}, remaining=${decoded.args[1]})` };
+      case 'InsufficientReserve':
+        return { user: 'Reserva insuficiente no contrato.', detail: `InsufficientReserve(available=${decoded.args[0]}, required=${decoded.args[1]})` };
+      case 'SafeTransferFailed':
+        return { user: 'Falha ao transferir o token.', detail: 'SafeTransferFailed()' };
+      case 'SafeTransferFromFailed':
+        return { user: 'Falha na aprovação ou transferência do token. Verifique se autorizou o contrato.', detail: 'SafeTransferFromFailed()' };
+      default:
+        return { user: `Erro no contrato: ${decoded.name}`, detail: `${decoded.name}(${decoded.args.join(', ')})` };
+    }
+  } catch {
+    return null;
+  }
+}
+
+function formatUserError(err) {
+  const decoded = decodeSwapError(err);
+  if (decoded) {
+    console.error('[CASSwapInline] contract error:', decoded.detail);
+    return decoded.user;
+  }
+
+  const msg = err?.reason || err?.shortMessage || err?.message || 'Swap falhou';
+
+  if (msg.includes('missing revert data') || msg.includes('could not coalesce error')) {
+    return 'Erro de rede: não foi possível comunicar com o contrato. Verifique se a carteira está na Polygon Mainnet (chainId 137).';
+  }
+  if (msg.includes('user rejected') || msg.includes('ACTION_REJECTED')) {
+    return 'Transação cancelada pelo usuário.';
+  }
+  if (msg.includes('insufficient funds')) {
+    return 'Saldo insuficiente para esta transação (gas + valor).';
+  }
+  if (msg.includes('execution reverted')) {
+    return 'A transação foi revertida pelo contrato. Possíveis causas: saldo insuficiente do contrato, ratio não configurado, ou slippage excessivo.';
+  }
+
+  return msg;
+}
+
 export default function CASSwapInline({
   diamondAddress,
   casTokenAddress,
@@ -191,7 +307,7 @@ export default function CASSwapInline({
             chainId: targetHex,
             chainName: chainId === 137 ? 'Polygon Mainnet' : `Chain ${chainId}`,
             nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
-            rpcUrls: ['https://polygon-rpc.com'],
+            rpcUrls: [process.env.NEXT_PUBLIC_RPC_URL || 'https://polygon.drpc.org'],
             blockExplorerUrls: [explorer],
           }],
         });
@@ -242,9 +358,9 @@ export default function CASSwapInline({
         const minCasOut = (casExpected * BigInt('99')) / BigInt('100');
 
         try {
-          await swap.buyCASWithPOL.staticCall(minCasOut, deadline, { value: polAmount, from: account });
+          await swap.buyCASWithPOL.staticCall(minCasOut, deadline, { value: polAmount });
         } catch (simErr) {
-          throw new Error(simErr.reason || simErr.shortMessage || 'A transação seria revertida. Verifique a liquidez do swap.');
+          throw simErr;
         }
 
         const tx = await swap.buyCASWithPOL(minCasOut, deadline, { value: polAmount, ...gasOverrides });
@@ -262,9 +378,9 @@ export default function CASSwapInline({
         const minPolOut = (polExpected * BigInt('99')) / BigInt('100');
 
         try {
-          await swap.sellCASForPOL.staticCall(casAmount, minPolOut, deadline, { from: account });
+          await swap.sellCASForPOL.staticCall(casAmount, minPolOut, deadline);
         } catch (simErr) {
-          throw new Error(simErr.reason || simErr.shortMessage || 'A transação seria revertida. Verifique seu saldo de CAS.');
+          throw simErr;
         }
 
         const tx = await swap.sellCASForPOL(casAmount, minPolOut, deadline, gasOverrides);
@@ -283,9 +399,9 @@ export default function CASSwapInline({
         }
 
         try {
-          await swap.buyCASWithUSDC.staticCall(usdcAmount, minCasOut, deadline, { from: account });
+          await swap.buyCASWithUSDC.staticCall(usdcAmount, minCasOut, deadline);
         } catch (simErr) {
-          throw new Error(simErr.reason || simErr.shortMessage || 'A transação seria revertida. Verifique seu saldo de USDC.');
+          throw simErr;
         }
 
         const tx = await swap.buyCASWithUSDC(usdcAmount, minCasOut, deadline, gasOverrides);
@@ -303,9 +419,9 @@ export default function CASSwapInline({
         const minUsdcOut = (usdcExpected * BigInt('99')) / BigInt('100');
 
         try {
-          await swap.sellCASForUSDC.staticCall(casAmount, minUsdcOut, deadline, { from: account });
+          await swap.sellCASForUSDC.staticCall(casAmount, minUsdcOut, deadline);
         } catch (simErr) {
-          throw new Error(simErr.reason || simErr.shortMessage || 'A transação seria revertida. Verifique seu saldo de CAS.');
+          throw simErr;
         }
 
         const tx = await swap.sellCASForUSDC(casAmount, minUsdcOut, deadline, gasOverrides);
@@ -316,13 +432,8 @@ export default function CASSwapInline({
       loadCasBalance();
       loadSwapInfo();
     } catch (err) {
-      const msg = err.reason || err.shortMessage || err.message || 'Swap falhou';
-      if (msg.includes('missing revert data') || msg.includes('could not coalesce error')) {
-        setError('Erro de rede: não foi possível comunicar com o contrato. Verifique se a carteira está na Polygon Mainnet (chainId 137).');
-      } else {
-        setError(msg);
-      }
       console.error('[CASSwapInline] swap error:', err);
+      setError(formatUserError(err));
     }
     setLoading(false);
   }

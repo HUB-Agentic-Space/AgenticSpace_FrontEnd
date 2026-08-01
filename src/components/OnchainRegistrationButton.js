@@ -182,7 +182,7 @@ export default function OnchainRegistrationButton({
                   chainId: '0x' + config.chainId.toString(16),
                   chainName: config.chainId === 137 ? 'Polygon Mainnet' : `Chain ${config.chainId}`,
                   nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
-                  rpcUrls: [config.rpcUrl || 'https://polygon-rpc.com'],
+                  rpcUrls: [config.rpcUrl || process.env.NEXT_PUBLIC_RPC_URL || 'https://polygon.drpc.org'],
                   blockExplorerUrls: [config.explorerUrl || 'https://polygonscan.com'],
                 }],
               });

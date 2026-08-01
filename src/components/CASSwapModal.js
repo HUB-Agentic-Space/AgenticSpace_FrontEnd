@@ -216,7 +216,7 @@ export default function CASSwapModal({
             chainId: targetHex,
             chainName: chainId === 137 ? 'Polygon Mainnet' : `Chain ${chainId}`,
             nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
-            rpcUrls: ['https://polygon-rpc.com'],
+            rpcUrls: [process.env.NEXT_PUBLIC_RPC_URL || 'https://polygon.drpc.org'],
             blockExplorerUrls: [explorer],
           }],
         });

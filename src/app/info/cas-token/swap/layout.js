@@ -37,3 +37,7 @@ export const metadata = {
     creator: '@carlosdelfino',
   },
 };
+
+export default function CASTokenSwapLayout({ children }) {
+  return children;
+}

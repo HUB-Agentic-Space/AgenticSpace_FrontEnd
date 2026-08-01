@@ -12,7 +12,7 @@ import Link from 'next/link';
 import CASSwapInline from '@/components/CASSwapInline';
 import { useLocaleContext, useTranslations } from '@/lib/LocaleProvider';
 import {
-  CAS_TOKEN_ADDRESS, CASSWAP_ADDRESS, DIAMOND_ADDRESS, USDC_ADDRESS,
+  CAS_TOKEN_ADDRESS, DIAMOND_ADDRESS, USDC_ADDRESS,
   EXPLORER_BASE, POLYGON_CHAIN_ID,
 } from '@/lib/cas-token-config';
 

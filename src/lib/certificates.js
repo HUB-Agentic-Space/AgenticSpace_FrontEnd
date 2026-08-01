@@ -57,7 +57,7 @@ const FALLBACK_CAS_ADDRESS =
   process.env.NEXT_PUBLIC_CAS_TOKEN_ADDRESS || '0x5151A34EaC7bA08cd6B540b32cD30316218A2287';
 const FALLBACK_SWAP_ADDRESS =
   process.env.NEXT_PUBLIC_CAS_SWAP_ADDRESS || '0x9399878Ce33EA9D4859ab708a111fB3f274BACF4';
-const FALLBACK_RPC = process.env.NEXT_PUBLIC_CERTIFICATE_RPC_URL || 'https://polygon-rpc.com';
+const FALLBACK_RPC = process.env.NEXT_PUBLIC_CERTIFICATE_RPC_URL || process.env.NEXT_PUBLIC_RPC_URL || 'https://polygon.drpc.org';
 const FALLBACK_EXPLORER = process.env.NEXT_PUBLIC_CERTIFICATE_EXPLORER_URL || 'https://polygonscan.com';
 const FALLBACK_SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL || 'https://agenticspace.rapport.tec.br';

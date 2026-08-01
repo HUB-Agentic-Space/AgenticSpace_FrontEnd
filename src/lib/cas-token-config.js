@@ -8,7 +8,7 @@
  */
 
 export const POLYGON_CHAIN_ID = 137;
-export const POLYGON_RPC = 'https://polygon-rpc.com';
+export const POLYGON_RPC = process.env.NEXT_PUBLIC_RPC_URL || process.env.NEXT_PUBLIC_CERTIFICATE_RPC_URL || 'https://polygon.drpc.org';
 
 export const CAS_TOKEN_ADDRESS = '0x5151A34EaC7bA08cd6B540b32cD30316218A2287';
 export const CASSWAP_ADDRESS = '0x9399878Ce33EA9D4859ab708a111fB3f274BACF4';

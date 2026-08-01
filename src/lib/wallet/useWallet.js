@@ -236,7 +236,7 @@ export function useWallet(opts = {}) {
             chainId: targetHex,
             chainName: targetChainId === 137 ? 'Polygon Mainnet' : `Chain ${targetChainId}`,
             nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
-            rpcUrls: ['https://polygon-rpc.com'],
+            rpcUrls: [process.env.NEXT_PUBLIC_RPC_URL || 'https://polygon.drpc.org'],
             blockExplorerUrls: ['https://polygonscan.com'],
           }],
         });
