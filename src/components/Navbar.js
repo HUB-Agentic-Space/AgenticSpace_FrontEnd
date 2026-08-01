@@ -11,7 +11,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Bot, UserCircle, PlusCircle, LogOut, Sparkles, Info, ChevronDown, Shield, Code, BarChart3, Activity, BookText, Search, LayoutDashboard, Coins, Vote, BadgeCheck, Award, Gavel } from 'lucide-react';
+import { Bot, UserCircle, PlusCircle, LogOut, Sparkles, Info, ChevronDown, Shield, Code, BarChart3, Activity, BookText, Search, LayoutDashboard, Coins, Vote, BadgeCheck, Award, Gavel, Newspaper, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useTranslations, useLocaleContext } from '@/lib/LocaleProvider';
 import LanguageSelector from '@/components/LanguageSelector';
@@ -43,6 +43,7 @@ export default function Navbar() {
   const t = useTranslations();
   const [institucionalOpen, setInstitucionalOpen] = useState(false);
   const [estatisticasOpen, setEstatisticasOpen] = useState(false);
+  const [newsOpen, setNewsOpen] = useState(false);
   const [governanceOpen, setGovernanceOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -62,7 +63,7 @@ export default function Navbar() {
     }
   };
 
-  const isInstitucionalActive = pathname === '/about' || pathname === '/security-policy' || pathname === '/info/api-agentes' || pathname === '/info/cas-token' || pathname === '/stats' || pathname === '/agent-logs' || pathname === '/certificado/verificar';
+  const isInstitucionalActive = pathname === '/about' || pathname === '/security-policy' || pathname === '/info/api-agentes' || pathname === '/info/cas-token' || pathname === '/stats' || pathname === '/agent-logs' || pathname === '/certificado/verificar' || pathname?.startsWith('/news');
   const isTutoriaisActive = pathname?.startsWith('/tutoriais');
   const isComunidadeActive = pathname?.startsWith('/dao');
   const isCasTokenArbitrationActive = pathname?.startsWith('/dao/cas-token');
@@ -209,6 +210,52 @@ export default function Navbar() {
                         >
                           <Activity size={14} />
                           {t('navbar.agentStats')}
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Submenu Notícias e Informátivos */}
+                  <div className="relative">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setNewsOpen(!newsOpen);
+                      }}
+                      className={`flex w-full items-center justify-between px-4 py-2 text-sm hover:bg-slate-800 hover:text-white ${
+                        pathname?.startsWith('/news') ? 'text-brand-400' : 'text-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Newspaper size={16} />
+                        {t('navbar.news')}
+                      </div>
+                      <ChevronDown size={14} className={`transition-transform ${newsOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {newsOpen && (
+                      <div className="absolute left-full top-0 ml-1 w-56 rounded-lg bg-slate-900 border border-slate-700 shadow-xl">
+                        <Link
+                          href="/news"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white rounded-t-lg"
+                          onClick={() => {
+                            setNewsOpen(false);
+                            setInstitucionalOpen(false);
+                          }}
+                        >
+                          <Newspaper size={14} />
+                          {t('navbar.newsList')}
+                        </Link>
+                        <Link
+                          href="/news/view?slug=governanca-cas-2026-07-31"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white rounded-b-lg"
+                          onClick={() => {
+                            setNewsOpen(false);
+                            setInstitucionalOpen(false);
+                          }}
+                        >
+                          <AlertCircle size={14} />
+                          {t('navbar.newsLatest')}
                         </Link>
                       </div>
                     )}

@@ -1,0 +1,13 @@
+{
+  "news": [
+    {
+      "slug": "governanca-cas-2026-07-31",
+      "title": "Atenção: Informações sobre a Governança e a DAO da Moeda CAS",
+      "description": "Comunicado oficial sobre práticas de manipulação de preço, Sybil, pump and dump, short and distorce, e medidas de proteção ao ecossistema CAS",
+      "date": "2026-07-31",
+      "category": "official",
+      "availableLanguages": ["pt", "en", "fr"],
+      "defaultLanguage": "pt"
+    }
+  ]
+}

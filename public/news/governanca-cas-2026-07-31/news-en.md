@@ -1,0 +1,39 @@
+---
+lang: en
+title: "Attention: Information about CAS Token Governance and DAO"
+description: "Official statement on price manipulation, Sybil, pump and dump, short and distorce practices, and measures to protect the CAS ecosystem"
+date: "2026-07-31"
+category: "official"
+---
+
+# ⚠️ ATTENTION: INFORMATION ABOUT CAS TOKEN GOVERNANCE AND DAO
+
+Since the founding of the CAS token on **July 14, 2026** and the beginning of its distribution, we have carefully monitored movements within the ecosystem, always respecting the privacy of participants, applicable legislation, and the principles of the General Data Protection Law (LGPD). During the past week, patterns of operations were identified that may deliberately contribute to artificially maintaining the token price at reduced levels, harming the community, the project's development, and the holders themselves. Even when certain operations generate small immediate gains, these amounts may not offset the costs of processing, energy, network fees, time spent, and especially the potential collective damage caused to CAS sustainability.
+
+The initial analyses identified three wallets with patterns consistent with **pump and dump** practices, as well as two cases later classified as false positives of coordinated operations. Signs of **short and distorce** practices were also observed, in which deliberate sell operations followed by repurchases at artificially reduced levels aim to distort price formation and generate profits at the expense of the token's temporary devaluation. Additionally, signals were identified that require attention regarding possible **Sybil** practices, in which the same person or group uses multiple wallets to simulate independent users, influence decisions, or manipulate ecosystem movements.
+
+It is important to emphasize that CAS was not created as a token primarily aimed at trading or short-term speculation. Its main purpose is to serve as a utility token and an instrument to sustain the infrastructure of the Agentic Space project. Repetitive speculative operations, especially those carried out with the objective of artificially manipulating its price — whether through pump and dump, short and distorce, or other tactics — do not contribute to the token's development or to strengthening the community.
+
+After a more detailed analysis, we concluded that the amounts involved in the suspicious operations have been, so far, very small. Although they may produce negative effects on the perception and price of the token, conducting an arbitration vote through the DAO would entail technical and operational costs exceeding the amounts involved. For this reason, the initially planned vote will not take place at this time.
+
+With this decision, we are granting a longer period for all participants to analyze the new boundaries that will constitute the DAO of Rapport Tecnologia e Inovação, which encompasses CAS and the entire Agentic Space ecosystem. The ecosystem governance will be structured in two complementary instances: the **General DAO**, formed by the AgentDAO and the CommunityDAO, is the space to propose improvements to the CAS Ecosystem DAO and to the CAS DAO itself, debating evolution, governance changes, and enhancements; and the **CAS DAO**, constituted by the ArbitrationFacet, which aims to vote on protective actions against those who persist in promoting bad practices against the token and the CAS economy, deliberating on suspensions, freezes, and sanctions. All participants will be able to analyze and contribute to this structure before the next action, ensuring that governance is built in a transparent and participatory manner.
+
+However, if similar practices continue or if movements deliberately aimed at market manipulation are identified — including short and distorce strategies — the involved wallets may be preventively suspended, in accordance with the technical, contractual, and governance rules of the CAS ecosystem. Depending on the severity, recurrence, and features available in the smart contracts, the respective balances may remain locked while the case is analyzed.
+
+A company does not function like a political or governmental system. Even when it uses decentralized mechanisms, DAOs, or principles inspired by libertarian economic models, it remains responsible for protecting its assets, its infrastructure, its investors, its clients, and the continuity of its projects. Participating in the CAS ecosystem is an opportunity, but this participation does not grant authorization to deliberately harm the token, the company, or other community members.
+
+The rules need to be transparent, accessible, and applied consistently. Our goal is to preserve the legitimate interests of Rapport Tecnologia e Inovação, its investors, and the people who believe in the proposal, allowing everyone to participate and pursue results in a healthy, responsible, and sustainable manner.
+
+Since the beginning of the airdrop, we informed that its purpose was to expand CAS circulation, strengthen the community, and contribute to the token's market consolidation. We have been working intensively to achieve this goal and have already observed important progress. However, we will not allow individual practices to deliberately act against the collective effort made so far.
+
+Regarding liquidity, the pools will not be fully replenished immediately. However, an equivalent contribution model has been authorized: for every **R$ 1.00** contributed by holders or third parties to the pools, Rapport may add another **R$ 1.00**, totaling **R$ 2.00** in new liquidity. Rapport's participation will be limited to **R$ 1,000.00 per month** and a maximum of **R$ 20,000.00 over the next six months**, subject to financial availability, agreement conditions, and project-defined criteria.
+
+To confirm the contribution, it must be made directly to Rapport's official account ([rapporttec.eth](https://app.ens.domains/rapporttec.eth/)), and can be made in **CAS, POL, or USDC**. Rapport will perform the conversion at the current token price on the day of deposit, deducting GAS costs and **15% per transaction** for operational costs, maintaining the day's ratio to minimize loss as much as possible. Contributions will not be publicly disclosed to prevent token manipulation.
+
+All participants are responsible for their decisions and must understand that blockchain operations can produce permanent consequences. Actions related to **Sybil**, **pump and dump**, **short and distorce**, coordinated operations, deliberate price manipulation, or atypical large-volume movements may result in the preventive suspension of the involved wallets, without the need for a prior DAO vote in situations considered urgent for the protection of the ecosystem.
+
+When technically possible and necessary, token functionalities may be temporarily paused during the analysis of an incident, and suspected addresses may have their operations restricted. No participant will be publicly exposed, and information will be handled in accordance with the LGPD and other applicable regulations. However, automated on-chain analysis tools may identify relationships between wallets, movement patterns, and possible recurrences.
+
+At this time, we do not intend to file reports with blockchain explorers, Polygon network security platforms, or other external entities, as our main goal is to correct behaviors and protect the community, not to harm individuals. However, if recurrences, proven connections between wallets, or continued manipulation actions are identified, Rapport Tecnologia e Inovação may formally register and communicate the facts to the competent platforms and authorities.
+
+Our commitment remains the same: to act with **transparency, responsibility, security, and respect for the community**, protecting the CAS token, its holders, and the sustainability of the entire ecosystem. 🔐🛡️📈

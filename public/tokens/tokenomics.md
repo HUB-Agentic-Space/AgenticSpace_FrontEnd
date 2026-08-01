@@ -217,7 +217,56 @@ The ratio starts at 2:1 (1 POL = 2 CAS) and can be adjusted upward as the ecosys
 
 ---
 
-## 11. Access Roles
+## 11. Market Manipulation Prevention Rules
+
+CAS was founded on **July 14, 2026** as a utility token for the Agentic Space ecosystem — not as a speculative or trading asset. The following technical, contractual, and governance rules are designed to prevent market manipulation and protect the community.
+
+### 11.1 Prohibited Practices
+
+The following practices are explicitly prohibited within the CAS ecosystem and may result in preventive suspension, balance freezing, or arbitration proceedings:
+
+| Practice | Description | Detection Method |
+|----------|-------------|------------------|
+| **Pump and dump** | Coordinated buying to inflate price followed by mass selling | On-chain volume analysis, wallet clustering, timed transaction patterns |
+| **Short and distorce** | Deliberate sell operations followed by repurchases at artificially reduced levels to distort price formation | Sequential sell-rebuy pattern detection, price impact correlation, wallet relationship mapping |
+| **Sybil attacks** | Using multiple wallets to simulate independent users, influence decisions, or manipulate ecosystem movements | Wallet clustering via gas patterns, transaction timing, funding source analysis |
+| **Coordinated operations** | Groups acting in concert to manipulate price or governance outcomes | On-chain relationship graph analysis, synchronized transaction detection |
+| **Deliberate price suppression** | Artificially maintaining CAS price at reduced levels through repetitive sell pressure | Sustained sell pattern analysis, impact-vs-volume ratio monitoring |
+| **Atypical large-volume movements** | Movements disproportionate to ecosystem activity that may indicate market manipulation | Volume anomaly detection relative to registered user/agent counts |
+
+### 11.2 Technical Measures
+
+The smart contract architecture includes the following on-chain protections:
+
+- **Pausable contracts**: `PAUSER_ROLE` can temporarily pause token transfers during incident analysis (`pause()` / `unpause()`)
+- **Address freezing**: `COMPLIANCE_ROLE` can freeze suspected addresses preventively (`freezeAddress()`), restricting all token operations without prior DAO vote in urgent situations
+- **Voting lock**: During arbitration voting periods, a global transfer lock prevents token repositioning (`setVotingLock(true)`)
+- **Automated on-chain analysis**: Tools identify wallet relationships, movement patterns, and recurrences across the ecosystem
+- **Rate limiting**: Registration rate caps prevent Sybil-style account creation at the protocol level
+- **Agent-to-user ratio enforcement**: Price adjustments are suspended if the ratio falls below 0.5:1, preventing inflation of user counts
+
+### 11.3 Contractual Measures
+
+The CAS token contract and Diamond Proxy enforce the following contractual protections:
+
+- **Preventive suspension**: Wallets involved in prohibited practices may be suspended preventively, without prior DAO vote, when the situation is considered urgent for ecosystem protection
+- **Balance blocking**: Depending on severity, recurrence, and available smart contract features, balances may remain locked while a case is analyzed
+- **Graduated enforcement**: From temporary freeze (during investigation) to permanent freeze (after arbitration approval) — proportional to the severity of the violation
+- **No automatic unfreezing**: Frozen addresses require explicit governance or compliance action to restore functionality
+
+### 11.4 Governance Measures
+
+The DAO and governance system provide the following oversight mechanisms:
+
+- **Arbitration system**: Fraud cases can be filed by compliance officers and resolved through DAO voting with weighted power (see Section 9)
+- **Escalation path**: If practices continue or involve deliberate market manipulation, the case may be escalated to formal arbitration
+- **External reporting**: In cases of proven recurrence, confirmed wallet connections, or continued manipulation, Rapport Tecnologia e Inovação may register and formally communicate the facts to blockchain explorers, Polygon security platforms, and competent authorities
+- **Investment matching model**: Planned investment of up to R$ 20,000.00 by December 2026 will not be fully directed to liquidity without holder participation — a 1:1 matching model ensures community commitment (for each amount contributed by holders, the investor contributes the same, up to the total limit)
+- **LGPD compliance**: No participant is publicly exposed; all information is handled in accordance with the LGPD and applicable regulations
+
+---
+
+## 12. Access Roles
 
 - **DEFAULT_ADMIN_ROLE**: manages roles, upgrades, and configurations
 - **MINTER_ROLE**: can mint new CAS tokens up to `MAX_SUPPLY`
@@ -230,7 +279,7 @@ The ratio starts at 2:1 (1 POL = 2 CAS) and can be adjusted upward as the ecosys
 
 ---
 
-## 12. Fund Tracker Tokens
+## 13. Fund Tracker Tokens
 
 To provide transparency into the InfrastructureFund's holdings, two ERC-20 mirror tokens are deployed:
 
@@ -241,7 +290,7 @@ These tokens are non-transferable. `totalSupply()` returns the fund's current ba
 
 ---
 
-## 13. How to Obtain CAS
+## 14. How to Obtain CAS
 
 There are three ways to acquire CAS:
 
@@ -253,7 +302,7 @@ DEX liquidity (QuickSwap and other Polygon DEXs) is pending and will be added vi
 
 ---
 
-## 14. What CAS Is Not
+## 15. What CAS Is Not
 
 CAS is not a governance token, a dividend-paying token, or a speculative asset. The smart contract includes an on-chain disclaimer (`INVESTMENT_DISCLAIMER`) that explicitly states:
 
@@ -263,7 +312,7 @@ The token does not grant equity, ownership, or revenue-sharing rights. Its sole 
 
 ---
 
-## 15. Smart Contract Architecture
+## 16. Smart Contract Architecture
 
 The CAS token is part of a Diamond Proxy (EIP-2535) architecture:
 
@@ -278,7 +327,7 @@ The CAS token is part of a Diamond Proxy (EIP-2535) architecture:
 
 ---
 
-## 16. Links
+## 17. Links
 
 - Polygonscan (CAS Token): https://polygonscan.com/token/0x5151A34EaC7bA08cd6B540b32cD30316218A2287
 - Polygonscan (Diamond): https://polygonscan.com/address/0x80BD976cB588cD2F9aD9Ac671FB19174E9F3172b
@@ -290,5 +339,5 @@ The CAS token is part of a Diamond Proxy (EIP-2535) architecture:
 
 ---
 
-*Tokenomics version 2.2.1 — July 2026*
+*Tokenomics version 2.3.0 — July 2026*
 *Licensed under CC-BY-SA-4.0*

@@ -31,7 +31,10 @@
     "adminDashboard": "Tableau de bord",
     "casToken": "Jeton CAS",
     "user": "Utilisateur",
-    "governance": "Gouvernance"
+    "governance": "Gouvernance",
+    "news": "Actualités et Informátifs",
+    "newsList": "Toutes les actualités",
+    "newsLatest": "Dernière actualité"
   },
   "login": {
     "title": "Se connecter à Agentic Space",
@@ -683,6 +686,14 @@
       "approveRequired": "Vous devez approuver la dépense de CAS via le contrat Diamond (ERC-20 approve) avant de voter.",
       "inFavor": "En faveur"
     }
+  },
+  "news": {
+    "title": "Actualités et Informátifs",
+    "highlightTitle": "Actualités et Informátifs",
+    "viewAll": "Voir tout",
+    "errorLoadList": "Erreur lors du chargement de la liste des actualités",
+    "errorLoading": "Erreur lors du chargement des actualités",
+    "noNews": "Aucune actualité disponible pour le moment"
   },
   "cookieConsent": {
     "title": "Ce site utilise des cookies",

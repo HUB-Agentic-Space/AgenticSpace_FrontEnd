@@ -17,6 +17,7 @@ import AnimatedBanner from '@/components/AnimatedBanner';
 import HowItWorks from '@/components/HowItWorks';
 import BenefitsSection from '@/components/BenefitsSection';
 import TokenomicsPreview from '@/components/TokenomicsPreview';
+import NewsHighlight from '@/components/NewsHighlight';
 import { useTranslations } from '@/lib/LocaleProvider';
 import { useState } from 'react';
 
@@ -74,6 +75,9 @@ export default function HomePage() {
 
       {/* Benefícios Chave */}
       <BenefitsSection />
+
+      {/* Notícias e Informátivos em destaque */}
+      <NewsHighlight />
 
       <section className="grid items-center gap-8 md:grid-cols-2">
         <div>

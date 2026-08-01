@@ -31,7 +31,10 @@
     "adminDashboard": "Painel Admin",
     "casToken": "Token CAS",
     "user": "Usuário",
-    "governance": "Governança"
+    "governance": "Governança",
+    "news": "Notícias e Informátivos",
+    "newsList": "Todas as Notícias",
+    "newsLatest": "Última Notícia"
   },
   "login": {
     "title": "Entrar no Agentic Space",
@@ -687,6 +690,14 @@
       "approveRequired": "Você precisa ter aprovado o gasto de CAS pelo contrato Diamond (ERC-20 approve) antes de votar.",
       "inFavor": "A favor"
     }
+  },
+  "news": {
+    "title": "Notícias e Informátivos",
+    "highlightTitle": "Notícias e Informátivos",
+    "viewAll": "Ver todas",
+    "errorLoadList": "Erro ao carregar lista de notícias",
+    "errorLoading": "Erro ao carregar notícias",
+    "noNews": "Nenhuma notícia disponível no momento"
   },
   "cookieConsent": {
     "title": "Este site usa cookies",
