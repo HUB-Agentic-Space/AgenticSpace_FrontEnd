@@ -5,6 +5,7 @@ import {
   CERTIFICATE_SVG_METADATA_ID,
   encodeCertificateManifest,
 } from '@/lib/certificate-pdf';
+import { markdownToSvgElements } from '../../lib/markdown-utils';
 
 const RAPPORT_LOGO = '/images/logo-rapport-2026.png';
 const AGENTIC_SPACE_LOGO = '/images/logo 2025 - whatsapp.svg';
@@ -34,6 +35,75 @@ function fitName(name) {
   return 42;
 }
 
+// Margem interna util do certificado: as bordas decorativas ficam em x=69 e
+// x=1531, portanto o texto precisa caber dentro dessa faixa.
+const TITLE_MAX_WIDTH = 1340;
+const TITLE_MAX_BLOCK_HEIGHT = 122;
+const TITLE_BASE_FONT_SIZE = 58;
+const TITLE_MIN_FONT_SIZE = 26;
+const BODY_MAX_WIDTH = 1240;
+const BODY_FONT_SIZE = 24;
+const BODY_LINE_HEIGHT = 34;
+
+/**
+ * Aproxima a largura renderizada de um texto. O SVG e montado sem acesso as
+ * metricas reais da fonte, entao usamos o fator medio de largura do glifo.
+ */
+function measureText(text, fontSize, { widthFactor = 0.58, letterSpacing = 0 } = {}) {
+  const chars = Array.from(String(text ?? ''));
+  return chars.length * (fontSize * widthFactor + letterSpacing);
+}
+
+function wrapText(text, { maxWidth, fontSize, widthFactor, letterSpacing = 0 }) {
+  const words = String(text ?? '').split(/\s+/).filter(Boolean);
+  const lines = [];
+  let current = '';
+
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (current && measureText(candidate, fontSize, { widthFactor, letterSpacing }) > maxWidth) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = candidate;
+    }
+  }
+  if (current) lines.push(current);
+
+  return lines.length > 0 ? lines : [''];
+}
+
+/**
+ * Quebra o titulo em linhas e reduz proporcionalmente a fonte ate o bloco
+ * caber na area interna reservada entre o subtitulo e o "Certificamos que".
+ */
+function fitTitle(text) {
+  for (let fontSize = TITLE_BASE_FONT_SIZE; fontSize >= TITLE_MIN_FONT_SIZE; fontSize -= 2) {
+    const lines = wrapText(text, {
+      maxWidth: TITLE_MAX_WIDTH,
+      fontSize,
+      widthFactor: 0.64,
+      letterSpacing: 2,
+    });
+    const lineHeight = Math.round(fontSize * 1.12);
+    if (lines.length * lineHeight <= TITLE_MAX_BLOCK_HEIGHT) {
+      return { lines, fontSize, lineHeight };
+    }
+  }
+
+  const fontSize = TITLE_MIN_FONT_SIZE;
+  return {
+    lines: wrapText(text, {
+      maxWidth: TITLE_MAX_WIDTH,
+      fontSize,
+      widthFactor: 0.64,
+      letterSpacing: 2,
+    }),
+    fontSize,
+    lineHeight: Math.round(fontSize * 1.12),
+  };
+}
+
 /**
  * Arte oficial A4 paisagem do certificado. Todo o conteudo documental fica
  * dentro do SVG; os logos sao incorporados ao baixar o arquivo/PDF.
@@ -50,6 +120,16 @@ export default function CertificateSvg({ manifest, draft = false, className = ''
   const metadataPayload = manifest
     ? `${CERTIFICATE_PDF_MARKER}${encodeCertificateManifest(manifest)}`
     : '';
+
+  const title = fitTitle(`CERTIFICADO DE ${phaseTitle.toLocaleUpperCase('pt-BR')}`);
+  const titleStartY = 383 - ((title.lines.length - 1) * title.lineHeight) / 2;
+
+  const bodyLines = wrapText(
+    `integra a fase ${phaseTitle} e demonstrou espírito empreendedor e dedicação ao voluntariado, `
+    + 'colaborando ativamente, com sua participação, para o crescimento do ecossistema Agentic Space.',
+    { maxWidth: BODY_MAX_WIDTH, fontSize: BODY_FONT_SIZE, widthFactor: 0.5 }
+  );
+  const bodyStartY = 654 - ((bodyLines.length - 1) * BODY_LINE_HEIGHT) / 2;
 
   return (
     <svg
@@ -127,9 +207,21 @@ export default function CertificateSvg({ manifest, draft = false, className = ''
       <text x="800" y="305" textAnchor="middle" fill="#b87408" fontFamily="Arial, Helvetica, sans-serif" fontWeight="700" fontSize="24" letterSpacing="7">
         RECONHECIMENTO DIGITAL • ERC-721 + ERC-6551
       </text>
-      <text x="800" y="383" textAnchor="middle" fill="#00011e" fontFamily="Georgia, 'Times New Roman', serif" fontWeight="700" fontSize="58" letterSpacing="2">
-        CERTIFICADO DE {phaseTitle.toLocaleUpperCase('pt-BR')}
-      </text>
+      {title.lines.map((line, index) => (
+        <text
+          key={`title-${index}`}
+          x="800"
+          y={titleStartY + (index * title.lineHeight)}
+          textAnchor="middle"
+          fill="#00011e"
+          fontFamily="Georgia, 'Times New Roman', serif"
+          fontWeight="700"
+          fontSize={title.fontSize}
+          letterSpacing="2"
+        >
+          {line}
+        </text>
+      ))}
 
       <text x="800" y="454" textAnchor="middle" fill="#475569" fontFamily="Arial, Helvetica, sans-serif" fontSize="23">
         Certificamos que
@@ -150,22 +242,47 @@ export default function CertificateSvg({ manifest, draft = false, className = ''
       <circle cx="315" cy="576" r="5" fill="#d89a23" />
       <circle cx="1285" cy="576" r="5" fill="#d89a23" />
 
-      <text x="800" y="634" textAnchor="middle" fill="#334155" fontFamily="Arial, Helvetica, sans-serif" fontSize="24">
-        integra a fase {phaseTitle} e demonstrou espírito empreendedor e dedicação ao voluntariado,
-      </text>
-      <text x="800" y="674" textAnchor="middle" fill="#334155" fontFamily="Arial, Helvetica, sans-serif" fontSize="24">
-        colaborando ativamente, com sua participação, para o crescimento do ecossistema Agentic Space.
-      </text>
+      {bodyLines.map((line, index) => (
+        <text
+          key={`body-${index}`}
+          x="800"
+          y={bodyStartY + (index * BODY_LINE_HEIGHT)}
+          textAnchor="middle"
+          fill="#334155"
+          fontFamily="Arial, Helvetica, sans-serif"
+          fontSize={BODY_FONT_SIZE}
+        >
+          {line}
+        </text>
+      ))}
       <text x="800" y="726" textAnchor="middle" fill="#00011e" fontFamily="Arial, Helvetica, sans-serif" fontSize="22" fontWeight="700">
         Raport Tecnologia Inova Simples • CNPJ: 67.904.299/0001-80
       </text>
 
       {certificate.skillsDescription && (
         <g transform="translate(300 740)">
-          <rect width="1000" height="28" rx="6" fill="#f8f1df" fillOpacity="0.6" />
-          <text x="500" y="19" textAnchor="middle" fill="#b87408" fontFamily="Arial, Helvetica, sans-serif" fontSize="16" fontWeight="600">
-            Habilidades: {certificate.skillsDescription}
+          <rect width="1000" height="60" rx="6" fill="#f8f1df" fillOpacity="0.6" />
+          <text x="500" y="19" textAnchor="middle" fill="#b87408" fontFamily="Arial, Helvetica, sans-serif" fontSize="14" fontWeight="600">
+            Habilidades:
           </text>
+          {markdownToSvgElements(certificate.skillsDescription, {
+            startX: 20,
+            startY: 35,
+            lineHeight: 16,
+            fontSize: 12,
+          }).map((el, idx) => (
+            <text
+              key={idx}
+              x={el.x}
+              y={el.y}
+              fill="#712d23"
+              fontFamily="Arial, Helvetica, sans-serif"
+              fontSize={el.fontSize}
+              fontWeight={el.fontWeight}
+            >
+              {el.text}
+            </text>
+          ))}
         </g>
       )}
 

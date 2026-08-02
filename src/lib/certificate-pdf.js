@@ -13,6 +13,8 @@ export const CERTIFICATE_PDF_MARKER = 'RAPPORT_CERTIFICATE_V1:';
 export const CERTIFICATE_SVG_METADATA_ID = 'rapport-certificate-manifest';
 export const MAX_CERTIFICATE_FILE_BYTES = 15 * 1024 * 1024;
 
+import { markdownToPlainText } from './markdown-utils';
+
 const PDF_GUIDANCE_LINKS = [
   {
     label: 'VALIDAR do ITI',
@@ -178,22 +180,32 @@ function drawWrappedText(page, text, {
   lineHeight,
   color,
 }) {
-  const words = String(text).split(/\s+/);
+  const paragraphs = String(text).split('\n');
   const lines = [];
   let currentLine = '';
 
-  for (const word of words) {
-    const candidate = currentLine ? `${currentLine} ${word}` : word;
-    if (currentLine && font.widthOfTextAtSize(candidate, size) > maxWidth) {
-      lines.push(currentLine);
-      currentLine = word;
-    } else {
-      currentLine = candidate;
+  for (const para of paragraphs) {
+    if (para.trim() === '') {
+      if (currentLine) { lines.push(currentLine); currentLine = ''; }
+      lines.push('');
+      continue;
     }
+    const words = para.split(/\s+/);
+    for (const word of words) {
+      const candidate = currentLine ? `${currentLine} ${word}` : word;
+      if (currentLine && font.widthOfTextAtSize(candidate, size) > maxWidth) {
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        currentLine = candidate;
+      }
+    }
+    if (currentLine) { lines.push(currentLine); currentLine = ''; }
   }
   if (currentLine) lines.push(currentLine);
 
   lines.forEach((line, index) => {
+    if (line === '') return;
     page.drawText(line, {
       x,
       y: y - (index * lineHeight),
@@ -293,7 +305,7 @@ async function addSignatureGuidancePage(pdf, pdfLib, manifest) {
       color: gold,
     });
 
-    drawWrappedText(page, skillsText, {
+    drawWrappedText(page, markdownToPlainText(skillsText), {
       x: margin + 20,
       y: skillsBoxY - 52,
       maxWidth: contentWidth - 40,

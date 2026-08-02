@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import RequireAuth from '@/components/RequireAuth';
 import Spinner from '@/components/Spinner';
+import MarkdownContent from '@/components/MarkdownContent';
 import CASSwapModal from '@/components/CASSwapModal';
 import WalletErrorModal from '@/components/WalletErrorModal';
 import CertificateSvg from '@/components/certificates/CertificateSvg';
@@ -316,10 +317,16 @@ function CertificateContent() {
     });
   }, [certificate, certificatePhase, config, lastTxHash, nameMatches, phase, profileName]);
 
-  const previewManifest = useMemo(
-    () => manifest || buildDraftManifest({ config, phase, recipientName: profileName, recipient: account }),
-    [account, config, manifest, phase, profileName]
-  );
+  // A arte precisa refletir sempre o item selecionado: usa o manifesto emitido
+  // apenas quando ele corresponde a fase/desafio escolhido, caso contrario cai
+  // para a previa (draft) daquela fase.
+  const previewManifest = useMemo(() => {
+    const manifestPhaseId = manifest?.certificate?.phaseId;
+    const manifestMatchesSelection = !selectedChallengeId
+      || String(manifestPhaseId) === String(selectedChallengeId);
+    if (manifest && manifestMatchesSelection) return manifest;
+    return buildDraftManifest({ config, phase, recipientName: profileName, recipient: account });
+  }, [account, config, manifest, phase, profileName, selectedChallengeId]);
 
   const requiredCas = phase?.minCasDeposit || DEFAULT_PHASE.minCasDeposit;
   const hasEnoughCas = BigInt(casBalance || 0) >= BigInt(requiredCas || 0);
@@ -340,6 +347,22 @@ function CertificateContent() {
   const isPending = selectedChallengeRequest?.status === 'pending';
   const isRejected = selectedChallengeRequest?.status === 'rejected';
   const needsApproval = Boolean(selectedChallengeId) && !isApproved;
+
+  const selectedChallenge = useMemo(() => {
+    if (!selectedChallengeId) return null;
+    return challenges.find(
+      (c) => String(c.onchainPhaseId || c.id) === String(selectedChallengeId),
+    ) || null;
+  }, [challenges, selectedChallengeId]);
+
+  // As habilidades e instrucoes orientam o candidato somente enquanto a emissao
+  // nao foi autorizada; depois disso o proprio certificado ja e a evidencia.
+  const showChallengeBriefing = Boolean(
+    selectedChallenge
+    && !isApproved
+    && selectedChallenge.hasCertificate !== true
+    && (selectedChallenge.skillsDescription || selectedChallenge.instructions)
+  );
 
   async function handleRequestCertificate() {
     if (!selectedChallengeId || !session?.jwt) return;
@@ -532,6 +555,11 @@ function CertificateContent() {
       setCertificatePhase(selected.phase);
       setCurrentCasBalance(selected.currentCasBalance);
       setLastTxHash(issuance.transaction?.txHash || '');
+      // Mantem a fase corrente e o desafio selecionado alinhados com a arte.
+      if (selected.phase?.id) {
+        setSelectedChallengeId(String(selected.phase.id));
+        setPhase(selected.phase);
+      }
     } catch (selectionError) {
       setError(walletError(selectionError));
     } finally {
@@ -710,6 +738,7 @@ function CertificateContent() {
                         active: ch.status === 'active' || ch.active === true,
                         minted: String(ch.minted || '0'),
                         skillsDescription: ch.skillsDescription || '',
+                        instructions: ch.instructions || '',
                         extraFeeTypeId: String(ch.extraFeeTypeId || '0'),
                         tbaRebateBps: Number(ch.tbaRebateBps || 0),
                       });
@@ -729,34 +758,17 @@ function CertificateContent() {
                     );
                   })}
                 </select>
-                {(() => {
-                  const ch = challenges.find(
-                    (c) => String(c.onchainPhaseId || c.id) === String(selectedChallengeId)
-                  );
-                  if (!ch) return null;
-                  return (
-                    <div className="mt-2 space-y-1">
-                      {ch.skillsDescription && (
-                        <p className="text-xs text-slate-400">
-                          <span className="text-slate-500">Habilidades:</span> {ch.skillsDescription}
-                        </p>
-                      )}
-                      {ch.instructions && (
-                        <p className="text-xs text-slate-400">
-                          <span className="text-slate-500">Instruções:</span> {ch.instructions}
-                        </p>
-                      )}
-                      {ch.prerequisitePhaseIds?.length > 0 && (
-                        <p className="text-xs text-amber-300">
-                          Requer: {ch.prerequisitePhaseIds.map((id) => {
-                            const prereq = challenges.find((c) => Number(c.onchainPhaseId) === id);
-                            return prereq?.name || `#${id}`;
-                          }).join(', ')}
-                        </p>
-                      )}
-                    </div>
-                  );
-                })()}
+                {selectedChallenge?.prerequisitePhaseIds?.length > 0 && (
+                  <p className="mt-2 text-xs text-amber-300">
+                    Requer: {selectedChallenge.prerequisitePhaseIds.map((id) => {
+                      const prereq = challenges.find((c) => Number(c.onchainPhaseId) === id);
+                      return prereq?.name || `#${id}`;
+                    }).join(', ')}
+                  </p>
+                )}
+                <p className="mt-2 text-xs text-slate-500">
+                  As habilidades e instruções do desafio aparecem abaixo da prévia do certificado.
+                </p>
               </div>
             )}
 
@@ -1009,6 +1021,51 @@ function CertificateContent() {
           <div id="certificate-print-target" ref={artworkRef} className="certificate-preview-shell">
             <CertificateSvg manifest={previewManifest} draft={!manifest} />
           </div>
+
+          {showChallengeBriefing && (
+            <div className="rounded-2xl border border-brand-500/20 bg-slate-950/60 p-5 sm:p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-brand-400">
+                    Desafio selecionado
+                  </p>
+                  <h3 className="mt-1 text-lg font-bold text-white">{selectedChallenge.name}</h3>
+                </div>
+                <span className="shrink-0 rounded-full bg-amber-500/15 px-3 py-1 text-xs font-semibold text-amber-300">
+                  {isPending ? 'Em análise' : isRejected ? 'Rejeitado' : 'Aguardando solicitação'}
+                </span>
+              </div>
+
+              <div className="mt-5 grid gap-6 lg:grid-cols-2">
+                {selectedChallenge.skillsDescription && (
+                  <section>
+                    <h4 className="flex items-center gap-2 text-sm font-semibold text-white">
+                      <Award size={16} className="text-brand-400" /> Habilidades adquiridas
+                    </h4>
+                    <MarkdownContent className="mt-3">
+                      {selectedChallenge.skillsDescription}
+                    </MarkdownContent>
+                  </section>
+                )}
+
+                {selectedChallenge.instructions && (
+                  <section>
+                    <h4 className="flex items-center gap-2 text-sm font-semibold text-white">
+                      <FileCheck2 size={16} className="text-blue-400" /> Instruções
+                    </h4>
+                    <MarkdownContent className="mt-3">
+                      {selectedChallenge.instructions}
+                    </MarkdownContent>
+                  </section>
+                )}
+              </div>
+
+              <p className="mt-5 border-t border-slate-800 pt-4 text-xs text-slate-500">
+                Estas orientações deixam de ser exibidas assim que a emissão do certificado for
+                autorizada.
+              </p>
+            </div>
+          )}
 
           {certificate && !nameMatches && (
             <div className="flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">

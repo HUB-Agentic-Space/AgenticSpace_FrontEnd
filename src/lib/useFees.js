@@ -30,6 +30,7 @@ import {
   FEES_CACHE_KEY,
   FEES_CACHE_TTL_MS,
 } from '@/lib/cas-token-config';
+import { fetchPhase } from '@/lib/certificates';
 
 /**
  * Formata um valor fiat usando Intl.NumberFormat.
@@ -283,7 +284,7 @@ export function useFees() {
         const currentPhaseId = certPhaseIdResult.value;
         if (currentPhaseId > 0n && certificateContract) {
           try {
-            const phaseData = await certificateContract.phases(currentPhaseId);
+            const phaseData = await fetchPhase(certificateContract, provider, currentPhaseId);
             certificatePhase = {
               id: currentPhaseId.toString(),
               name: phaseData.name,
@@ -291,7 +292,7 @@ export function useFees() {
               startsAt: phaseData.startsAt.toString(),
               endsAt: phaseData.endsAt.toString(),
               minted: phaseData.minted.toString(),
-              active: phaseData.active,
+              active: Number(phaseData.active) === 1,
               extraFeeTypeId: phaseData.extraFeeTypeId?.toString() || '0',
               tbaRebateBps: phaseData.tbaRebateBps != null ? Number(phaseData.tbaRebateBps) : 0,
             };

@@ -19,7 +19,7 @@ export const CERTIFICATE_ABI = [
   'function casToken() view returns (address)',
   'function certificatesByRecipientAndPhase(address recipient, uint256 phaseId) view returns (uint256)',
   'function nonces(address recipient) view returns (uint256)',
-  'function phases(uint256 phaseId) view returns (tuple(string name, bytes32 templateHash, uint256 minCasDeposit, uint256 startsAt, uint256 endsAt, uint256 minted, bool active, string skillsDescription, string instructions, uint256 extraFeeTypeId, uint256 tbaRebateBps))',
+  'function phases(uint256 phaseId) view returns (tuple(string name, bytes32 templateHash, uint256 minCasDeposit, uint256 startsAt, uint256 endsAt, uint256 minted, uint8 active, string skillsDescription, string instructions, uint256 extraFeeTypeId, uint256 tbaRebateBps))',
   'function phasePrerequisites(uint256 phaseId) view returns (uint256[])',
   'function certificates(uint256 tokenId) view returns (tuple(uint256 phaseId, address recipient, address tokenBoundAccount, bytes32 issuanceId, bytes32 nameHash, bytes32 metadataHash, uint256 casDeposited, uint256 issuedAt, bool revoked, bytes32 revocationReasonHash, uint256 revokedAt, bytes32 documentHash))',
   'function mintCertificate((bytes32 issuanceId, address recipient, bytes32 nameHash, uint256 phaseId, bytes32 metadataHash, uint256 casAmount, uint256 nonce, uint256 deadline) auth, address issuer, bytes signature) returns (uint256 tokenId, address tokenBoundAccount_)',
@@ -261,6 +261,30 @@ export function getDiamondCertificateContract(address, runner) {
   return new ethers.Contract(address, DIAMOND_CERTIFICATE_ABI, runner);
 }
 
+const PHASES_RETURN_TYPES = [
+  'string', 'bytes32', 'uint256', 'uint256', 'uint256', 'uint256',
+  'uint8', 'string', 'string', 'uint256', 'uint256',
+];
+
+export async function fetchPhase(contract, provider, phaseId) {
+  const data = contract.interface.encodeFunctionData('phases', [phaseId]);
+  const raw = await provider.call({ to: await contract.getAddress(), data });
+  const decoded = ethers.AbiCoder.defaultAbiCoder().decode(PHASES_RETURN_TYPES, raw);
+  return {
+    name: decoded[0],
+    templateHash: decoded[1],
+    minCasDeposit: decoded[2],
+    startsAt: decoded[3],
+    endsAt: decoded[4],
+    minted: decoded[5],
+    active: decoded[6],
+    skillsDescription: decoded[7],
+    instructions: decoded[8],
+    extraFeeTypeId: decoded[9],
+    tbaRebateBps: decoded[10],
+  };
+}
+
 export function phaseFromResult(result, phaseId) {
   return {
     id: String(phaseId),
@@ -270,7 +294,7 @@ export function phaseFromResult(result, phaseId) {
     startsAt: result.startsAt.toString(),
     endsAt: result.endsAt.toString(),
     minted: result.minted.toString(),
-    active: result.active,
+    active: Number(result.active) === 1,
     skillsDescription: result.skillsDescription || '',
     instructions: result.instructions || '',
     extraFeeTypeId: result.extraFeeTypeId?.toString() || '0',
@@ -304,7 +328,7 @@ export async function readCertificateContext(config, recipient) {
   const contract = getCertificateContract(config.certificateAddress, provider);
   const phaseId = await contract.currentPhaseId();
   const phase = phaseId > BigInt('0')
-    ? phaseFromResult(await contract.phases(phaseId), phaseId)
+    ? phaseFromResult(await fetchPhase(contract, provider, phaseId), phaseId)
     : null;
   let certificate = null;
   let currentCasBalance = '0';
@@ -345,7 +369,7 @@ export async function readCertificateByToken(config, tokenId) {
     merkleRootProof,
   };
   const phase = phaseFromResult(
-    await contract.phases(certificate.phaseId),
+    await fetchPhase(contract, provider, certificate.phaseId),
     certificate.phaseId
   );
   return {
@@ -497,7 +521,7 @@ export async function verifyCertificateManifest(manifest, suppliedConfig) {
     throw new Error('O token informado nao existe no contrato oficial.');
   }
   const record = certificateFromResult(rawRecord, tokenId);
-  const phase = phaseFromResult(await contract.phases(record.phaseId), record.phaseId);
+  const phase = phaseFromResult(await fetchPhase(contract, provider, record.phaseId), record.phaseId);
   const verification = {
     valid: !rawRecord.revoked,
     recipient: rawRecord.recipient,
@@ -528,7 +552,7 @@ export async function verifyCertificateReference({ chainId, contractAddress, tok
   const contract = getCertificateContract(config.certificateAddress, provider);
   const rawRecord = await contract.certificates(tokenId);
   const record = certificateFromResult(rawRecord, tokenId);
-  const phase = phaseFromResult(await contract.phases(record.phaseId), record.phaseId);
+  const phase = phaseFromResult(await fetchPhase(contract, provider, record.phaseId), record.phaseId);
   return {
     valid: !rawRecord.revoked,
     config,
