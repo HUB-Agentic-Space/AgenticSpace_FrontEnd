@@ -125,6 +125,7 @@ function CertificateContent() {
   const [accountsChecked, setAccountsChecked] = useState(false);
   const [challenges, setChallenges] = useState([]);
   const [selectedChallengeId, setSelectedChallengeId] = useState(null);
+  const [certificatePage, setCertificatePage] = useState('front');
   const [issuanceRequests, setIssuanceRequests] = useState([]);
 
   const loadCertificates = useCallback(async (activeConfig, recipient, jwt) => {
@@ -1019,7 +1020,32 @@ function CertificateContent() {
 
         <div className="min-w-0 space-y-5">
           <div id="certificate-print-target" ref={artworkRef} className="certificate-preview-shell">
-            <CertificateSvg manifest={previewManifest} draft={!manifest} />
+            <CertificateSvg manifest={previewManifest} draft={!manifest} page={certificatePage} />
+          </div>
+
+          <div className="flex items-center justify-center gap-4 py-2">
+            <button
+              type="button"
+              onClick={() => setCertificatePage('front')}
+              aria-label="Frente do certificado"
+              aria-pressed={certificatePage === 'front'}
+              className={`h-4 w-4 rounded-full border-2 transition-all ${
+                certificatePage === 'front'
+                  ? 'border-brand-500 bg-brand-500'
+                  : 'border-slate-600 bg-transparent hover:border-slate-400'
+              }`}
+            />
+            <button
+              type="button"
+              onClick={() => setCertificatePage('back')}
+              aria-label="Verso do certificado"
+              aria-pressed={certificatePage === 'back'}
+              className={`h-4 w-4 rounded-full border-2 transition-all ${
+                certificatePage === 'back'
+                  ? 'border-brand-500 bg-brand-500'
+                  : 'border-slate-600 bg-transparent hover:border-slate-400'
+              }`}
+            />
           </div>
 
           {showChallengeBriefing && (

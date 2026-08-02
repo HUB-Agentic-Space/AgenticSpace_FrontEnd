@@ -6,6 +6,8 @@ import {
   encodeCertificateManifest,
 } from '@/lib/certificate-pdf';
 import { markdownToSvgElements } from '../../lib/markdown-utils';
+import { generateQrDataUrl } from '../../lib/qr-utils';
+import { useEffect, useState } from 'react';
 
 const RAPPORT_LOGO = '/images/logo-rapport-2026.png';
 const AGENTIC_SPACE_LOGO = '/images/logo 2025 - whatsapp.svg';
@@ -104,11 +106,112 @@ function fitTitle(text) {
   };
 }
 
-/**
- * Arte oficial A4 paisagem do certificado. Todo o conteudo documental fica
- * dentro do SVG; os logos sao incorporados ao baixar o arquivo/PDF.
- */
-export default function CertificateSvg({ manifest, draft = false, className = '' }) {
+function useQrCode(text, opts = {}) {
+  const [dataUrl, setDataUrl] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!text) {
+      setDataUrl(null);
+      return;
+    }
+    generateQrDataUrl(text, opts)
+      .then((url) => { if (!cancelled) setDataUrl(url); })
+      .catch(() => { if (!cancelled) setDataUrl(null); });
+    return () => { cancelled = true; };
+  }, [text, opts.width, opts.margin, opts.color, opts.background]);
+
+  return dataUrl;
+}
+
+function SharedDefs() {
+  return (
+    <defs>
+      <linearGradient id="certificate-bg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stopColor="#fffdf8" />
+        <stop offset="0.5" stopColor="#f8f1df" />
+        <stop offset="1" stopColor="#eef3ff" />
+      </linearGradient>
+      <linearGradient id="certificate-gold" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stopColor="#b86f06" />
+        <stop offset="0.5" stopColor="#f6b632" />
+        <stop offset="1" stopColor="#c77d09" />
+      </linearGradient>
+      <linearGradient id="certificate-space" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stopColor="#50b7f1" />
+        <stop offset="1" stopColor="#9763f6" />
+      </linearGradient>
+      <pattern id="certificate-grid" width="34" height="34" patternUnits="userSpaceOnUse">
+        <path d="M34 0H0V34" fill="none" stroke="#172554" strokeOpacity="0.045" strokeWidth="1" />
+      </pattern>
+      <filter id="certificate-shadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="5" stdDeviation="8" floodColor="#00011e" floodOpacity="0.17" />
+      </filter>
+    </defs>
+  );
+}
+
+function PageFrame() {
+  return (
+    <>
+      <rect width="1600" height="1131" fill="url(#certificate-bg)" />
+      <rect width="1600" height="1131" fill="url(#certificate-grid)" />
+      <path d="M0 0H515L0 355Z" fill="#00011e" opacity="0.97" />
+      <path d="M1600 1131H1100L1600 795Z" fill="#00011e" opacity="0.97" />
+      <path d="M0 0H475L0 315Z" fill="url(#certificate-space)" opacity="0.17" />
+      <path d="M1600 1131H1140L1600 835Z" fill="url(#certificate-gold)" opacity="0.26" />
+      <rect x="34" y="34" width="1532" height="1063" rx="6" fill="none" stroke="url(#certificate-gold)" strokeWidth="9" />
+      <rect x="54" y="54" width="1492" height="1023" rx="4" fill="none" stroke="#00011e" strokeWidth="2" />
+      <rect x="69" y="69" width="1462" height="993" rx="3" fill="none" stroke="#d89a23" strokeWidth="1.5" strokeDasharray="7 8" />
+    </>
+  );
+}
+
+function HeaderLogos() {
+  return (
+    <>
+      <g filter="url(#certificate-shadow)">
+        <rect x="96" y="82" width="420" height="145" rx="12" fill="#fff" fillOpacity="0.98" />
+        <image href={RAPPORT_LOGO} x="111" y="101" width="390" height="108" preserveAspectRatio="xMidYMid meet" />
+      </g>
+      <g filter="url(#certificate-shadow)">
+        <circle cx="1430" cy="153" r="91" fill="#fff" stroke="#d89a23" strokeWidth="5" />
+        <clipPath id="agentic-logo-clip"><circle cx="1430" cy="153" r="82" /></clipPath>
+        <image
+          href={AGENTIC_SPACE_LOGO}
+          x="1348"
+          y="71"
+          width="164"
+          height="164"
+          preserveAspectRatio="xMidYMid slice"
+          clipPath="url(#agentic-logo-clip)"
+        />
+      </g>
+      <text x="800" y="176" textAnchor="middle" fill="#00011e" fontFamily="Georgia, 'Times New Roman', serif" fontSize="30" letterSpacing="8">
+        AGENTIC SPACE
+      </text>
+      <line x1="585" y1="203" x2="1015" y2="203" stroke="url(#certificate-gold)" strokeWidth="3" />
+    </>
+  );
+}
+
+function FooterBar() {
+  return (
+    <>
+      <text x="105" y="1068" fill="#fff" fontFamily="Arial, Helvetica, sans-serif" fontSize="17" fontWeight="700">
+        https://rapport.tec.br
+      </text>
+      <text x="800" y="1068" textAnchor="middle" fill="#475569" fontFamily="Arial, Helvetica, sans-serif" fontSize="17">
+        Valide em https://agenticspace.rapport.tec.br/certificado/verificar
+      </text>
+      <text x="1495" y="1068" textAnchor="end" fill="#fff" fontFamily="Arial, Helvetica, sans-serif" fontSize="17" fontWeight="700">
+        agenticspace.rapport.tec.br
+      </text>
+    </>
+  );
+}
+
+function CertificateFrontPage({ manifest, draft }) {
   const certificate = manifest?.certificate || {};
   const blockchain = manifest?.blockchain || {};
   const phaseTitle = certificate.phaseTitle || 'Sócio Fundador';
@@ -138,8 +241,8 @@ export default function CertificateSvg({ manifest, draft = false, className = ''
       viewBox="0 0 1600 1131"
       role="img"
       aria-labelledby="certificate-title certificate-description"
-      className={className}
       data-certificate-artwork="rapport-v1"
+      data-certificate-page="front"
     >
       <title id="certificate-title">Certificado {phaseTitle} de {recipientName}</title>
       <desc id="certificate-description">
@@ -147,62 +250,9 @@ export default function CertificateSvg({ manifest, draft = false, className = ''
       </desc>
       <metadata id={CERTIFICATE_SVG_METADATA_ID}>{metadataPayload}</metadata>
 
-      <defs>
-        <linearGradient id="certificate-bg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#fffdf8" />
-          <stop offset="0.5" stopColor="#f8f1df" />
-          <stop offset="1" stopColor="#eef3ff" />
-        </linearGradient>
-        <linearGradient id="certificate-gold" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#b86f06" />
-          <stop offset="0.5" stopColor="#f6b632" />
-          <stop offset="1" stopColor="#c77d09" />
-        </linearGradient>
-        <linearGradient id="certificate-space" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#50b7f1" />
-          <stop offset="1" stopColor="#9763f6" />
-        </linearGradient>
-        <pattern id="certificate-grid" width="34" height="34" patternUnits="userSpaceOnUse">
-          <path d="M34 0H0V34" fill="none" stroke="#172554" strokeOpacity="0.045" strokeWidth="1" />
-        </pattern>
-        <filter id="certificate-shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="5" stdDeviation="8" floodColor="#00011e" floodOpacity="0.17" />
-        </filter>
-      </defs>
-
-      <rect width="1600" height="1131" fill="url(#certificate-bg)" />
-      <rect width="1600" height="1131" fill="url(#certificate-grid)" />
-      <path d="M0 0H515L0 355Z" fill="#00011e" opacity="0.97" />
-      <path d="M1600 1131H1100L1600 795Z" fill="#00011e" opacity="0.97" />
-      <path d="M0 0H475L0 315Z" fill="url(#certificate-space)" opacity="0.17" />
-      <path d="M1600 1131H1140L1600 835Z" fill="url(#certificate-gold)" opacity="0.26" />
-
-      <rect x="34" y="34" width="1532" height="1063" rx="6" fill="none" stroke="url(#certificate-gold)" strokeWidth="9" />
-      <rect x="54" y="54" width="1492" height="1023" rx="4" fill="none" stroke="#00011e" strokeWidth="2" />
-      <rect x="69" y="69" width="1462" height="993" rx="3" fill="none" stroke="#d89a23" strokeWidth="1.5" strokeDasharray="7 8" />
-
-      <g filter="url(#certificate-shadow)">
-        <rect x="96" y="82" width="420" height="145" rx="12" fill="#fff" fillOpacity="0.98" />
-        <image href={RAPPORT_LOGO} x="111" y="101" width="390" height="108" preserveAspectRatio="xMidYMid meet" />
-      </g>
-      <g filter="url(#certificate-shadow)">
-        <circle cx="1430" cy="153" r="91" fill="#fff" stroke="#d89a23" strokeWidth="5" />
-        <clipPath id="agentic-logo-clip"><circle cx="1430" cy="153" r="82" /></clipPath>
-        <image
-          href={AGENTIC_SPACE_LOGO}
-          x="1348"
-          y="71"
-          width="164"
-          height="164"
-          preserveAspectRatio="xMidYMid slice"
-          clipPath="url(#agentic-logo-clip)"
-        />
-      </g>
-
-      <text x="800" y="176" textAnchor="middle" fill="#00011e" fontFamily="Georgia, 'Times New Roman', serif" fontSize="30" letterSpacing="8">
-        AGENTIC SPACE
-      </text>
-      <line x1="585" y1="203" x2="1015" y2="203" stroke="url(#certificate-gold)" strokeWidth="3" />
+      <SharedDefs />
+      <PageFrame />
+      <HeaderLogos />
 
       <text x="800" y="305" textAnchor="middle" fill="#b87408" fontFamily="Arial, Helvetica, sans-serif" fontWeight="700" fontSize="24" letterSpacing="7">
         RECONHECIMENTO DIGITAL • ERC-721 + ERC-6551
@@ -259,33 +309,6 @@ export default function CertificateSvg({ manifest, draft = false, className = ''
         Raport Tecnologia Inova Simples • CNPJ: 67.904.299/0001-80
       </text>
 
-      {certificate.skillsDescription && (
-        <g transform="translate(300 740)">
-          <rect width="1000" height="60" rx="6" fill="#f8f1df" fillOpacity="0.6" />
-          <text x="500" y="19" textAnchor="middle" fill="#b87408" fontFamily="Arial, Helvetica, sans-serif" fontSize="14" fontWeight="600">
-            Habilidades:
-          </text>
-          {markdownToSvgElements(certificate.skillsDescription, {
-            startX: 20,
-            startY: 35,
-            lineHeight: 16,
-            fontSize: 12,
-          }).map((el, idx) => (
-            <text
-              key={idx}
-              x={el.x}
-              y={el.y}
-              fill="#712d23"
-              fontFamily="Arial, Helvetica, sans-serif"
-              fontSize={el.fontSize}
-              fontWeight={el.fontWeight}
-            >
-              {el.text}
-            </text>
-          ))}
-        </g>
-      )}
-
       <g transform="translate(115 776)">
         <rect width="640" height="142" rx="18" fill="#00011e" />
         <circle cx="65" cy="71" r="42" fill="none" stroke="url(#certificate-space)" strokeWidth="7" />
@@ -322,15 +345,7 @@ export default function CertificateSvg({ manifest, draft = false, className = ''
         <text x="1100" y="55" fill="#b87408" fontFamily="monospace" fontSize="17" fontWeight="700">{verificationCode}</text>
       </g>
 
-      <text x="105" y="1068" fill="#fff" fontFamily="Arial, Helvetica, sans-serif" fontSize="17" fontWeight="700">
-        https://rapport.tec.br
-      </text>
-      <text x="800" y="1068" textAnchor="middle" fill="#475569" fontFamily="Arial, Helvetica, sans-serif" fontSize="17">
-        Valide em https://agenticspace.rapport.tec.br/certificado/verificar
-      </text>
-      <text x="1495" y="1068" textAnchor="end" fill="#fff" fontFamily="Arial, Helvetica, sans-serif" fontSize="17" fontWeight="700">
-        agenticspace.rapport.tec.br
-      </text>
+      <FooterBar />
 
       {draft && (
         <g transform="rotate(-18 800 565)" opacity="0.12">
@@ -350,4 +365,145 @@ export default function CertificateSvg({ manifest, draft = false, className = ''
       )}
     </svg>
   );
+}
+
+function CertificateBackPage({ manifest }) {
+  const certificate = manifest?.certificate || {};
+  const blockchain = manifest?.blockchain || {};
+  const phaseTitle = certificate.phaseTitle || 'Sócio Fundador';
+  const recipientName = certificate.recipientName || 'Nome do Sócio Fundador';
+  const tokenId = certificate.tokenId && certificate.tokenId !== '0' ? certificate.tokenId : '—';
+
+  const verificationUrl = manifest?.verificationUrl || '';
+  const explorerUrl = blockchain.explorerUrl || 'https://polygonscan.com';
+  const nftUrl = blockchain.contractAddress && tokenId !== '—'
+    ? `${explorerUrl}/token/${blockchain.contractAddress}?a=${tokenId}`
+    : '';
+
+  const qrVerification = useQrCode(verificationUrl, { width: 240, margin: 1 });
+  const qrNft = useQrCode(nftUrl, { width: 240, margin: 1 });
+
+  const skillsElements = certificate.skillsDescription
+    ? markdownToSvgElements(certificate.skillsDescription, {
+        startX: 120,
+        startY: 340,
+        lineHeight: 22,
+        fontSize: 15,
+        maxWidth: 1000,
+      })
+    : [];
+
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      xmlnsXlink="http://www.w3.org/1999/xlink"
+      viewBox="0 0 1600 1131"
+      role="img"
+      aria-labelledby="back-title back-description"
+      data-certificate-artwork="rapport-v1"
+      data-certificate-page="back"
+    >
+      <title id="back-title">Verso do Certificado — {phaseTitle}</title>
+      <desc id="back-description">
+        Habilidades adquiridas, instruções e QR Codes de validação do certificado e do NFT on-chain.
+      </desc>
+
+      <SharedDefs />
+      <PageFrame />
+      <HeaderLogos />
+
+      <text x="800" y="305" textAnchor="middle" fill="#b87408" fontFamily="Arial, Helvetica, sans-serif" fontWeight="700" fontSize="24" letterSpacing="7">
+        HABILIDADES E VALIDAÇÃO
+      </text>
+
+      {certificate.skillsDescription && (
+        <g>
+          <text x="120" y="280" fill="#00011e" fontFamily="Arial, Helvetica, sans-serif" fontSize="20" fontWeight="700">
+            Habilidades adquiridas
+          </text>
+          <line x1="120" y1="295" x2="780" y2="295" stroke="url(#certificate-gold)" strokeWidth="2" />
+          {skillsElements.map((el, idx) => (
+            <text
+              key={`skill-${idx}`}
+              x={el.x}
+              y={el.y}
+              fill="#334155"
+              fontFamily="Arial, Helvetica, sans-serif"
+              fontSize={el.fontSize}
+              fontWeight={el.fontWeight}
+            >
+              {el.text}
+            </text>
+          ))}
+        </g>
+      )}
+
+      <g transform="translate(1100 280)">
+        <text x="200" y="0" textAnchor="middle" fill="#00011e" fontFamily="Arial, Helvetica, sans-serif" fontSize="18" fontWeight="700">
+          Validação do certificado
+        </text>
+        {qrVerification ? (
+          <image href={qrVerification} x="80" y="20" width="240" height="240" />
+        ) : (
+          <rect x="80" y="20" width="240" height="240" rx="8" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="2" />
+        )}
+        <text x="200" y="285" textAnchor="middle" fill="#64748b" fontFamily="Arial, Helvetica, sans-serif" fontSize="13">
+          {verificationUrl ? 'Escaneie para validar' : 'Disponível após emissão'}
+        </text>
+      </g>
+
+      <g transform="translate(1100 580)">
+        <text x="200" y="0" textAnchor="middle" fill="#00011e" fontFamily="Arial, Helvetica, sans-serif" fontSize="18" fontWeight="700">
+          NFT on-chain
+        </text>
+        {qrNft ? (
+          <image href={qrNft} x="80" y="20" width="240" height="240" />
+        ) : (
+          <rect x="80" y="20" width="240" height="240" rx="8" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="2" />
+        )}
+        <text x="200" y="285" textAnchor="middle" fill="#64748b" fontFamily="Arial, Helvetica, sans-serif" fontSize="13">
+          {nftUrl ? 'Escaneie para ver on-chain' : 'Disponível após emissão'}
+        </text>
+      </g>
+
+      <g transform="translate(115 700)">
+        <rect width="930" height="60" rx="8" fill="#fff" fillOpacity="0.9" stroke="#cbd5e1" />
+        <text x="20" y="25" fill="#64748b" fontFamily="Arial, Helvetica, sans-serif" fontSize="14">TITULAR</text>
+        <text x="20" y="48" fill="#0f172a" fontFamily="monospace" fontSize="16" fontWeight="700">{recipientName}</text>
+        <text x="350" y="25" fill="#64748b" fontFamily="Arial, Helvetica, sans-serif" fontSize="14">TOKEN ID</text>
+        <text x="350" y="48" fill="#0f172a" fontFamily="monospace" fontSize="16" fontWeight="700">#{tokenId}</text>
+        <text x="600" y="25" fill="#64748b" fontFamily="Arial, Helvetica, sans-serif" fontSize="14">FASE</text>
+        <text x="600" y="48" fill="#0f172a" fontFamily="Arial, Helvetica, sans-serif" fontSize="16" fontWeight="700">{phaseTitle}</text>
+      </g>
+
+      <g transform="translate(115 790)">
+        <rect width="1370" height="120" rx="12" fill="#00011e" />
+        <text x="24" y="30" fill="#93c5fd" fontFamily="Arial, Helvetica, sans-serif" fontSize="16" letterSpacing="2">
+          VERIFICAÇÃO ON-CHAIN
+        </text>
+        <text x="24" y="60" fill="#fff" fontFamily="Arial, Helvetica, sans-serif" fontSize="18" fontWeight="700">
+          Contrato: {compactAddress(blockchain.contractAddress, 12, 8)}
+        </text>
+        <text x="24" y="88" fill="#cbd5e1" fontFamily="Arial, Helvetica, sans-serif" fontSize="16">
+          Chain ID: {blockchain.chainId || 137} • Explorer: {explorerUrl}
+        </text>
+        <text x="24" y="110" fill="#cbd5e1" fontFamily="Arial, Helvetica, sans-serif" fontSize="14">
+          TX: {compactAddress(blockchain.transactionHash, 12, 8) || '—'}
+        </text>
+      </g>
+
+      <FooterBar />
+    </svg>
+  );
+}
+
+/**
+ * Arte oficial A4 paisagem do certificado com frente e verso.
+ * O parametro `page` controla qual pagina e renderizada: 'front' | 'back'.
+ */
+export default function CertificateSvg({ manifest, draft = false, className = '', page = 'front' }) {
+  if (page === 'back') {
+    return <CertificateBackPage manifest={manifest} className={className} />;
+  }
+  return <CertificateFrontPage manifest={manifest} draft={draft} className={className} />;
 }
