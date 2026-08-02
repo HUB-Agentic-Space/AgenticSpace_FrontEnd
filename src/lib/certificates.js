@@ -271,9 +271,21 @@ const PHASES_RETURN_TYPES = [
 ];
 
 export async function fetchPhase(contract, provider, phaseId) {
-  const data = contract.interface.encodeFunctionData('getPhase', [phaseId]);
-  const raw = await provider.call({ to: await contract.getAddress(), data });
-  const decoded = ethers.AbiCoder.defaultAbiCoder().decode(PHASES_RETURN_TYPES, raw);
+  const address = await contract.getAddress();
+  try {
+    const data = contract.interface.encodeFunctionData('getPhase', [phaseId]);
+    const raw = await provider.call({ to: address, data });
+    const decoded = ethers.AbiCoder.defaultAbiCoder().decode(PHASES_RETURN_TYPES, raw);
+    return decodePhaseResult(decoded);
+  } catch {
+    const data = contract.interface.encodeFunctionData('phases', [phaseId]);
+    const raw = await provider.call({ to: address, data });
+    const decoded = ethers.AbiCoder.defaultAbiCoder().decode(PHASES_RETURN_TYPES, raw);
+    return decodePhaseResult(decoded);
+  }
+}
+
+function decodePhaseResult(decoded) {
   return {
     name: decoded[0],
     templateHash: decoded[1],
@@ -287,6 +299,20 @@ export async function fetchPhase(contract, provider, phaseId) {
     extraFeeTypeId: decoded[9],
     tbaRebateBps: decoded[10],
   };
+}
+
+async function getCertificateOrFallback(contract, provider, tokenId) {
+  const address = await contract.getAddress();
+  const iface = contract.interface;
+  try {
+    const data = iface.encodeFunctionData('getCertificate', [tokenId]);
+    const raw = await provider.call({ to: address, data });
+    return iface.decodeFunctionResult('getCertificate', raw)[0];
+  } catch {
+    const data = iface.encodeFunctionData('certificates', [tokenId]);
+    const raw = await provider.call({ to: address, data });
+    return iface.decodeFunctionResult('certificates', raw)[0];
+  }
 }
 
 export function phaseFromResult(result, phaseId) {

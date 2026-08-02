@@ -1185,6 +1185,15 @@ function CertificateContent() {
                 Estas orientações deixam de ser exibidas assim que o certificado for emitido
                 on-chain.
               </p>
+
+              <button
+                onClick={handleInstructionsPdf}
+                disabled={Boolean(exporting)}
+                className="btn-secondary mt-4"
+              >
+                {exporting === 'instructions' ? <Spinner size={16} /> : <Download size={17} />}
+                {exporting === 'instructions' ? 'Gerando PDF...' : 'Baixar instruções em PDF'}
+              </button>
             </div>
           )}
 
