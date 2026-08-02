@@ -387,7 +387,7 @@ function CertificateFrontPage({ manifest, draft }) {
 // ── Verso: constantes de layout ──────────────────────────────────────
 const BACK_MARGIN_X = 120;
 const BACK_CONTENT_WIDTH = 1360; // 1600 - 2*120
-const BACK_SKILLS_MAX_WIDTH = 1360; // largura total até a margem direita
+const BACK_SKILLS_MAX_WIDTH = 1411; // até a borda tracejada (x=1531)
 const BACK_SKILLS_FONT_SIZE = 13;
 const BACK_SKILLS_LINE_HEIGHT = 18;
 const BACK_QR_SIZE = 110;
