@@ -387,13 +387,13 @@ function CertificateFrontPage({ manifest, draft }) {
 // ── Verso: constantes de layout ──────────────────────────────────────
 const BACK_MARGIN_X = 120;
 const BACK_CONTENT_WIDTH = 1360; // 1600 - 2*120
-const BACK_SKILLS_MAX_WIDTH = 940; // deixa espaço para QR codes à direita
+const BACK_SKILLS_MAX_WIDTH = 1270; // 35% mais largo — usa quase toda a largura útil
 const BACK_SKILLS_FONT_SIZE = 13;
 const BACK_SKILLS_LINE_HEIGHT = 18;
 const BACK_QR_SIZE = 110;
 const BACK_QR_GAP = 16;
-const BACK_BOTTOM_Y = 860; // linha inferior: QR codes + box on-chain
-const BACK_BOX_HEIGHT = 150;
+const BACK_BOTTOM_Y = 900; // linha inferior: QR codes + box on-chain
+const BACK_BOX_HEIGHT = 140;
 
 function CertificateBackPage({ manifest }) {
   const certificate = manifest?.certificate || {};
@@ -424,10 +424,11 @@ function CertificateBackPage({ manifest }) {
 
   // Posicionamento dos QR codes à direita, alinhados com o box on-chain
   const qrRightX = BACK_MARGIN_X + BACK_CONTENT_WIDTH; // margem direita
-  const qr1X = qrRightX - BACK_QR_SIZE * 2 - BACK_QR_GAP - BACK_QR_SIZE;
   const qr2X = qrRightX - BACK_QR_SIZE;
+  const qr1X = qr2X - BACK_QR_SIZE - BACK_QR_GAP;
   const qrY = BACK_BOTTOM_Y;
   const qrLabelY = qrY + BACK_QR_SIZE + 16;
+  const onChainBoxWidth = qr1X - BACK_MARGIN_X - BACK_QR_GAP;
 
   return (
     <svg
@@ -506,29 +507,29 @@ function CertificateBackPage({ manifest }) {
 
       {/* Box on-chain + info bar (titular/token/fase) — mesma linha dos QR codes */}
       <g transform={`translate(${BACK_MARGIN_X} ${BACK_BOTTOM_Y})`}>
-        <rect width={BACK_CONTENT_WIDTH - BACK_QR_SIZE * 2 - BACK_QR_GAP} height={BACK_BOX_HEIGHT} rx="12" fill="#00011e" />
+        <rect width={onChainBoxWidth} height={BACK_BOX_HEIGHT} rx="12" fill="#00011e" />
         {/* Info bar integrada */}
         <text x="20" y="28" fill="#93c5fd" fontFamily="Arial, Helvetica, sans-serif" fontSize="13" letterSpacing="1">TITULAR</text>
         <text x="20" y="48" fill="#fff" fontFamily="Arial, Helvetica, sans-serif" fontSize="15" fontWeight="700">{recipientName}</text>
         <text x="20" y="72" fill="#93c5fd" fontFamily="Arial, Helvetica, sans-serif" fontSize="13" letterSpacing="1">FASE</text>
         <text x="20" y="92" fill="#fff" fontFamily="Arial, Helvetica, sans-serif" fontSize="15" fontWeight="700">{phaseTitle}</text>
 
-        <line x1="320" y1="20" x2="320" y2="130" stroke="#1e3a5f" strokeWidth="1" />
+        <line x1="320" y1="20" x2="320" y2="120" stroke="#1e3a5f" strokeWidth="1" />
 
         {/* Verificação on-chain */}
-        <text x="340" y="28" fill="#93c5fd" fontFamily="Arial, Helvetica, sans-serif" fontSize="13" letterSpacing="2">
+        <text x="680" y="28" fill="#93c5fd" fontFamily="Arial, Helvetica, sans-serif" fontSize="13" letterSpacing="2">
           VERIFICAÇÃO ON-CHAIN
         </text>
-        <text x="340" y="52" fill="#fff" fontFamily="Arial, Helvetica, sans-serif" fontSize="15" fontWeight="700">
+        <text x="680" y="52" fill="#fff" fontFamily="Arial, Helvetica, sans-serif" fontSize="15" fontWeight="700">
           Contrato: {compactAddress(blockchain.contractAddress, 12, 8)}
         </text>
-        <text x="340" y="76" fill="#cbd5e1" fontFamily="Arial, Helvetica, sans-serif" fontSize="13">
+        <text x="680" y="76" fill="#cbd5e1" fontFamily="Arial, Helvetica, sans-serif" fontSize="13">
           Chain ID: {blockchain.chainId || 137} • Explorer: {explorerUrl}
         </text>
-        <text x="340" y="98" fill="#cbd5e1" fontFamily="Arial, Helvetica, sans-serif" fontSize="13">
+        <text x="680" y="98" fill="#cbd5e1" fontFamily="Arial, Helvetica, sans-serif" fontSize="13">
           TX: {compactAddress(blockchain.transactionHash, 12, 8) || '—'}
         </text>
-        <text x="340" y="120" fill="#cbd5e1" fontFamily="Arial, Helvetica, sans-serif" fontSize="13">
+        <text x="680" y="120" fill="#cbd5e1" fontFamily="Arial, Helvetica, sans-serif" fontSize="13">
           Token ID: #{tokenId}
         </text>
       </g>
