@@ -13,7 +13,8 @@ export const CERTIFICATE_PDF_MARKER = 'RAPPORT_CERTIFICATE_V1:';
 export const CERTIFICATE_SVG_METADATA_ID = 'rapport-certificate-manifest';
 export const MAX_CERTIFICATE_FILE_BYTES = 15 * 1024 * 1024;
 
-import { markdownToPlainText } from './markdown-utils';
+import { markdownToPlainText, parseMarkdown } from './markdown-utils';
+import { ISSUER } from './certificates';
 
 const PDF_GUIDANCE_LINKS = [
   {
@@ -455,6 +456,263 @@ export async function downloadCertificateSvg(svgElement, manifest) {
   const svgText = await serializeCertificateSvg(svgElement);
   const filename = `certificado-${safeFilenamePart(manifest.certificate.recipientName)}-${manifest.certificate.tokenId}.svg`;
   downloadBytes(new TextEncoder().encode(svgText), 'image/svg+xml;charset=utf-8', filename);
+}
+
+async function fetchLogoPng() {
+  try {
+    const response = await fetch('/images/logo-rapport-2026.png', { credentials: 'same-origin' });
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    return new Uint8Array(await blob.arrayBuffer());
+  } catch {
+    return null;
+  }
+}
+
+function drawMarkdownBlocks(page, md, {
+  font, boldFont, x, y, maxWidth, baseSize, lineHeight, color, headingColor,
+}) {
+  const blocks = parseMarkdown(md);
+  let cursorY = y;
+
+  for (const block of blocks) {
+    if (cursorY < 80) break;
+
+    switch (block.type) {
+      case 'heading': {
+        const headingSize = baseSize + (6 - Math.min(block.level, 4));
+        const lines = wrapText(font, block.text, headingSize, maxWidth);
+        for (const line of lines) {
+          if (cursorY < 80) break;
+          page.drawText(line, { x, y: cursorY, size: headingSize, font: boldFont, color: headingColor });
+          cursorY -= lineHeight;
+        }
+        cursorY -= lineHeight * 0.3;
+        break;
+      }
+      case 'paragraph': {
+        const lines = wrapText(font, block.text, baseSize, maxWidth);
+        for (const line of lines) {
+          if (cursorY < 80) break;
+          page.drawText(line, { x, y: cursorY, size: baseSize, font, color });
+          cursorY -= lineHeight;
+        }
+        cursorY -= lineHeight * 0.2;
+        break;
+      }
+      case 'list': {
+        for (let j = 0; j < block.items.length; j++) {
+          if (cursorY < 80) break;
+          const prefix = block.ordered ? `${j + 1}. ` : '\u2022 ';
+          const fullText = `${prefix}${block.items[j]}`;
+          const lines = wrapText(font, fullText, baseSize, maxWidth);
+          for (let k = 0; k < lines.length; k++) {
+            if (cursorY < 80) break;
+            const indent = k > 0 ? 18 : 0;
+            page.drawText(lines[k], { x: x + indent, y: cursorY, size: baseSize, font, color });
+            cursorY -= lineHeight;
+          }
+        }
+        cursorY -= lineHeight * 0.2;
+        break;
+      }
+    }
+  }
+  return cursorY;
+}
+
+function wrapText(font, text, size, maxWidth) {
+  const paragraphs = String(text).split('\n');
+  const lines = [];
+  let currentLine = '';
+
+  for (const para of paragraphs) {
+    if (para.trim() === '') {
+      if (currentLine) { lines.push(currentLine); currentLine = ''; }
+      lines.push('');
+      continue;
+    }
+    const words = para.split(/\s+/);
+    for (const word of words) {
+      const candidate = currentLine ? `${currentLine} ${word}` : word;
+      if (currentLine && font.widthOfTextAtSize(candidate, size) > maxWidth) {
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        currentLine = candidate;
+      }
+    }
+    if (currentLine) { lines.push(currentLine); currentLine = ''; }
+  }
+  if (currentLine) lines.push(currentLine);
+  return lines;
+}
+
+/**
+ * Gera e baixa um PDF com as instrucoes de um desafio, permitindo que o
+ * usuario siga as orientacoes offline ou imprima. O documento inclui o
+ * logo da Rapport no header, o titulo "Desafio", o nome do desafio como
+ * subtitulo, as habilidades e instrucoes, e os dados da empresa no rodape.
+ */
+export async function downloadChallengeInstructionsPdf(challenge) {
+  const pdfLib = await import('pdf-lib');
+  const { PDFDocument, StandardFonts, rgb } = pdfLib;
+  const pdf = await PDFDocument.create();
+  const page = pdf.addPage([595.28, 841.89]);
+  const width = page.getWidth();
+  const height = page.getHeight();
+  const regular = await pdf.embedFont(StandardFonts.Helvetica);
+  const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+
+  const brandOrange = rgb(0.941, 0.373, 0.251);
+  const dark = rgb(0.133, 0.133, 0.133);
+  const slate = rgb(0.2, 0.255, 0.333);
+  const muted = rgb(0.392, 0.455, 0.545);
+  const paper = rgb(1, 1, 1);
+  const margin = 48;
+  const contentWidth = width - (margin * 2);
+
+  page.drawRectangle({ x: 0, y: 0, width, height, color: paper });
+
+  const logoBytes = await fetchLogoPng();
+  let logoHeight = 0;
+  if (logoBytes) {
+    try {
+      const logo = await pdf.embedPng(logoBytes);
+      const logoW = 140;
+      const logoH = (logo.height / logo.width) * logoW;
+      page.drawImage(logo, { x: margin, y: height - margin - logoH, width: logoW, height: logoH });
+      logoHeight = logoH;
+    } catch {
+      // Skip logo if embedding fails
+    }
+  }
+
+  page.drawRectangle({ x: 0, y: height - margin - logoHeight - 12, width, height: 3, color: brandOrange });
+  const headerBottom = height - margin - logoHeight - 20;
+
+  page.drawText('Desafio', {
+    x: margin,
+    y: headerBottom - 36,
+    size: 28,
+    font: bold,
+    color: dark,
+  });
+
+  page.drawText(challenge.name || 'Desafio', {
+    x: margin,
+    y: headerBottom - 60,
+    size: 16,
+    font: regular,
+    color: brandOrange,
+  });
+
+  let contentY = headerBottom - 90;
+
+  if (challenge.skillsDescription) {
+    page.drawRectangle({
+      x: margin,
+      y: contentY - 8,
+      width: contentWidth,
+      height: 4,
+      color: brandOrange,
+    });
+    contentY -= 24;
+
+    page.drawText('HABILIDADES ADQUIRIDAS', {
+      x: margin,
+      y: contentY,
+      size: 13,
+      font: bold,
+      color: brandOrange,
+    });
+    contentY -= 22;
+
+    contentY = drawMarkdownBlocks(page, challenge.skillsDescription, {
+      font: regular,
+      boldFont: bold,
+      x: margin,
+      y: contentY,
+      maxWidth: contentWidth,
+      baseSize: 11.5,
+      lineHeight: 17,
+      color: slate,
+      headingColor: dark,
+    });
+    contentY -= 16;
+  }
+
+  if (challenge.instructions) {
+    page.drawRectangle({
+      x: margin,
+      y: contentY - 8,
+      width: contentWidth,
+      height: 4,
+      color: brandOrange,
+    });
+    contentY -= 24;
+
+    page.drawText('INSTRUÇÕES', {
+      x: margin,
+      y: contentY,
+      size: 13,
+      font: bold,
+      color: brandOrange,
+    });
+    contentY -= 22;
+
+    contentY = drawMarkdownBlocks(page, challenge.instructions, {
+      font: regular,
+      boldFont: bold,
+      x: margin,
+      y: contentY,
+      maxWidth: contentWidth,
+      baseSize: 11.5,
+      lineHeight: 17,
+      color: slate,
+      headingColor: dark,
+    });
+  }
+
+  const footerY = 50;
+  page.drawRectangle({ x: 0, y: 0, width, height: footerY + 10, color: dark });
+  page.drawRectangle({ x: 0, y: footerY + 10, width, height: 2, color: brandOrange });
+
+  page.drawText(ISSUER.legalName, {
+    x: margin,
+    y: footerY - 6,
+    size: 9,
+    font: bold,
+    color: rgb(1, 1, 1),
+  });
+  page.drawText(`CNPJ: ${ISSUER.cnpj}`, {
+    x: margin,
+    y: footerY - 20,
+    size: 8,
+    font: regular,
+    color: muted,
+  });
+
+  const websiteText = `${ISSUER.website}  |  ${ISSUER.agenticSpaceWebsite}`;
+  const websiteWidth = bold.widthOfTextAtSize(websiteText, 8);
+  page.drawText(websiteText, {
+    x: width - margin - websiteWidth,
+    y: footerY - 20,
+    size: 8,
+    font: regular,
+    color: muted,
+  });
+
+  pdf.setTitle(`Desafio: ${challenge.name || 'Desafio'}`);
+  pdf.setAuthor(ISSUER.legalName);
+  pdf.setSubject('Instruções do Desafio');
+  pdf.setCreator('Agentic Space');
+  pdf.setProducer('Agentic Space Challenge Studio');
+  pdf.setCreationDate(new Date());
+
+  const pdfBytes = await pdf.save({ useObjectStreams: true });
+  const filename = `desafio-${safeFilenamePart(challenge.name)}-instrucoes.pdf`;
+  downloadBytes(pdfBytes, 'application/pdf', filename);
 }
 
 function findMarkedPayload(values) {

@@ -17,11 +17,12 @@ export const CERTIFICATE_ABI = [
   'function phaseCount() view returns (uint256)',
   'function activePhases(uint256 phaseId) view returns (bool)',
   'function casToken() view returns (address)',
-  'function certificatesByRecipientAndPhase(address recipient, uint256 phaseId) view returns (uint256)',
+  'function certificateOf(address recipient, uint256 phaseId) view returns (uint256)',
   'function nonces(address recipient) view returns (uint256)',
-  'function phases(uint256 phaseId) view returns (tuple(string name, bytes32 templateHash, uint256 minCasDeposit, uint256 startsAt, uint256 endsAt, uint256 minted, uint8 active, string skillsDescription, string instructions, uint256 extraFeeTypeId, uint256 tbaRebateBps))',
+  'function getPhase(uint256 phaseId) view returns (tuple(string name, bytes32 templateHash, uint256 minCasDeposit, uint256 startsAt, uint256 endsAt, uint256 minted, uint8 active, string skillsDescription, string instructions, uint256 extraFeeTypeId, uint256 tbaRebateBps))',
   'function phasePrerequisites(uint256 phaseId) view returns (uint256[])',
-  'function certificates(uint256 tokenId) view returns (tuple(uint256 phaseId, address recipient, address tokenBoundAccount, bytes32 issuanceId, bytes32 nameHash, bytes32 metadataHash, uint256 casDeposited, uint256 issuedAt, bool revoked, bytes32 revocationReasonHash, uint256 revokedAt, bytes32 documentHash))',
+  'function getCertificate(uint256 tokenId) view returns (tuple(uint256 phaseId, address recipient, address tokenBoundAccount, bytes32 issuanceId, bytes32 nameHash, bytes32 metadataHash, uint256 casDeposited, uint256 issuedAt, bool revoked, bytes32 revocationReasonHash, uint256 revokedAt, bytes32 documentHash))',
+  'function tokenBoundAccount(uint256 tokenId) view returns (address)',
   'function mintCertificate((bytes32 issuanceId, address recipient, bytes32 nameHash, uint256 phaseId, bytes32 metadataHash, uint256 casAmount, uint256 nonce, uint256 deadline) auth, address issuer, bytes signature) returns (uint256 tokenId, address tokenBoundAccount_)',
   'function depositCasForMint(uint256 phaseId)',
   'function withdrawCasDeposit(uint256 phaseId)',
@@ -52,6 +53,7 @@ export const CAS_CERTIFICATE_ABI = [
 
 const FALLBACK_CHAIN_ID = Number(process.env.NEXT_PUBLIC_CERTIFICATE_CHAIN_ID || 137);
 const FALLBACK_CERTIFICATE_ADDRESS = process.env.NEXT_PUBLIC_CERTIFICATE_ADDRESS || '';
+const FALLBACK_LEGACY_CERTIFICATE_ADDRESS = process.env.NEXT_PUBLIC_LEGACY_CERTIFICATE_ADDRESS || '';
 const FALLBACK_DIAMOND_ADDRESS = process.env.NEXT_PUBLIC_DIAMOND_ADDRESS || '';
 const FALLBACK_CAS_ADDRESS =
   process.env.NEXT_PUBLIC_CAS_TOKEN_ADDRESS || '0x5151A34EaC7bA08cd6B540b32cD30316218A2287';
@@ -149,6 +151,7 @@ export function getFallbackCertificateConfig() {
     enabled: ethers.isAddress(FALLBACK_CERTIFICATE_ADDRESS),
     chainId: FALLBACK_CHAIN_ID,
     certificateAddress: FALLBACK_CERTIFICATE_ADDRESS,
+    legacyCertificateAddress: FALLBACK_LEGACY_CERTIFICATE_ADDRESS,
     diamondAddress: FALLBACK_DIAMOND_ADDRESS,
     casTokenAddress: FALLBACK_CAS_ADDRESS,
     casSwapAddress: FALLBACK_SWAP_ADDRESS,
@@ -170,6 +173,7 @@ function normalizeConfig(data = {}) {
     enabled: Boolean(source.enabled ?? ethers.isAddress(certificateAddress)),
     chainId: Number(source.chainId || fallback.chainId),
     certificateAddress,
+    legacyCertificateAddress: source.legacyCertificateAddress || fallback.legacyCertificateAddress,
     diamondAddress: source.diamondAddress || fallback.diamondAddress,
     casTokenAddress: source.casTokenAddress || fallback.casTokenAddress,
     casSwapAddress: source.casSwapAddress || fallback.casSwapAddress,
@@ -267,7 +271,7 @@ const PHASES_RETURN_TYPES = [
 ];
 
 export async function fetchPhase(contract, provider, phaseId) {
-  const data = contract.interface.encodeFunctionData('phases', [phaseId]);
+  const data = contract.interface.encodeFunctionData('getPhase', [phaseId]);
   const raw = await provider.call({ to: await contract.getAddress(), data });
   const decoded = ethers.AbiCoder.defaultAbiCoder().decode(PHASES_RETURN_TYPES, raw);
   return {
@@ -334,10 +338,10 @@ export async function readCertificateContext(config, recipient) {
   let certificate = null;
   let currentCasBalance = '0';
   if (phaseId > BigInt('0') && recipient && ethers.isAddress(recipient)) {
-    const tokenId = await contract.certificatesByRecipientAndPhase(recipient, phaseId);
+    const tokenId = await contract.certificateOf(recipient, phaseId);
     if (tokenId > BigInt('0')) {
       const [rawCert, merkleRoot, merkleRootProof] = await Promise.all([
-        contract.certificates(tokenId),
+        contract.getCertificate(tokenId),
         contract.certificateMerkleRoots(tokenId).catch(() => ethers.ZeroHash),
         contract.certificateMerkleRootProofs(tokenId).catch(() => ethers.ZeroHash),
       ]);
@@ -360,9 +364,9 @@ export async function readCertificateByToken(config, tokenId) {
   const provider = new ethers.JsonRpcProvider(config.rpcUrl, config.chainId, { staticNetwork: true });
   const contract = getCertificateContract(config.certificateAddress, provider);
   const [rawCertificate, merkleRoot, merkleRootProof] = await Promise.all([
-    contract.certificates(numericTokenId),
-    contract.certificateMerkleRoots(numericTokenId).catch(() => ethers.ZeroHash),
-    contract.certificateMerkleRootProofs(numericTokenId).catch(() => ethers.ZeroHash),
+    contract.getCertificate(numericTokenId),
+    contract.certificateMerkleRoots(tokenId).catch(() => ethers.ZeroHash),
+    contract.certificateMerkleRootProofs(tokenId).catch(() => ethers.ZeroHash),
   ]);
   const certificate = {
     ...certificateFromResult(rawCertificate, numericTokenId),
@@ -504,9 +508,13 @@ export async function verifyCertificateManifest(manifest, suppliedConfig) {
   if (!ethers.isAddress(config.certificateAddress)) {
     throw new Error('O verificador ainda nao possui um contrato oficial configurado.');
   }
-  if (!equalAddress(manifestAddress, config.certificateAddress)) {
+  const isCurrentContract = equalAddress(manifestAddress, config.certificateAddress);
+  const isLegacyContract = config.legacyCertificateAddress
+    && equalAddress(manifestAddress, config.legacyCertificateAddress);
+  if (!isCurrentContract && !isLegacyContract) {
     throw new Error('O PDF aponta para um contrato que nao pertence ao emissor oficial.');
   }
+  const verifyAddress = isCurrentContract ? config.certificateAddress : config.legacyCertificateAddress;
   if (Number(manifest.blockchain?.chainId) !== Number(config.chainId)) {
     throw new Error('A rede blockchain informada no PDF nao e a rede oficial configurada.');
   }
@@ -514,14 +522,14 @@ export async function verifyCertificateManifest(manifest, suppliedConfig) {
   const tokenId = BigInt(manifest.certificate?.tokenId || 0);
   if (tokenId <= BigInt('0')) throw new Error('Token ID ausente ou invalido.');
   const provider = new ethers.JsonRpcProvider(config.rpcUrl, config.chainId, { staticNetwork: true });
-  if ((await provider.getCode(config.certificateAddress)) === '0x') {
+  if ((await provider.getCode(verifyAddress)) === '0x') {
     throw new Error('O contrato oficial nao foi encontrado na rede configurada.');
   }
-  const contract = getCertificateContract(config.certificateAddress, provider);
+  const contract = getCertificateContract(verifyAddress, provider);
 
   let rawRecord;
   try {
-    rawRecord = await contract.certificates(tokenId);
+    rawRecord = await contract.getCertificate(tokenId);
   } catch {
     throw new Error('O token informado nao existe no contrato oficial.');
   }
@@ -550,12 +558,16 @@ export async function verifyCertificateManifest(manifest, suppliedConfig) {
 /** Consulta publica por token sem revelar nome civil (armazenado apenas como hash). */
 export async function verifyCertificateReference({ chainId, contractAddress, tokenId }, suppliedConfig) {
   const config = normalizeConfig(suppliedConfig);
-  if (Number(chainId) !== config.chainId || !equalAddress(contractAddress, config.certificateAddress)) {
+  const isCurrentContract = equalAddress(contractAddress, config.certificateAddress);
+  const isLegacyContract = config.legacyCertificateAddress
+    && equalAddress(contractAddress, config.legacyCertificateAddress);
+  if (Number(chainId) !== config.chainId || (!isCurrentContract && !isLegacyContract)) {
     throw new Error('A referencia nao pertence ao contrato oficial configurado.');
   }
+  const verifyAddress = isCurrentContract ? config.certificateAddress : config.legacyCertificateAddress;
   const provider = new ethers.JsonRpcProvider(config.rpcUrl, config.chainId, { staticNetwork: true });
-  const contract = getCertificateContract(config.certificateAddress, provider);
-  const rawRecord = await contract.certificates(tokenId);
+  const contract = getCertificateContract(verifyAddress, provider);
+  const rawRecord = await contract.getCertificate(tokenId);
   const record = certificateFromResult(rawRecord, tokenId);
   const phase = phaseFromResult(await fetchPhase(contract, provider, record.phaseId), record.phaseId);
   return {

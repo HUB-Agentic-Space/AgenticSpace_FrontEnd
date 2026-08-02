@@ -64,6 +64,7 @@ import {
 import {
   downloadCertificatePdf,
   downloadCertificateSvg,
+  downloadChallengeInstructionsPdf,
 } from '@/lib/certificate-pdf';
 
 const DEFAULT_PHASE = {
@@ -470,6 +471,12 @@ function CertificateContent() {
     try {
       const recipient = await ensureWallet();
       await loadCertificates(config, recipient, session?.jwt);
+      const freshContext = await readCertificateContext(config, recipient);
+      if (freshContext?.certificate) {
+        setSuccess(`Voce ja possui o certificado #${freshContext.certificate.tokenId} nesta fase.`);
+        setMinting(false);
+        return;
+      }
       const nameHash = hashCertificateName(profileName, recipient);
 
       setStep('Confirmando sua elegibilidade como inscrito...');
@@ -635,6 +642,19 @@ function CertificateContent() {
     setError('');
     try {
       await downloadCertificateSvg(getArtwork(), manifest);
+    } catch (exportError) {
+      setError(walletError(exportError));
+    } finally {
+      setExporting('');
+    }
+  }
+
+  async function handleInstructionsPdf() {
+    if (!selectedChallenge) return;
+    setExporting('instructions');
+    setError('');
+    try {
+      await downloadChallengeInstructionsPdf(selectedChallenge);
     } catch (exportError) {
       setError(walletError(exportError));
     } finally {
