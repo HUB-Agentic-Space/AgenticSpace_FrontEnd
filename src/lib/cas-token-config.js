@@ -52,6 +52,8 @@ export const CAS_TOKEN_READ_ABI = [
 export const DIAMOND_READ_ABI = [
   'function getFees() external view returns (tuple(uint256 registrationFee, uint256 validationFee, uint256 daoProposalFee, uint256 userRegistrationFee))',
   'function getAllFeeTypes() external view returns (uint256[] feeTypes, uint256[] amounts)',
+  'function getCustomFee(uint256 feeType) external view returns (uint256)',
+  'function isFeeTypeRegistered(uint256 feeType) external view returns (bool)',
 ];
 
 export const CERTIFICATE_READ_ABI = [

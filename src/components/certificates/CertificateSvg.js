@@ -227,9 +227,26 @@ function CertificateFrontPage({ manifest, draft }) {
   const title = fitTitle(`CERTIFICADO DE ${phaseTitle.toLocaleUpperCase('pt-BR')}`);
   const titleStartY = 383 - ((title.lines.length - 1) * title.lineHeight) / 2;
 
+  const bodyText = (() => {
+    const summary = certificate.achievementSummary || '';
+    const certType = certificate.certificateType || '';
+    const isChallenge = Boolean(certificate.phaseId && certType && certType !== 'Sócio Fundador');
+
+    if (summary) {
+      return isChallenge
+        ? `concluiu o desafio ${phaseTitle}, ${summary}`
+        : `integra a fase ${phaseTitle} e ${summary}`;
+    }
+
+    return isChallenge
+      ? `concluiu o desafio ${phaseTitle}, demonstrando habilidades técnicas com dedicação autodidata, `
+        + 'buscando de forma proativa conhecimento e de forma autônoma a solução do desafio para esta certificação.'
+      : `integra a fase ${phaseTitle} e demonstrou espírito empreendedor e dedicação ao voluntariado, `
+        + 'colaborando ativamente, com sua participação, para o crescimento do ecossistema Agentic Space.';
+  })();
+
   const bodyLines = wrapText(
-    `integra a fase ${phaseTitle} e demonstrou espírito empreendedor e dedicação ao voluntariado, `
-    + 'colaborando ativamente, com sua participação, para o crescimento do ecossistema Agentic Space.',
+    bodyText,
     { maxWidth: BODY_MAX_WIDTH, fontSize: BODY_FONT_SIZE, widthFactor: 0.5 }
   );
   const bodyStartY = 654 - ((bodyLines.length - 1) * BODY_LINE_HEIGHT) / 2;

@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import { createPortal } from 'react-dom';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ethers } from 'ethers';
 import {
   AlertCircle,
+  ArrowRight,
   Award,
   BadgeCheck,
   CheckCircle2,
@@ -13,12 +15,16 @@ import {
   ExternalLink,
   FileCheck2,
   Fuel,
+  Info,
+  Landmark,
   Linkedin,
   LockKeyhole,
   Printer,
   RefreshCw,
+  ShieldAlert,
   ShieldCheck,
   Wallet,
+  X,
 } from 'lucide-react';
 import RequireAuth from '@/components/RequireAuth';
 import Spinner from '@/components/Spinner';
@@ -26,6 +32,7 @@ import MarkdownContent from '@/components/MarkdownContent';
 import CASSwapModal from '@/components/CASSwapModal';
 import WalletErrorModal from '@/components/WalletErrorModal';
 import CertificateSvg from '@/components/certificates/CertificateSvg';
+import { DIAMOND_READ_ABI } from '@/lib/cas-token-config';
 import { useAuth } from '@/lib/auth-context';
 import { getProfile, listLinkedAccounts } from '@/lib/api';
 import { useWallet } from '@/lib/wallet/useWallet';
@@ -127,6 +134,9 @@ function CertificateContent() {
   const [selectedChallengeId, setSelectedChallengeId] = useState(null);
   const [certificatePage, setCertificatePage] = useState('front');
   const [issuanceRequests, setIssuanceRequests] = useState([]);
+  const [extraFeeAmount, setExtraFeeAmount] = useState(null);
+  const [extraFeeLoading, setExtraFeeLoading] = useState(false);
+  const [showMintModal, setShowMintModal] = useState(false);
 
   const loadCertificates = useCallback(async (activeConfig, recipient, jwt) => {
     if (!ethers.isAddress(activeConfig?.certificateAddress || '')) return;
@@ -206,11 +216,15 @@ function CertificateContent() {
           setPhase({
             id: String(loadedConfig.currentPhase.id),
             name: loadedConfig.currentPhase.name || 'Sócio Fundador',
+            certificateType: loadedConfig.currentPhase.certificateType || loadedConfig.currentPhase.name || '',
             minCasDeposit: String(
               loadedConfig.currentPhase.casAmount || DEFAULT_PHASE.minCasDeposit
             ),
             active: Boolean(loadedConfig.currentPhase.active),
             minted: String(loadedConfig.currentPhase.minted || '0'),
+            skillsDescription: loadedConfig.currentPhase.skillsDescription || '',
+            instructions: loadedConfig.currentPhase.instructions || '',
+            achievementSummary: loadedConfig.currentPhase.achievementSummary || '',
           });
         }
         if (profileResponse.status < 400) {
@@ -264,6 +278,31 @@ function CertificateContent() {
     readWalletBalance();
     return () => { cancelled = true; };
   }, [account, config?.casTokenAddress, config?.chainId, config?.diamondAddress, getProvider]);
+
+  useEffect(() => {
+    const feeTypeId = phase?.extraFeeTypeId;
+    const hasFee = Boolean(feeTypeId && feeTypeId !== '0');
+    if (!hasFee || !ethers.isAddress(config?.diamondAddress || '')) {
+      setExtraFeeAmount(null);
+      return;
+    }
+    let cancelled = false;
+    async function fetchExtraFee() {
+      setExtraFeeLoading(true);
+      try {
+        const provider = new ethers.JsonRpcProvider(config.rpcUrl);
+        const diamond = new ethers.Contract(config.diamondAddress, DIAMOND_READ_ABI, provider);
+        const amount = await diamond.getCustomFee(BigInt(feeTypeId));
+        if (!cancelled) setExtraFeeAmount(amount.toString());
+      } catch {
+        if (!cancelled) setExtraFeeAmount(null);
+      } finally {
+        if (!cancelled) setExtraFeeLoading(false);
+      }
+    }
+    fetchExtraFee();
+    return () => { cancelled = true; };
+  }, [config?.diamondAddress, config?.rpcUrl, phase?.extraFeeTypeId]);
 
   useEffect(() => {
     if (!session?.jwt) return;
@@ -330,12 +369,10 @@ function CertificateContent() {
   }, [account, config, manifest, phase, profileName, selectedChallengeId]);
 
   const requiredCas = phase?.minCasDeposit || DEFAULT_PHASE.minCasDeposit;
-  const hasEnoughCas = BigInt(casBalance || 0) >= BigInt(requiredCas || 0);
-  const hasEnoughPol = !gasEstimate || BigInt(polBalance || 0) >= gasEstimate.estimatedCost;
   const hasExtraFee = Boolean(phase?.extraFeeTypeId && phase.extraFeeTypeId !== '0');
-  const extraFeeNote = hasExtraFee
-    ? ` + taxa extra (tipo #${phase.extraFeeTypeId})`
-    : '';
+  const totalRequiredCas = BigInt(requiredCas || 0) + BigInt(extraFeeAmount || 0);
+  const hasEnoughCas = BigInt(casBalance || 0) >= totalRequiredCas;
+  const hasEnoughPol = !gasEstimate || BigInt(polBalance || 0) >= gasEstimate.estimatedCost;
 
   const selectedChallengeRequest = useMemo(() => {
     if (!selectedChallengeId) return null;
@@ -356,11 +393,11 @@ function CertificateContent() {
     ) || null;
   }, [challenges, selectedChallengeId]);
 
-  // As habilidades e instrucoes orientam o candidato somente enquanto a emissao
-  // nao foi autorizada; depois disso o proprio certificado ja e a evidencia.
+  // As habilidades e instrucoes orientam o candidato ate o certificado ser
+  // efetivamente emitido on-chain; depois disso o proprio certificado ja e a evidencia.
   const showChallengeBriefing = Boolean(
     selectedChallenge
-    && !isApproved
+    && !currentCertificate
     && selectedChallenge.hasCertificate !== true
     && (selectedChallenge.skillsDescription || selectedChallenge.instructions)
   );
@@ -481,26 +518,31 @@ function CertificateContent() {
       const contract = getCertificateContract(config.certificateAddress, signer);
       const balance = await cas.balanceOf(recipient);
       setCasBalance(balance.toString());
-      if (balance < BigInt(authorization.casAmount)) {
+      const useDiamond = ethers.isAddress(config.diamondAddress);
+      // Quando o fluxo passa pelo Diamond, o CertificateFacet cobra o deposito
+      // (casAmount) e, se a fase tiver taxa extra configurada, tambem a taxa
+      // (extraFeeAmount) via safeTransferFrom na mesma transacao.
+      const totalNeeded = useDiamond
+        ? BigInt(authorization.casAmount) + BigInt(extraFeeAmount || 0)
+        : BigInt(authorization.casAmount);
+      if (balance < totalNeeded) {
         setShowSwap(true);
         throw new Error(
-          `Saldo CAS insuficiente. Voce precisa de ${formatCasAmount(authorization.casAmount)}; ` +
-          `seu saldo e ${formatCasAmount(balance.toString(), 6)}.`
+          `Saldo CAS insuficiente. Voce precisa de ${formatCasAmount(totalNeeded.toString())} ` +
+          `(deposito + taxa de emissao); seu saldo e ${formatCasAmount(balance.toString(), 6)}.`
         );
       }
 
       let mintTx;
-      const useDiamond = ethers.isAddress(config.diamondAddress);
       if (useDiamond) {
         // Fluxo via Diamond Proxy: aprova o Diamond (contrato conhecido/verificado)
         // para gastar o CAS necessario (deposito + taxa extra) e emite em uma unica transacao.
         // O CertificateFacet puxa casAmount para o contrato de certificados e extraFee
         // para o InfrastructureFund, ambos via safeTransferFrom.
         const diamond = getDiamondCertificateContract(config.diamondAddress, signer);
-        const totalNeeded = BigInt(authorization.casAmount);
         const currentAllowance = await cas.allowance(recipient, config.diamondAddress);
         if (currentAllowance < totalNeeded) {
-          setStep(`Aprovando ${formatCasAmount(totalNeeded)} CAS para o Diamond...`);
+          setStep(`Aprovando ${formatCasAmount(totalNeeded.toString())} CAS (depósito + taxa) para o Diamond...`);
           const approveTx = await cas.approve(config.diamondAddress, totalNeeded);
           await approveTx.wait();
         }
@@ -735,11 +777,13 @@ function CertificateContent() {
                       setPhase({
                         id: String(ch.onchainPhaseId || ch.id),
                         name: ch.name || 'Desafio',
+                        certificateType: ch.name || 'Desafio',
                         minCasDeposit: String(ch.minCasDeposit || DEFAULT_PHASE.minCasDeposit),
                         active: ch.status === 'active' || ch.active === true,
                         minted: String(ch.minted || '0'),
                         skillsDescription: ch.skillsDescription || '',
                         instructions: ch.instructions || '',
+                        achievementSummary: ch.achievementSummary || '',
                         extraFeeTypeId: String(ch.extraFeeTypeId || '0'),
                         tbaRebateBps: Number(ch.tbaRebateBps || 0),
                       });
@@ -925,21 +969,42 @@ function CertificateContent() {
                   </div>
                 )}
                 <button
-                  onClick={handleMint}
-                  disabled={minting || !profileName || !phase?.active || !config?.enabled || (gasEstimate && !hasEnoughPol) || needsApproval}
+                  onClick={() => setShowMintModal(true)}
+                  disabled={minting || !profileName || !phase?.active || !config?.enabled || (gasEstimate && !hasEnoughPol) || needsApproval || extraFeeLoading}
                   className="btn-primary w-full"
                 >
                   {minting ? <Spinner size={17} /> : <Award size={17} />}
-                  {minting ? (step || 'Processando...') : needsApproval ? 'Aguardando aprovação' : 'Emitir certificado'}
+                  {minting
+                    ? (step || 'Processando...')
+                    : needsApproval
+                      ? 'Aguardando aprovação'
+                      : extraFeeLoading
+                        ? 'Carregando custos...'
+                        : 'Emitir certificado'}
                 </button>
-                {hasExtraFee && (
-                  <p className="mt-2 text-xs text-amber-300">
-                    Esta fase inclui uma taxa extra de emissão (tipo #{phase.extraFeeTypeId}) além do aporte CAS.
-                    {Number(phase.tbaRebateBps) > 0 && (
-                      <> {Number(phase.tbaRebateBps) / 100}% é rebatido para a TBA do Sócio Fundador; o restante vai para o Fundo de Infraestrutura.</>
-                    )}
-                  </p>
-                )}
+                <div className="mt-2 rounded-lg border border-slate-800 bg-slate-950/60 p-2.5 text-xs text-slate-400">
+                  <div className="flex items-center justify-between">
+                    <span>Aporte (reserva TBA)</span>
+                    <span className="text-slate-200">{formatCasAmount(requiredCas)}</span>
+                  </div>
+                  {hasExtraFee && (
+                    <div className="mt-1 flex items-center justify-between">
+                      <span>Taxa de emissão</span>
+                      <span className="text-slate-200">
+                        {extraFeeLoading ? '...' : extraFeeAmount != null ? formatCasAmount(extraFeeAmount) : '—'}
+                      </span>
+                    </div>
+                  )}
+                  <div className="mt-1.5 flex items-center justify-between border-t border-slate-800 pt-1.5 font-semibold">
+                    <span className="text-slate-300">Custo total</span>
+                    <span className="text-white">{formatCasAmount(totalRequiredCas.toString())}</span>
+                  </div>
+                  {hasExtraFee && Number(phase.tbaRebateBps) > 0 && (
+                    <p className="mt-1.5 text-[11px] text-slate-500">
+                      {Number(phase.tbaRebateBps) / 100}% da taxa retorna para a TBA do seu Sócio Fundador; o restante vai para o Fundo de Infraestrutura.
+                    </p>
+                  )}
+                </div>
               </>
             ) : (
               <div className={`rounded-xl border p-4 ${
@@ -1057,8 +1122,18 @@ function CertificateContent() {
                   </p>
                   <h3 className="mt-1 text-lg font-bold text-white">{selectedChallenge.name}</h3>
                 </div>
-                <span className="shrink-0 rounded-full bg-amber-500/15 px-3 py-1 text-xs font-semibold text-amber-300">
-                  {isPending ? 'Em análise' : isRejected ? 'Rejeitado' : 'Aguardando solicitação'}
+                <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
+                  isApproved
+                    ? 'bg-emerald-500/15 text-emerald-300'
+                    : 'bg-amber-500/15 text-amber-300'
+                }`}>
+                  {isApproved
+                    ? 'Aprovado — pronto para emitir'
+                    : isPending
+                      ? 'Em análise'
+                      : isRejected
+                        ? 'Rejeitado'
+                        : 'Aguardando solicitação'}
                 </span>
               </div>
 
@@ -1087,8 +1162,8 @@ function CertificateContent() {
               </div>
 
               <p className="mt-5 border-t border-slate-800 pt-4 text-xs text-slate-500">
-                Estas orientações deixam de ser exibidas assim que a emissão do certificado for
-                autorizada.
+                Estas orientações deixam de ser exibidas assim que o certificado for emitido
+                on-chain.
               </p>
             </div>
           )}
@@ -1175,10 +1250,211 @@ function CertificateContent() {
         />
       )}
 
+      {showMintModal && (
+        <MintConfirmationModal
+          phase={phase}
+          requiredCas={requiredCas}
+          hasExtraFee={hasExtraFee}
+          extraFeeAmount={extraFeeAmount}
+          extraFeeLoading={extraFeeLoading}
+          totalRequiredCas={totalRequiredCas}
+          gasEstimate={gasEstimate}
+          useDiamond={ethers.isAddress(config?.diamondAddress || '')}
+          onCancel={() => setShowMintModal(false)}
+          onConfirm={() => {
+            setShowMintModal(false);
+            handleMint();
+          }}
+        />
+      )}
+
         </>
       )}
 
     </div>
+  );
+}
+
+/**
+ * Modal de confirmacao exibido antes de emitir o certificado. Detalha de
+ * forma transparente todos os valores cobrados (aporte CAS + taxa extra),
+ * o destino de cada valor, o custo de gas estimado e os passos on-chain que
+ * serao executados, para que o usuario nunca seja surpreendido por uma
+ * cobranca nao explicada.
+ */
+function MintConfirmationModal({
+  phase,
+  requiredCas,
+  hasExtraFee,
+  extraFeeAmount,
+  extraFeeLoading,
+  totalRequiredCas,
+  gasEstimate,
+  useDiamond,
+  onCancel,
+  onConfirm,
+}) {
+  const rebateBps = Number(phase?.tbaRebateBps || 0);
+  const hasRebate = hasExtraFee && rebateBps > 0;
+  const feeValue = extraFeeAmount != null ? BigInt(extraFeeAmount) : 0n;
+  const tbaShare = hasRebate ? (feeValue * BigInt(rebateBps)) / 10000n : 0n;
+  const infraShare = hasExtraFee ? feeValue - tbaShare : 0n;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-4 overflow-y-auto"
+      onClick={onCancel}
+    >
+      <div
+        className="card my-8 w-full max-w-lg space-y-5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
+            <Award size={20} className="text-brand-400" />
+            Confirmar emissão do certificado
+          </h2>
+          <button onClick={onCancel} className="text-slate-400 hover:text-white">
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Breakdown de custos */}
+        <div className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+            O que você vai pagar
+          </p>
+
+          <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-2 text-sm font-medium text-white">
+                <Landmark size={15} className="text-cyan-400" /> Aporte CAS (reserva TBA)
+              </span>
+              <span className="font-semibold text-white">{formatCasAmount(requiredCas)}</span>
+            </div>
+            <p className="mt-1.5 text-xs text-slate-400">
+              Este valor fica reservado na conta token-bound (TBA) do seu certificado NFT.
+              Permanece sob seu controle e é devolvido se o certificado for revogado.
+            </p>
+          </div>
+
+          {hasExtraFee && (
+            <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2 text-sm font-medium text-white">
+                  <Coins size={15} className="text-amber-400" /> Taxa de emissão
+                </span>
+                <span className="font-semibold text-white">
+                  {extraFeeLoading ? <Spinner size={14} /> : formatCasAmount(extraFeeAmount || '0')}
+                </span>
+              </div>
+              {hasRebate ? (
+                <p className="mt-1.5 text-xs text-slate-400">
+                  {rebateBps / 100}% ({formatCasAmount(tbaShare.toString())}) retorna para a TBA do
+                  seu certificado Sócio Fundador; o restante ({formatCasAmount(infraShare.toString())})
+                  vai para o Fundo de Infraestrutura da comunidade.
+                </p>
+              ) : (
+                <p className="mt-1.5 text-xs text-slate-400">
+                  Este valor vai integralmente para o Fundo de Infraestrutura, que mantém os
+                  serviços e a operação da comunidade Agentic Space.
+                </p>
+              )}
+            </div>
+          )}
+
+          <div className="rounded-xl border border-brand-500/30 bg-brand-500/10 p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-brand-200">Custo total em CAS</span>
+              <span className="text-lg font-bold text-white">
+                {formatCasAmount(totalRequiredCas.toString())}
+              </span>
+            </div>
+          </div>
+
+          {gasEstimate && (
+            <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-sm">
+              <span className="flex items-center gap-2 text-slate-300">
+                <Fuel size={15} className="text-orange-400" /> Gas estimado (Polygon)
+              </span>
+              <span className="font-semibold text-white">{formatPolCost(gasEstimate.estimatedCost)}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Passos do fluxo */}
+        <div className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+            O que vai acontecer
+          </p>
+          <ol className="space-y-2 text-sm text-slate-300">
+            <li className="flex items-start gap-2">
+              <ArrowRight size={15} className="mt-0.5 shrink-0 text-brand-400" />
+              {useDiamond ? (
+                <span>Aprovar o contrato Diamond para gastar {formatCasAmount(totalRequiredCas.toString())} do seu saldo CAS.</span>
+              ) : (
+                <span>Transferir {formatCasAmount(requiredCas)} CAS para o contrato de certificados.</span>
+              )}
+            </li>
+            {useDiamond ? (
+              <>
+                <li className="flex items-start gap-2">
+                  <ArrowRight size={15} className="mt-0.5 shrink-0 text-brand-400" />
+                  <span>Depositar {formatCasAmount(requiredCas)} CAS na conta ERC-6551 do certificado.</span>
+                </li>
+                {hasExtraFee && (
+                  <li className="flex items-start gap-2">
+                    <ArrowRight size={15} className="mt-0.5 shrink-0 text-brand-400" />
+                    <span>Pagar {formatCasAmount(extraFeeAmount || '0')} de taxa de emissão (dividida entre TBA e Fundo de Infraestrutura).</span>
+                  </li>
+                )}
+              </>
+            ) : (
+              <li className="flex items-start gap-2">
+                <ArrowRight size={15} className="mt-0.5 shrink-0 text-brand-400" />
+                <span>Registrar o depósito CAS no contrato de certificados.</span>
+              </li>
+            )}
+            <li className="flex items-start gap-2">
+              <ArrowRight size={15} className="mt-0.5 shrink-0 text-brand-400" />
+              <span>Emitir o NFT do certificado e criar a conta ERC-6551 vinculada a ele.</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <ArrowRight size={15} className="mt-0.5 shrink-0 text-brand-400" />
+              <span>Aguardar a confirmação da transação na rede Polygon.</span>
+            </li>
+          </ol>
+        </div>
+
+        {/* Avisos */}
+        <div className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-100">
+          <ShieldAlert size={16} className="mt-0.5 shrink-0 text-amber-400" />
+          <span>
+            O certificado é intransferível (SBT). O contrato grava apenas o hash do seu nome —
+            a operação é registrada permanentemente na blockchain e não pode ser desfeita.
+          </span>
+        </div>
+
+        <div className="flex items-start gap-2 rounded-lg border border-blue-500/30 bg-blue-500/10 p-3 text-xs text-blue-100">
+          <Info size={16} className="mt-0.5 shrink-0 text-blue-400" />
+          <span>
+            Você precisará confirmar cada transação na sua carteira (MetaMask). Mantenha a página
+            aberta até o processo terminar.
+          </span>
+        </div>
+
+        <div className="flex justify-end gap-3">
+          <button onClick={onCancel} className="btn-secondary">
+            Cancelar
+          </button>
+          <button onClick={onConfirm} disabled={extraFeeLoading} className="btn-primary">
+            <Award size={16} />
+            Entendi, emitir certificado
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }
 
