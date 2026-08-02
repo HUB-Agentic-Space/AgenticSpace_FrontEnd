@@ -182,51 +182,67 @@ export function markdownToHtml(md) {
  * @param {object} opts - { startX, startY, lineHeight, maxWidth, fontSize }
  * @returns {Array} Array of { text, x, y, fontSize, fontWeight } elements
  */
+function measureSvgText(text, fontSize, widthFactor = 0.55) {
+  return Array.from(String(text ?? '')).length * (fontSize * widthFactor);
+}
+
+function wrapSvgLine(text, maxWidth, fontSize, widthFactor = 0.55) {
+  const words = String(text ?? '').split(/\s+/).filter(Boolean);
+  if (words.length === 0) return [''];
+  const lines = [];
+  let current = '';
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (current && measureSvgText(candidate, fontSize, widthFactor) > maxWidth) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = candidate;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
 export function markdownToSvgElements(md, opts = {}) {
   const {
     startX = 0,
     startY = 0,
     lineHeight = 20,
     fontSize = 14,
+    maxWidth = 0,
+    widthFactor = 0.55,
   } = opts;
 
   const blocks = parseMarkdown(md);
   const elements = [];
   let y = startY;
 
+  const pushWrapped = (text, fSize, weight) => {
+    if (maxWidth > 0) {
+      const wrapped = wrapSvgLine(text, maxWidth, fSize, widthFactor);
+      for (const line of wrapped) {
+        elements.push({ text: line, x: startX, y, fontSize: fSize, fontWeight: weight });
+        y += lineHeight;
+      }
+    } else {
+      elements.push({ text, x: startX, y, fontSize: fSize, fontWeight: weight });
+      y += lineHeight;
+    }
+  };
+
   for (const block of blocks) {
     switch (block.type) {
       case 'heading':
-        elements.push({
-          text: block.text,
-          x: startX,
-          y,
-          fontSize: fontSize + (6 - block.level),
-          fontWeight: '700',
-        });
-        y += lineHeight;
+        pushWrapped(block.text, fontSize + (6 - block.level), '700');
         break;
       case 'paragraph':
-        elements.push({
-          text: block.text,
-          x: startX,
-          y,
-          fontSize,
-          fontWeight: '400',
-        });
-        y += lineHeight;
+        pushWrapped(block.text, fontSize, '400');
         break;
       case 'list':
         for (let j = 0; j < block.items.length; j++) {
           const prefix = block.ordered ? `${j + 1}. ` : '• ';
-          elements.push({
-            text: `${prefix}${block.items[j]}`,
-            x: startX,
-            y,
-            fontSize,
-            fontWeight: '400',
-          });
-          y += lineHeight;
+          pushWrapped(`${prefix}${block.items[j]}`, fontSize, '400');
         }
         break;
     }

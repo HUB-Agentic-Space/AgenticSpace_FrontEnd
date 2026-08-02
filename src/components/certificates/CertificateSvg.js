@@ -384,6 +384,17 @@ function CertificateFrontPage({ manifest, draft }) {
   );
 }
 
+// ── Verso: constantes de layout ──────────────────────────────────────
+const BACK_MARGIN_X = 120;
+const BACK_CONTENT_WIDTH = 1360; // 1600 - 2*120
+const BACK_SKILLS_MAX_WIDTH = 940; // deixa espaço para QR codes à direita
+const BACK_SKILLS_FONT_SIZE = 13;
+const BACK_SKILLS_LINE_HEIGHT = 18;
+const BACK_QR_SIZE = 110;
+const BACK_QR_GAP = 16;
+const BACK_BOTTOM_Y = 860; // linha inferior: QR codes + box on-chain
+const BACK_BOX_HEIGHT = 150;
+
 function CertificateBackPage({ manifest }) {
   const certificate = manifest?.certificate || {};
   const blockchain = manifest?.blockchain || {};
@@ -397,18 +408,26 @@ function CertificateBackPage({ manifest }) {
     ? `${explorerUrl}/token/${blockchain.contractAddress}?a=${tokenId}`
     : '';
 
-  const qrVerification = useQrCode(verificationUrl, { width: 240, margin: 1 });
-  const qrNft = useQrCode(nftUrl, { width: 240, margin: 1 });
+  const qrVerification = useQrCode(verificationUrl, { width: BACK_QR_SIZE * 2, margin: 1 });
+  const qrNft = useQrCode(nftUrl, { width: BACK_QR_SIZE * 2, margin: 1 });
 
   const skillsElements = certificate.skillsDescription
     ? markdownToSvgElements(certificate.skillsDescription, {
-        startX: 120,
+        startX: BACK_MARGIN_X,
         startY: 340,
-        lineHeight: 22,
-        fontSize: 15,
-        maxWidth: 1000,
+        lineHeight: BACK_SKILLS_LINE_HEIGHT,
+        fontSize: BACK_SKILLS_FONT_SIZE,
+        maxWidth: BACK_SKILLS_MAX_WIDTH,
+        widthFactor: 0.55,
       })
     : [];
+
+  // Posicionamento dos QR codes à direita, alinhados com o box on-chain
+  const qrRightX = BACK_MARGIN_X + BACK_CONTENT_WIDTH; // margem direita
+  const qr1X = qrRightX - BACK_QR_SIZE * 2 - BACK_QR_GAP - BACK_QR_SIZE;
+  const qr2X = qrRightX - BACK_QR_SIZE;
+  const qrY = BACK_BOTTOM_Y;
+  const qrLabelY = qrY + BACK_QR_SIZE + 16;
 
   return (
     <svg
@@ -435,10 +454,10 @@ function CertificateBackPage({ manifest }) {
 
       {certificate.skillsDescription && (
         <g>
-          <text x="120" y="280" fill="#00011e" fontFamily="Arial, Helvetica, sans-serif" fontSize="20" fontWeight="700">
+          <text x={BACK_MARGIN_X} y="330" fill="#00011e" fontFamily="Arial, Helvetica, sans-serif" fontSize="18" fontWeight="700">
             Habilidades adquiridas
           </text>
-          <line x1="120" y1="295" x2="780" y2="295" stroke="url(#certificate-gold)" strokeWidth="2" />
+          <line x1={BACK_MARGIN_X} y1="342" x2={BACK_MARGIN_X + 600} y2="342" stroke="url(#certificate-gold)" strokeWidth="2" />
           {skillsElements.map((el, idx) => (
             <text
               key={`skill-${idx}`}
@@ -455,57 +474,62 @@ function CertificateBackPage({ manifest }) {
         </g>
       )}
 
-      <g transform="translate(1100 280)">
-        <text x="200" y="0" textAnchor="middle" fill="#00011e" fontFamily="Arial, Helvetica, sans-serif" fontSize="18" fontWeight="700">
-          Validação do certificado
+      {/* QR Code 1: Validação do certificado */}
+      <g>
+        <text x={qr1X + BACK_QR_SIZE / 2} y={qrY - 8} textAnchor="middle" fill="#00011e" fontFamily="Arial, Helvetica, sans-serif" fontSize="13" fontWeight="700">
+          Validar
         </text>
         {qrVerification ? (
-          <image href={qrVerification} x="80" y="20" width="240" height="240" />
+          <image href={qrVerification} x={qr1X} y={qrY} width={BACK_QR_SIZE} height={BACK_QR_SIZE} />
         ) : (
-          <rect x="80" y="20" width="240" height="240" rx="8" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="2" />
+          <rect x={qr1X} y={qrY} width={BACK_QR_SIZE} height={BACK_QR_SIZE} rx="6" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="2" />
         )}
-        <text x="200" y="285" textAnchor="middle" fill="#64748b" fontFamily="Arial, Helvetica, sans-serif" fontSize="13">
-          {verificationUrl ? 'Escaneie para validar' : 'Disponível após emissão'}
+        <text x={qr1X + BACK_QR_SIZE / 2} y={qrLabelY} textAnchor="middle" fill="#64748b" fontFamily="Arial, Helvetica, sans-serif" fontSize="11">
+          {verificationUrl ? 'Escaneie' : 'Após emissão'}
         </text>
       </g>
 
-      <g transform="translate(1100 580)">
-        <text x="200" y="0" textAnchor="middle" fill="#00011e" fontFamily="Arial, Helvetica, sans-serif" fontSize="18" fontWeight="700">
-          NFT on-chain
+      {/* QR Code 2: NFT on-chain */}
+      <g>
+        <text x={qr2X + BACK_QR_SIZE / 2} y={qrY - 8} textAnchor="middle" fill="#00011e" fontFamily="Arial, Helvetica, sans-serif" fontSize="13" fontWeight="700">
+          NFT
         </text>
         {qrNft ? (
-          <image href={qrNft} x="80" y="20" width="240" height="240" />
+          <image href={qrNft} x={qr2X} y={qrY} width={BACK_QR_SIZE} height={BACK_QR_SIZE} />
         ) : (
-          <rect x="80" y="20" width="240" height="240" rx="8" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="2" />
+          <rect x={qr2X} y={qrY} width={BACK_QR_SIZE} height={BACK_QR_SIZE} rx="6" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="2" />
         )}
-        <text x="200" y="285" textAnchor="middle" fill="#64748b" fontFamily="Arial, Helvetica, sans-serif" fontSize="13">
-          {nftUrl ? 'Escaneie para ver on-chain' : 'Disponível após emissão'}
+        <text x={qr2X + BACK_QR_SIZE / 2} y={qrLabelY} textAnchor="middle" fill="#64748b" fontFamily="Arial, Helvetica, sans-serif" fontSize="11">
+          {nftUrl ? 'Escaneie' : 'Após emissão'}
         </text>
       </g>
 
-      <g transform="translate(115 700)">
-        <rect width="930" height="60" rx="8" fill="#fff" fillOpacity="0.9" stroke="#cbd5e1" />
-        <text x="20" y="25" fill="#64748b" fontFamily="Arial, Helvetica, sans-serif" fontSize="14">TITULAR</text>
-        <text x="20" y="48" fill="#0f172a" fontFamily="monospace" fontSize="16" fontWeight="700">{recipientName}</text>
-        <text x="350" y="25" fill="#64748b" fontFamily="Arial, Helvetica, sans-serif" fontSize="14">TOKEN ID</text>
-        <text x="350" y="48" fill="#0f172a" fontFamily="monospace" fontSize="16" fontWeight="700">#{tokenId}</text>
-        <text x="600" y="25" fill="#64748b" fontFamily="Arial, Helvetica, sans-serif" fontSize="14">FASE</text>
-        <text x="600" y="48" fill="#0f172a" fontFamily="Arial, Helvetica, sans-serif" fontSize="16" fontWeight="700">{phaseTitle}</text>
-      </g>
+      {/* Box on-chain + info bar (titular/token/fase) — mesma linha dos QR codes */}
+      <g transform={`translate(${BACK_MARGIN_X} ${BACK_BOTTOM_Y})`}>
+        <rect width={BACK_CONTENT_WIDTH - BACK_QR_SIZE * 2 - BACK_QR_GAP} height={BACK_BOX_HEIGHT} rx="12" fill="#00011e" />
+        {/* Info bar integrada */}
+        <text x="20" y="28" fill="#93c5fd" fontFamily="Arial, Helvetica, sans-serif" fontSize="13" letterSpacing="1">TITULAR</text>
+        <text x="20" y="48" fill="#fff" fontFamily="Arial, Helvetica, sans-serif" fontSize="15" fontWeight="700">{recipientName}</text>
+        <text x="20" y="72" fill="#93c5fd" fontFamily="Arial, Helvetica, sans-serif" fontSize="13" letterSpacing="1">FASE</text>
+        <text x="20" y="92" fill="#fff" fontFamily="Arial, Helvetica, sans-serif" fontSize="15" fontWeight="700">{phaseTitle}</text>
 
-      <g transform="translate(115 790)">
-        <rect width="1370" height="120" rx="12" fill="#00011e" />
-        <text x="24" y="30" fill="#93c5fd" fontFamily="Arial, Helvetica, sans-serif" fontSize="16" letterSpacing="2">
+        <line x1="320" y1="20" x2="320" y2="130" stroke="#1e3a5f" strokeWidth="1" />
+
+        {/* Verificação on-chain */}
+        <text x="340" y="28" fill="#93c5fd" fontFamily="Arial, Helvetica, sans-serif" fontSize="13" letterSpacing="2">
           VERIFICAÇÃO ON-CHAIN
         </text>
-        <text x="24" y="60" fill="#fff" fontFamily="Arial, Helvetica, sans-serif" fontSize="18" fontWeight="700">
+        <text x="340" y="52" fill="#fff" fontFamily="Arial, Helvetica, sans-serif" fontSize="15" fontWeight="700">
           Contrato: {compactAddress(blockchain.contractAddress, 12, 8)}
         </text>
-        <text x="24" y="88" fill="#cbd5e1" fontFamily="Arial, Helvetica, sans-serif" fontSize="16">
+        <text x="340" y="76" fill="#cbd5e1" fontFamily="Arial, Helvetica, sans-serif" fontSize="13">
           Chain ID: {blockchain.chainId || 137} • Explorer: {explorerUrl}
         </text>
-        <text x="24" y="110" fill="#cbd5e1" fontFamily="Arial, Helvetica, sans-serif" fontSize="14">
+        <text x="340" y="98" fill="#cbd5e1" fontFamily="Arial, Helvetica, sans-serif" fontSize="13">
           TX: {compactAddress(blockchain.transactionHash, 12, 8) || '—'}
+        </text>
+        <text x="340" y="120" fill="#cbd5e1" fontFamily="Arial, Helvetica, sans-serif" fontSize="13">
+          Token ID: #{tokenId}
         </text>
       </g>
 
