@@ -387,7 +387,7 @@ function CertificateFrontPage({ manifest, draft }) {
 // ── Verso: constantes de layout ──────────────────────────────────────
 const BACK_MARGIN_X = 120;
 const BACK_CONTENT_WIDTH = 1360; // 1600 - 2*120
-const BACK_SKILLS_MAX_WIDTH = 1270; // 35% mais largo — usa quase toda a largura útil
+const BACK_SKILLS_MAX_WIDTH = 1360; // largura total até a margem direita
 const BACK_SKILLS_FONT_SIZE = 13;
 const BACK_SKILLS_LINE_HEIGHT = 18;
 const BACK_QR_SIZE = 110;
@@ -414,11 +414,14 @@ function CertificateBackPage({ manifest }) {
   const skillsElements = certificate.skillsDescription
     ? markdownToSvgElements(certificate.skillsDescription, {
         startX: BACK_MARGIN_X,
-        startY: 340,
+        startY: 320,
         lineHeight: BACK_SKILLS_LINE_HEIGHT,
         fontSize: BACK_SKILLS_FONT_SIZE,
         maxWidth: BACK_SKILLS_MAX_WIDTH,
         widthFactor: 0.55,
+      }).filter((el) => {
+        const t = el.text?.toLowerCase().trim() || '';
+        return t !== 'conhecimentos e habilidades desenvolvidos';
       })
     : [];
 
@@ -455,10 +458,6 @@ function CertificateBackPage({ manifest }) {
 
       {certificate.skillsDescription && (
         <g>
-          <text x={BACK_MARGIN_X} y="330" fill="#00011e" fontFamily="Arial, Helvetica, sans-serif" fontSize="18" fontWeight="700">
-            Habilidades adquiridas
-          </text>
-          <line x1={BACK_MARGIN_X} y1="342" x2={BACK_MARGIN_X + 600} y2="342" stroke="url(#certificate-gold)" strokeWidth="2" />
           {skillsElements.map((el, idx) => (
             <text
               key={`skill-${idx}`}
