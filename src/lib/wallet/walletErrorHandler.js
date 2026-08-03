@@ -89,10 +89,14 @@ const CERTIFICATE_CUSTOM_ERRORS = [
 function decodeCustomSolidityError(error) {
   try {
     const revertData = error?.data || error?.reason?.data || error?.error?.data;
+    console.error('[walletErrorHandler] revert data:', { revertData });
     if (!revertData || typeof revertData !== 'string' || !revertData.startsWith('0x')) return null;
     const selector = revertData.slice(0, 10).toLowerCase();
     const match = CERTIFICATE_CUSTOM_ERRORS.find((e) => e.selector === selector);
-    if (!match) return null;
+    if (!match) {
+      console.warn('[walletErrorHandler] unknown custom error selector:', { selector, revertData });
+      return null;
+    }
     return {
       title: 'Erro do Contrato',
       message: match.message,
@@ -207,6 +211,20 @@ export function parseWalletError(error, context = {}) {
 
   const rawMessage = error.shortMessage || error.reason || error.message || '';
   const lowerMsg = (rawMessage || '').toLowerCase();
+
+  console.error('[walletErrorHandler] raw error:', {
+    errorCode: error?.code,
+    shortMessage: error?.shortMessage,
+    reason: error?.reason,
+    message: error?.message,
+    data: error?.data,
+    transactionData: error?.transaction?.data,
+    transactionTo: error?.transaction?.to,
+    method: error?.method || error?.methodName,
+    address: error?.address || error?.to,
+    info: error?.info,
+    context,
+  });
   const errorCode = error.code;
   const action = error.action || error.info?.action;
 

@@ -479,6 +479,15 @@ function CertificateContent() {
       }
       const nameHash = hashCertificateName(profileName, recipient);
 
+      console.log('[CertificatePageClient.handleMint] start', {
+        certificateAddress: config.certificateAddress,
+        diamondAddress: config.diamondAddress,
+        casTokenAddress: config.casTokenAddress,
+        issuerAddress: config.issuerAddress,
+        phaseId: phase.id,
+        recipient,
+      });
+
       setStep('Confirmando sua elegibilidade como inscrito...');
       const preparedResponse = await prepareCertificateMint({
         recipient,
@@ -497,6 +506,13 @@ function CertificateContent() {
       const authorization = normalizeAuthorization(mint);
       const issuer = mint?.issuer || mint?.issuerAddress || config.issuerAddress;
       const signature = mint?.signature;
+
+      console.log('[CertificatePageClient] prepared mint', {
+        status: preparedResponse.status,
+        authorization,
+        issuer,
+        signature,
+      });
 
       if (!ethers.isAddress(issuer) || !ethers.isHexString(signature)) {
         throw new Error('A autorizacao retornada pelo emissor esta incompleta.');
@@ -525,6 +541,13 @@ function CertificateContent() {
       const contract = getCertificateContract(config.certificateAddress, signer);
       const balance = await cas.balanceOf(recipient);
       setCasBalance(balance.toString());
+
+      console.log('[CertificatePageClient] contracts ready', {
+        balance: balance.toString(),
+        certificateAddress: config.certificateAddress,
+        diamondAddress: config.diamondAddress,
+        casTokenAddress: config.casTokenAddress,
+      });
       let useDiamond = ethers.isAddress(config.diamondAddress);
       if (useDiamond) {
         try {
@@ -544,12 +567,21 @@ function CertificateContent() {
           console.warn('[CertificatePageClient] Diamond trust check failed — using direct contract.', guardErr);
         }
       }
+      console.log('[CertificatePageClient] useDiamond decision', { useDiamond });
       // Quando o fluxo passa pelo Diamond, o CertificateFacet cobra o deposito
       // (casAmount) e, se a fase tiver taxa extra configurada, tambem a taxa
       // (extraFeeAmount) via safeTransferFrom na mesma transacao.
       const totalNeeded = useDiamond
         ? BigInt(authorization.casAmount) + BigInt(extraFeeAmount || 0)
         : BigInt(authorization.casAmount);
+
+      console.log('[CertificatePageClient] totalNeeded', {
+        useDiamond,
+        totalNeeded: totalNeeded.toString(),
+        balance: balance.toString(),
+        extraFeeAmount: String(extraFeeAmount || 0),
+      });
+
       if (balance < totalNeeded) {
         setShowSwap(true);
         throw new Error(
@@ -566,6 +598,13 @@ function CertificateContent() {
         // para o InfrastructureFund, ambos via safeTransferFrom.
         const diamond = getDiamondCertificateContract(config.diamondAddress, signer);
         const currentAllowance = await cas.allowance(recipient, config.diamondAddress);
+
+        console.log('[CertificatePageClient] diamond allowance', {
+          currentAllowance: currentAllowance.toString(),
+          totalNeeded: totalNeeded.toString(),
+          diamondAddress: config.diamondAddress,
+        });
+
         if (currentAllowance < totalNeeded) {
           setStep(`Aprovando ${formatCasAmount(totalNeeded.toString())} CAS (depósito + taxa) para o Diamond...`);
           const approveTx = await cas.approve(config.diamondAddress, totalNeeded);
@@ -573,22 +612,36 @@ function CertificateContent() {
         }
 
         setStep('Emitindo o NFT e criando a conta ERC-6551 (via Diamond)...');
+        console.log('[CertificatePageClient] calling depositAndMintCertificate', { authorization, issuer, signature });
         mintTx = await diamond.depositAndMintCertificate(authorization, issuer, signature);
       } else {
         setStep(`Transferindo ${formatCasAmount(authorization.casAmount)} CAS para o contrato...`);
+        console.log('[CertificatePageClient] calling cas.transfer', {
+          certificateAddress: config.certificateAddress,
+          casAmount: authorization.casAmount,
+        });
         const transferTx = await cas.transfer(config.certificateAddress, authorization.casAmount);
         await transferTx.wait();
 
         setStep('Registrando o depósito CAS...');
+        console.log('[CertificatePageClient] calling depositCasForMint', { phaseId: authorization.phaseId });
         const depositTx = await contract.depositCasForMint(authorization.phaseId);
         await depositTx.wait();
 
         setStep('Emitindo o NFT e criando a conta ERC-6551...');
+        console.log('[CertificatePageClient] calling mintCertificate', { authorization, issuer, signature });
         mintTx = await contract.mintCertificate(authorization, issuer, signature);
       }
+
+      console.log('[CertificatePageClient] mint tx sent', { hash: mintTx.hash });
       setLastTxHash(mintTx.hash);
       setStep('Aguardando a confirmacao na Polygon...');
       const receipt = await mintTx.wait();
+      console.log('[CertificatePageClient] receipt', {
+        status: receipt.status,
+        logsCount: receipt.logs?.length,
+        gasUsed: receipt.gasUsed?.toString?.(),
+      });
       if (receipt.status !== 1) throw new Error('A transacao nao foi confirmada pela rede.');
       const minted = parseCertificateMinted(receipt, contract.interface);
 
@@ -605,7 +658,9 @@ function CertificateContent() {
       await loadCertificates(config, recipient, session?.jwt);
       setSuccess(`Certificado #${minted.tokenId} emitido com sucesso.${confirmationWarning}`);
     } catch (mintError) {
+      console.error('[CertificatePageClient] mint error:', mintError);
       const parsed = parseWalletError(mintError, { account, config });
+      console.error('[CertificatePageClient] parsed wallet error:', parsed);
       setWalletErrorObj(parsed);
     } finally {
       setStep('');
