@@ -829,19 +829,6 @@ function CertificateContent() {
     }
   }
 
-  async function handleSvg() {
-    if (!manifest) return;
-    setExporting('svg');
-    setError('');
-    try {
-      await downloadCertificateSvg(getArtwork(), manifest);
-    } catch (exportError) {
-      setError(walletError(exportError));
-    } finally {
-      setExporting('');
-    }
-  }
-
   async function handleInstructionsPdf() {
     if (!selectedChallenge) return;
     setExporting('instructions');
@@ -1428,9 +1415,6 @@ function CertificateContent() {
             </button>
             <button onClick={() => window.print()} disabled={!manifest} className="btn-secondary">
               <Printer size={17} /> Imprimir
-            </button>
-            <button onClick={handleSvg} disabled={!manifest || Boolean(exporting)} className="btn-secondary">
-              {exporting === 'svg' ? <Spinner size={16} /> : <FileCheck2 size={17} />} Baixar SVG
             </button>
             <button onClick={copyLinkedInData} disabled={!manifest || certificate?.revoked} className="btn-secondary">
               <Linkedin size={17} /> Copiar dados para LinkedIn
