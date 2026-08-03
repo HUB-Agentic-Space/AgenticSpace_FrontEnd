@@ -455,6 +455,8 @@ function CertificateBackPage({ manifest }) {
       <text x="800" y="305" textAnchor="middle" fill="#b87408" fontFamily="Arial, Helvetica, sans-serif" fontWeight="700" fontSize="24" letterSpacing="7">
         HABILIDADES E VALIDAÇÃO
       </text>
+
+      {certificate.skillsDescription && (
         <g>
           {skillsElements.map((el, idx) => (
             <text
@@ -470,6 +472,7 @@ function CertificateBackPage({ manifest }) {
             </text>
           ))}
         </g>
+      )}
 
       {/* QR Code 1: Validação do certificado */}
       <g>

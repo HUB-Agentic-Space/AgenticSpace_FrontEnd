@@ -424,17 +424,25 @@ async function addSignatureGuidancePage(pdf, pdfLib, manifest) {
   });
 }
 
-/** Gera e baixa o diploma PDF com o manifesto verificavel nos metadados. */
-export async function downloadCertificatePdf(svgElement, manifest) {
-  const svgText = await serializeCertificateSvg(svgElement);
-  const pngBytes = await renderSvgToPng(svgText);
+/** Gera e baixa o diploma PDF com frente, verso e manifesto nos metadados. */
+export async function downloadCertificatePdf(frontSvg, backSvg, manifest) {
   const pdfLib = await import('pdf-lib');
   const { PDFDocument } = pdfLib;
   const pdf = await PDFDocument.create();
-  const page = pdf.addPage([841.8898, 595.2756]);
-  const artwork = await pdf.embedPng(pngBytes);
-  page.drawImage(artwork, { x: 0, y: 0, width: page.getWidth(), height: page.getHeight() });
-  await addSignatureGuidancePage(pdf, pdfLib, manifest);
+
+  const frontSvgText = await serializeCertificateSvg(frontSvg);
+  const frontPng = await renderSvgToPng(frontSvgText);
+  const frontPage = pdf.addPage([841.8898, 595.2756]);
+  const frontArtwork = await pdf.embedPng(frontPng);
+  frontPage.drawImage(frontArtwork, { x: 0, y: 0, width: frontPage.getWidth(), height: frontPage.getHeight() });
+
+  if (backSvg) {
+    const backSvgText = await serializeCertificateSvg(backSvg);
+    const backPng = await renderSvgToPng(backSvgText);
+    const backPage = pdf.addPage([841.8898, 595.2756]);
+    const backArtwork = await pdf.embedPng(backPng);
+    backPage.drawImage(backArtwork, { x: 0, y: 0, width: backPage.getWidth(), height: backPage.getHeight() });
+  }
 
   const payload = `${CERTIFICATE_PDF_MARKER}${encodeCertificateManifest(manifest)}`;
   pdf.setTitle(`Certificado ${manifest.certificate.phaseTitle} - ${manifest.certificate.recipientName}`);

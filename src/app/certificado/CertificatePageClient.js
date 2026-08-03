@@ -106,6 +106,8 @@ function CertificateContent() {
     switchChain,
   } = useWallet({ chains: [137, 80002] });
   const artworkRef = useRef(null);
+  const frontArtworkRef = useRef(null);
+  const backArtworkRef = useRef(null);
   const [config, setConfig] = useState(null);
   const [phase, setPhase] = useState(DEFAULT_PHASE);
   const [profileName, setProfileName] = useState('');
@@ -149,10 +151,18 @@ function CertificateContent() {
     const issuanceList = issuances.status === 'fulfilled' ? issuances.value : [];
 
     if (context?.phase) {
-      setPhase(context.phase);
+      setPhase((previous) => ({
+        ...previous,
+        ...context.phase,
+        name: context.phase.name || previous?.name || '',
+        certificateType: context.phase.certificateType || previous?.certificateType || '',
+        achievementSummary: context.phase.achievementSummary || previous?.achievementSummary || '',
+        skillsDescription: context.phase.skillsDescription || previous?.skillsDescription || '',
+        instructions: context.phase.instructions || previous?.instructions || '',
+      }));
     }
-    // Se o contexto não trouxe a fase (ex.: RPC falhou ou currentPhaseId é 0),
-    // mantém a fase previamente carregada pelo config, preservando skills/instructions.
+    // O contexto pode não trazer skills/instructions on-chain; a fase do config/desafio
+    // é preservada para os campos descritivos.
     if (context) {
       setCurrentCertificate(context.certificate);
       setCurrentPhaseCasBalance(context.currentCasBalance);
@@ -202,6 +212,8 @@ function CertificateContent() {
           name: latest.phase?.name || phase.name,
           certificateType: latest.phase?.certificateType || latest.phase?.name || phase.certificateType,
           achievementSummary: latest.phase?.achievementSummary || phase.achievementSummary,
+          skillsDescription: latest.phase?.skillsDescription || phase?.skillsDescription || '',
+          instructions: latest.phase?.instructions || phase?.instructions || '',
         };
         setCertificate(fallbackCertificate);
         setCertificatePhase(fallbackPhase);
@@ -373,9 +385,18 @@ function CertificateContent() {
 
   const manifest = useMemo(() => {
     if (!config || !certificate || !profileName || !nameMatches) return null;
+    const effectivePhase = {
+      ...phase,
+      ...certificatePhase,
+      name: certificatePhase?.name || phase?.name || '',
+      certificateType: certificatePhase?.certificateType || certificatePhase?.name || phase?.certificateType || phase?.name || '',
+      achievementSummary: certificatePhase?.achievementSummary || phase?.achievementSummary || '',
+      skillsDescription: certificatePhase?.skillsDescription || phase?.skillsDescription || '',
+      instructions: certificatePhase?.instructions || phase?.instructions || '',
+    };
     return buildCertificateManifest({
       config,
-      phase: certificatePhase || phase,
+      phase: effectivePhase,
       certificate,
       recipientName: profileName,
       txHash: lastTxHash,
@@ -770,7 +791,15 @@ function CertificateContent() {
       // Mantem a fase corrente e o desafio selecionado alinhados com a arte.
       if (selected.phase?.id) {
         setSelectedChallengeId(String(selected.phase.id));
-        setPhase(selected.phase);
+        setPhase((previous) => ({
+          ...previous,
+          ...selected.phase,
+          name: selected.phase.name || previous?.name || '',
+          certificateType: selected.phase.certificateType || selected.phase.name || previous?.certificateType || '',
+          achievementSummary: selected.phase.achievementSummary || previous?.achievementSummary || '',
+          skillsDescription: selected.phase.skillsDescription || previous?.skillsDescription || '',
+          instructions: selected.phase.instructions || previous?.instructions || '',
+        }));
       }
     } catch (selectionError) {
       const fallbackCertificate = {
@@ -794,6 +823,8 @@ function CertificateContent() {
         name: issuance.phase?.name || phase.name,
         certificateType: issuance.phase?.certificateType || issuance.phase?.name || phase.certificateType,
         achievementSummary: issuance.phase?.achievementSummary || phase.achievementSummary,
+        skillsDescription: issuance.phase?.skillsDescription || phase?.skillsDescription || '',
+        instructions: issuance.phase?.instructions || phase?.instructions || '',
       };
       setCertificate(fallbackCertificate);
       setCurrentCertificate(fallbackCertificate);
@@ -810,9 +841,15 @@ function CertificateContent() {
     }
   }
 
-  function getArtwork() {
-    const svg = artworkRef.current?.querySelector('svg');
-    if (!svg) throw new Error('A arte do certificado ainda nao foi carregada.');
+  function getFrontArtwork() {
+    const svg = frontArtworkRef.current?.querySelector('svg');
+    if (!svg) throw new Error('A frente do certificado ainda nao foi carregada.');
+    return svg;
+  }
+
+  function getBackArtwork() {
+    const svg = backArtworkRef.current?.querySelector('svg');
+    if (!svg) throw new Error('O verso do certificado ainda nao foi carregado.');
     return svg;
   }
 
@@ -821,7 +858,7 @@ function CertificateContent() {
     setExporting('pdf');
     setError('');
     try {
-      await downloadCertificatePdf(getArtwork(), manifest);
+      await downloadCertificatePdf(getFrontArtwork(), getBackArtwork(), manifest);
     } catch (exportError) {
       setError(walletError(exportError));
     } finally {
@@ -1300,6 +1337,15 @@ function CertificateContent() {
         <div className="min-w-0 space-y-5">
           <div id="certificate-print-target" ref={artworkRef} className="certificate-preview-shell">
             <CertificateSvg manifest={previewManifest} draft={!manifest} page={certificatePage} />
+          </div>
+
+          <div className="hidden" aria-hidden="true">
+            <div ref={frontArtworkRef}>
+              <CertificateSvg manifest={previewManifest} draft={!manifest} page="front" />
+            </div>
+            <div ref={backArtworkRef}>
+              <CertificateSvg manifest={previewManifest} draft={!manifest} page="back" />
+            </div>
           </div>
 
           <div className="flex items-center justify-center gap-4 py-2">
