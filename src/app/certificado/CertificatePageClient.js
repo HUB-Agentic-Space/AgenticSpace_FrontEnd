@@ -626,28 +626,50 @@ function CertificateContent() {
           throw new Error(`O contrato de certificado espera o token CAS ${onChainCasToken}, mas o frontend esta configurado para ${config.casTokenAddress}.`);
         }
 
-        setStep(`Transferindo ${formatCasAmount(authorization.casAmount)} CAS para o contrato...`);
-        console.log('[CertificatePageClient] calling cas.transfer', {
-          certificateAddress: config.certificateAddress,
-          casAmount: authorization.casAmount,
-        });
-        const preBalance = await cas.balanceOf(config.certificateAddress);
-        const transferTx = await cas.transfer(config.certificateAddress, authorization.casAmount);
-        await transferTx.wait();
-        const postBalance = await cas.balanceOf(config.certificateAddress);
-        console.log('[CertificatePageClient] CAS balance before/after transfer', {
-          preBalance: preBalance.toString(),
-          postBalance: postBalance.toString(),
-          expectedIncrease: authorization.casAmount,
-        });
-        if (postBalance <= preBalance) {
-          throw new Error('O contrato de certificado não recebeu os tokens CAS. O depósito não pode ser contabilizado.');
+        let needsTransfer = true;
+        try {
+          console.log('[CertificatePageClient] checking for existing unaccounted deposit', { phaseId: authorization.phaseId });
+          await contract.depositCasForMint.staticCall(authorization.phaseId);
+          console.log('[CertificatePageClient] existing unaccounted deposit found — skipping CAS transfer');
+          needsTransfer = false;
+        } catch (checkErr) {
+          console.log('[CertificatePageClient] no existing unaccounted deposit — CAS transfer required', { error: checkErr?.message || String(checkErr) });
+        }
+
+        if (needsTransfer) {
+          setStep(`Transferindo ${formatCasAmount(authorization.casAmount)} CAS para o contrato...`);
+          console.log('[CertificatePageClient] calling cas.transfer', {
+            certificateAddress: config.certificateAddress,
+            casAmount: authorization.casAmount,
+          });
+          const transferTx = await cas.transfer(config.certificateAddress, authorization.casAmount);
+          await transferTx.wait(2);
+        }
+
+        setStep('Aguardando o contrato reconhecer o depósito...');
+        let depositSimulation = false;
+        for (let attempt = 0; attempt < 6; attempt += 1) {
+          try {
+            console.log('[CertificatePageClient] depositCasForMint simulation attempt', { attempt, phaseId: authorization.phaseId });
+            await contract.depositCasForMint.staticCall(authorization.phaseId);
+            console.log('[CertificatePageClient] depositCasForMint simulation ok', { attempt });
+            depositSimulation = true;
+            break;
+          } catch (staticErr) {
+            console.warn('[CertificatePageClient] depositCasForMint simulation failed', { attempt, error: staticErr?.message || String(staticErr) });
+            if (attempt < 5) {
+              await new Promise((resolve) => setTimeout(resolve, 5000));
+            }
+          }
+        }
+        if (!depositSimulation) {
+          throw new Error('O depósito de CAS foi enviado, mas o contrato ainda não o reconhece na rede. Aguarde alguns minutos e clique em emitir novamente SEM transferir mais tokens.');
         }
 
         setStep('Registrando o depósito CAS...');
         console.log('[CertificatePageClient] calling depositCasForMint', { phaseId: authorization.phaseId });
         const depositTx = await contract.depositCasForMint(authorization.phaseId);
-        await depositTx.wait();
+        await depositTx.wait(2);
 
         setStep('Emitindo o NFT e criando a conta ERC-6551...');
         console.log('[CertificatePageClient] calling mintCertificate', { authorization, issuer, signature });
