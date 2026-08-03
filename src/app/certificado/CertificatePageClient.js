@@ -615,13 +615,34 @@ function CertificateContent() {
         console.log('[CertificatePageClient] calling depositAndMintCertificate', { authorization, issuer, signature });
         mintTx = await diamond.depositAndMintCertificate(authorization, issuer, signature);
       } else {
+        setStep('Verificando configuração do contrato de certificado...');
+        const onChainCasToken = await contract.casToken();
+        console.log('[CertificatePageClient] on-chain casToken check', {
+          onChainCasToken,
+          configCasToken: config.casTokenAddress,
+          certificateAddress: config.certificateAddress,
+        });
+        if (onChainCasToken.toLowerCase() !== (config.casTokenAddress || '').toLowerCase()) {
+          throw new Error(`O contrato de certificado espera o token CAS ${onChainCasToken}, mas o frontend esta configurado para ${config.casTokenAddress}.`);
+        }
+
         setStep(`Transferindo ${formatCasAmount(authorization.casAmount)} CAS para o contrato...`);
         console.log('[CertificatePageClient] calling cas.transfer', {
           certificateAddress: config.certificateAddress,
           casAmount: authorization.casAmount,
         });
+        const preBalance = await cas.balanceOf(config.certificateAddress);
         const transferTx = await cas.transfer(config.certificateAddress, authorization.casAmount);
         await transferTx.wait();
+        const postBalance = await cas.balanceOf(config.certificateAddress);
+        console.log('[CertificatePageClient] CAS balance before/after transfer', {
+          preBalance: preBalance.toString(),
+          postBalance: postBalance.toString(),
+          expectedIncrease: authorization.casAmount,
+        });
+        if (postBalance <= preBalance) {
+          throw new Error('O contrato de certificado não recebeu os tokens CAS. O depósito não pode ser contabilizado.');
+        }
 
         setStep('Registrando o depósito CAS...');
         console.log('[CertificatePageClient] calling depositCasForMint', { phaseId: authorization.phaseId });

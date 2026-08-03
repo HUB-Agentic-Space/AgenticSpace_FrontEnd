@@ -73,17 +73,17 @@ function formatGasInPol(wei) {
 }
 
 const CERTIFICATE_CUSTOM_ERRORS = [
-  { selector: '0x4d267c3d', name: 'CertificateAlreadyIssued', message: 'Você já possui certificado nesta fase.', nextStep: 'Seu certificado já foi emitido. Atualize a página para visualizá-lo.' },
-  { selector: '0xb206b079', name: 'AuthorizationExpired', message: 'A autorização de emissão expirou.', nextStep: 'Solicite uma nova autorização e tente novamente.' },
-  { selector: '0x6c9d36e1', name: 'IssuanceAlreadyUsed', message: 'Esta autorização já foi utilizada.', nextStep: 'Solicite uma nova autorização para emitir outro certificado.' },
-  { selector: '0x2c5212c6', name: 'InvalidNonce', message: 'O nonce de emissão é inválido.', nextStep: 'Atualize a página e tente novamente.' },
-  { selector: '0x1bd505c4', name: 'InsufficientCasDeposit', message: 'O depósito CAS é insuficiente para esta fase.', nextStep: 'Verifique o valor mínimo exigido e tente novamente.' },
-  { selector: '0xf3fef3a3', name: 'InsufficientCasDepositBalance', message: 'Saldo CAS insuficiente para o depósito.', nextStep: 'Adquira mais tokens CAS e tente novamente.' },
+  { selector: '0xa834b185', name: 'CertificateAlreadyIssued', message: 'Você já possui certificado nesta fase.', nextStep: 'Seu certificado já foi emitido. Atualize a página para visualizá-lo.' },
+  { selector: '0x3d91b05f', name: 'AuthorizationExpired', message: 'A autorização de emissão expirou.', nextStep: 'Solicite uma nova autorização e tente novamente.' },
+  { selector: '0x984cb07c', name: 'IssuanceAlreadyUsed', message: 'Esta autorização já foi utilizada.', nextStep: 'Solicite uma nova autorização para emitir outro certificado.' },
+  { selector: '0x06427aeb', name: 'InvalidNonce', message: 'O nonce de emissão é inválido.', nextStep: 'Atualize a página e tente novamente.' },
+  { selector: '0x732de20e', name: 'InsufficientCasDeposit', message: 'O depósito CAS é insuficiente para esta fase.', nextStep: 'Verifique o valor mínimo exigido e tente novamente.' },
+  { selector: '0xa8749d04', name: 'InsufficientCasDepositBalance', message: 'O contrato não reconheceu o depósito de CAS. Os tokens foram transferidos, mas não puderam ser contabilizados.', nextStep: 'Não tente depositar novamente sem verificar. O endereço do token CAS pode estar incorreto ou o contrato de certificado não recebeu a transferência. Contate o suporte.' },
   { selector: '0x5416eb98', name: 'FunctionNotFound', message: 'A função chamada não existe no contrato Diamond.', nextStep: 'O contrato pode não estar configurado corretamente. Contate o suporte.' },
-  { selector: '0x3ecc563f', name: 'RecipientMustCall', message: 'Apenas o destinatário pode executar esta operação.', nextStep: 'Use a carteira correta para emitir o certificado.' },
-  { selector: '0x5a693e43', name: 'PhaseNotActive', message: 'A fase de certificados não está ativa.', nextStep: 'Aguarde a abertura da próxima fase.' },
-  { selector: '0x6f4f3d33', name: 'PhaseEnded', message: 'O período de emissão desta fase encerrou.', nextStep: 'Aguarde a abertura da próxima fase.' },
-  { selector: '0x937ba473', name: 'InvalidIssuerSignature', message: 'A assinatura do emissor é inválida.', nextStep: 'Solicite uma nova autorização e tente novamente.' },
+  { selector: '0xd79cc9f3', name: 'RecipientMustCall', message: 'Apenas o destinatário pode executar esta operação.', nextStep: 'Use a carteira correta para emitir o certificado.' },
+  { selector: '0x182f0d98', name: 'PhaseNotActive', message: 'A fase de certificados não está ativa.', nextStep: 'Aguarde a abertura da próxima fase.' },
+  { selector: '0x6c46bd7f', name: 'PhaseEnded', message: 'O período de emissão desta fase encerrou.', nextStep: 'Aguarde a abertura da próxima fase.' },
+  { selector: '0x9e365e5c', name: 'InvalidIssuerSignature', message: 'A assinatura do emissor é inválida.', nextStep: 'Solicite uma nova autorização e tente novamente.' },
 ];
 
 function decodeCustomSolidityError(error) {

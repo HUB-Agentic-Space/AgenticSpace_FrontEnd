@@ -59,6 +59,7 @@ export const DIAMOND_READ_ABI = [
 export const CERTIFICATE_READ_ABI = [
   'function currentPhaseId() view returns (uint256)',
   'function phaseCount() view returns (uint256)',
+  'function getPhase(uint256 phaseId) view returns (tuple(string name, bytes32 templateHash, uint256 minCasDeposit, uint256 startsAt, uint256 endsAt, uint256 minted, bool active, string skillsDescription, string instructions, uint256 extraFeeTypeId, uint256 tbaRebateBps))',
   'function phases(uint256 phaseId) view returns (tuple(string name, bytes32 templateHash, uint256 minCasDeposit, uint256 startsAt, uint256 endsAt, uint256 minted, bool active, string skillsDescription, string instructions, uint256 extraFeeTypeId, uint256 tbaRebateBps))',
 ];
 

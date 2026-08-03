@@ -279,17 +279,41 @@ const PHASES_RETURN_TYPES = [
 
 export async function fetchPhase(contract, provider, phaseId) {
   const address = await contract.getAddress();
-  try {
-    const data = contract.interface.encodeFunctionData('getPhase', [phaseId]);
-    const raw = await provider.call({ to: address, data });
-    const decoded = ethers.AbiCoder.defaultAbiCoder().decode(PHASES_RETURN_TYPES, raw);
-    return decodePhaseResult(decoded);
-  } catch {
-    const data = contract.interface.encodeFunctionData('phases', [phaseId]);
-    const raw = await provider.call({ to: address, data });
-    const decoded = ethers.AbiCoder.defaultAbiCoder().decode(PHASES_RETURN_TYPES, raw);
-    return decodePhaseResult(decoded);
+  const phaseIdStr = String(phaseId);
+  const hasGetPhase = contract.interface.hasFunction('getPhase');
+  const hasPhases = contract.interface.hasFunction('phases');
+  console.log('[fetchPhase] start', { address, phaseId: phaseIdStr, hasGetPhase, hasPhases });
+
+  let getPhaseErr = null;
+  if (hasGetPhase) {
+    try {
+      const data = contract.interface.encodeFunctionData('getPhase', [phaseId]);
+      console.log('[fetchPhase] calling getPhase', { data, phaseId: phaseIdStr });
+      const raw = await provider.call({ to: address, data });
+      console.log('[fetchPhase] getPhase raw', { raw, phaseId: phaseIdStr });
+      const decoded = ethers.AbiCoder.defaultAbiCoder().decode(PHASES_RETURN_TYPES, raw);
+      return decodePhaseResult(decoded);
+    } catch (err) {
+      getPhaseErr = err;
+      console.warn('[fetchPhase] getPhase failed', { phaseId: phaseIdStr, address, error: err?.message || String(err) });
+    }
   }
+
+  if (hasPhases) {
+    try {
+      const data = contract.interface.encodeFunctionData('phases', [phaseId]);
+      console.log('[fetchPhase] calling phases fallback', { data, phaseId: phaseIdStr });
+      const raw = await provider.call({ to: address, data });
+      console.log('[fetchPhase] phases raw', { raw, phaseId: phaseIdStr });
+      const decoded = ethers.AbiCoder.defaultAbiCoder().decode(PHASES_RETURN_TYPES, raw);
+      return decodePhaseResult(decoded);
+    } catch (err) {
+      console.error('[fetchPhase] phases fallback failed', { phaseId: phaseIdStr, address, error: err?.message || String(err) });
+    }
+  }
+
+  const finalError = getPhaseErr || new Error(`Contrato ${address} nao possui getPhase nem phases no ABI.`);
+  throw finalError;
 }
 
 function decodePhaseResult(decoded) {
@@ -378,21 +402,37 @@ export async function readCertificateContext(config, recipient) {
   }
   const provider = new ethers.JsonRpcProvider(config.rpcUrl, config.chainId, { staticNetwork: true });
   const contract = getCertificateContract(config.certificateAddress, provider);
-  const phaseId = await contract.currentPhaseId();
-  const phase = phaseId > BigInt('0')
-    ? phaseFromResult(await fetchPhase(contract, provider, phaseId), phaseId)
-    : null;
+  const phaseId = await contract.currentPhaseId().catch((err) => {
+    console.warn('[readCertificateContext] currentPhaseId failed', { certificateAddress: config.certificateAddress, error: err?.message || String(err) });
+    return 0n;
+  });
+  let phase = null;
+  if (phaseId > BigInt('0')) {
+    try {
+      phase = phaseFromResult(await fetchPhase(contract, provider, phaseId), phaseId);
+    } catch (phaseErr) {
+      console.warn('[readCertificateContext] fetchPhase failed — continuing without phase', { certificateAddress: config.certificateAddress, phaseId: phaseId.toString(), error: phaseErr?.message || String(phaseErr) });
+    }
+  }
   let certificate = null;
   let currentCasBalance = '0';
   if (phaseId > BigInt('0') && recipient && ethers.isAddress(recipient)) {
-    const tokenId = await certificateOfOrFallback(contract, provider, recipient, phaseId);
+    const tokenId = await certificateOfOrFallback(contract, provider, recipient, phaseId).catch((err) => {
+      console.warn('[readCertificateContext] certificateOf failed', { certificateAddress: config.certificateAddress, recipient, phaseId: phaseId.toString(), error: err?.message || String(err) });
+      return 0n;
+    });
     if (tokenId > BigInt('0')) {
       const [rawCert, merkleRoot, merkleRootProof] = await Promise.all([
-        getCertificateOrFallback(contract, provider, tokenId),
+        getCertificateOrFallback(contract, provider, tokenId).catch((err) => {
+          console.warn('[readCertificateContext] getCertificate failed', { certificateAddress: config.certificateAddress, tokenId: tokenId.toString(), error: err?.message || String(err) });
+          return null;
+        }),
         contract.certificateMerkleRoots(tokenId).catch(() => ethers.ZeroHash),
         contract.certificateMerkleRootProofs(tokenId).catch(() => ethers.ZeroHash),
       ]);
-      certificate = { ...certificateFromResult(rawCert, tokenId), merkleRoot, merkleRootProof };
+      if (rawCert) {
+        certificate = { ...certificateFromResult(rawCert, tokenId), merkleRoot, merkleRootProof };
+      }
     }
   }
   const cas = getCasContract(config.casTokenAddress, provider);
@@ -420,10 +460,15 @@ export async function readCertificateByToken(config, tokenId) {
     merkleRoot,
     merkleRootProof,
   };
-  const phase = phaseFromResult(
-    await fetchPhase(contract, provider, certificate.phaseId),
-    certificate.phaseId
-  );
+  let phase = null;
+  try {
+    phase = phaseFromResult(
+      await fetchPhase(contract, provider, certificate.phaseId),
+      certificate.phaseId
+    );
+  } catch (phaseErr) {
+    console.warn('[readCertificateByToken] fetchPhase failed — returning certificate without phase', { certificateAddress: config.certificateAddress, tokenId: numericTokenId.toString(), phaseId: certificate.phaseId.toString(), error: phaseErr?.message || String(phaseErr) });
+  }
   return {
     certificate,
     phase,
