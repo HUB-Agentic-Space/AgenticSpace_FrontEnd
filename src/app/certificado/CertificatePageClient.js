@@ -178,17 +178,43 @@ function CertificateContent() {
         const historical = await readCertificateByToken(activeConfig, latest.token.tokenId);
         setCertificate(historical.certificate);
         setCertificatePhase(historical.phase);
+        setCurrentCertificate(historical.certificate);
         setCurrentCasBalance(historical.currentCasBalance);
         setLastTxHash(latest.transaction?.txHash || '');
       } catch {
         // Falha ao ler token on-chain — ainda exibir dados da API
-        setCertificate(null);
-        setCertificatePhase(null);
+        const fallbackCertificate = {
+          tokenId: String(latest.token.tokenId),
+          phaseId: latest.phase?.id || '0',
+          recipient: latest.holder?.wallet || '',
+          tokenBoundAccount: latest.token?.tokenBoundAccount || '',
+          issuanceId: latest.issuanceId,
+          nameHash: latest.holder?.nameHash || ethers.ZeroHash,
+          metadataHash: latest.metadataHash || ethers.ZeroHash,
+          casDeposited: String(latest.reserve?.amount || '0'),
+          issuedAt: latest.issuedAt ? String(Math.floor(new Date(latest.issuedAt).getTime() / 1000)) : String(Math.floor(Date.now() / 1000)),
+          revoked: false,
+          revocationReasonHash: ethers.ZeroHash,
+          revokedAt: '0',
+          documentHash: ethers.ZeroHash,
+        };
+        const fallbackPhase = {
+          ...phase,
+          id: latest.phase?.id || phase.id,
+          name: latest.phase?.name || phase.name,
+          certificateType: latest.phase?.certificateType || latest.phase?.name || phase.certificateType,
+          achievementSummary: latest.phase?.achievementSummary || phase.achievementSummary,
+        };
+        setCertificate(fallbackCertificate);
+        setCertificatePhase(fallbackPhase);
+        setCurrentCertificate(fallbackCertificate);
         setCurrentCasBalance('0');
+        setLastTxHash(latest.transaction?.txHash || '');
       }
     } else {
       setCertificate(null);
       setCertificatePhase(null);
+      setCurrentCertificate(null);
       setCurrentCasBalance('0');
     }
   }, []);
@@ -698,6 +724,28 @@ function CertificateContent() {
         ? ' O NFT foi emitido, mas o recibo ainda precisa ser sincronizado com o site.'
         : '';
 
+      const mintedCertificate = {
+        tokenId: minted.tokenId,
+        phaseId: minted.phaseId,
+        recipient: minted.recipient,
+        tokenBoundAccount: minted.tokenBoundAccount,
+        issuanceId: minted.issuanceId,
+        nameHash: minted.nameHash,
+        metadataHash: minted.metadataHash,
+        casDeposited: minted.casAmount,
+        issuedAt: String(Math.floor(Date.now() / 1000)),
+        revoked: false,
+        revocationReasonHash: ethers.ZeroHash,
+        revokedAt: '0',
+        documentHash: ethers.ZeroHash,
+      };
+      setCertificate(mintedCertificate);
+      setCurrentCertificate(mintedCertificate);
+      setCertificatePhase(phase);
+      setCurrentPhaseCasBalance(minted.casAmount);
+      setCurrentCasBalance(minted.casAmount);
+      setLastTxHash(mintTx.hash);
+
       await loadCertificates(config, recipient, session?.jwt);
       setSuccess(`Certificado #${minted.tokenId} emitido com sucesso.${confirmationWarning}`);
     } catch (mintError) {
@@ -727,7 +775,38 @@ function CertificateContent() {
         setPhase(selected.phase);
       }
     } catch (selectionError) {
-      setError(walletError(selectionError));
+      const fallbackCertificate = {
+        tokenId: String(issuance.token.tokenId),
+        phaseId: issuance.phase?.id || '0',
+        recipient: issuance.holder?.wallet || '',
+        tokenBoundAccount: issuance.token?.tokenBoundAccount || '',
+        issuanceId: issuance.issuanceId,
+        nameHash: issuance.holder?.nameHash || ethers.ZeroHash,
+        metadataHash: issuance.metadataHash || ethers.ZeroHash,
+        casDeposited: String(issuance.reserve?.amount || '0'),
+        issuedAt: issuance.issuedAt ? String(Math.floor(new Date(issuance.issuedAt).getTime() / 1000)) : String(Math.floor(Date.now() / 1000)),
+        revoked: false,
+        revocationReasonHash: ethers.ZeroHash,
+        revokedAt: '0',
+        documentHash: ethers.ZeroHash,
+      };
+      const fallbackPhase = {
+        ...phase,
+        id: issuance.phase?.id || phase.id,
+        name: issuance.phase?.name || phase.name,
+        certificateType: issuance.phase?.certificateType || issuance.phase?.name || phase.certificateType,
+        achievementSummary: issuance.phase?.achievementSummary || phase.achievementSummary,
+      };
+      setCertificate(fallbackCertificate);
+      setCurrentCertificate(fallbackCertificate);
+      setCertificatePhase(fallbackPhase);
+      setCurrentCasBalance('0');
+      setLastTxHash(issuance.transaction?.txHash || '');
+      if (fallbackPhase.id) {
+        setSelectedChallengeId(String(fallbackPhase.id));
+        setPhase(fallbackPhase);
+      }
+      console.warn('[CertificatePageClient] selectCertificate on-chain failed — using API data', { tokenId: issuance.token.tokenId, error: selectionError?.message || String(selectionError) });
     } finally {
       setRefreshing(false);
     }
