@@ -31,6 +31,8 @@ export const CERTIFICATE_ABI = [
   'function tokensByDocumentHash(bytes32 documentHash) view returns (uint256)',
   'function certificateMerkleRoots(uint256 tokenId) view returns (bytes32)',
   'function certificateMerkleRootProofs(uint256 tokenId) view returns (bytes32)',
+  'function TRUSTED_CALLER_ROLE() view returns (bytes32)',
+  'function hasRole(bytes32 role, address account) view returns (bool)',
   'event CertificateMinted(uint256 indexed tokenId, uint256 indexed phaseId, address indexed recipient, address tokenBoundAccount, bytes32 issuanceId, bytes32 nameHash, bytes32 metadataHash, uint256 casAmount)',
   'event CasDeposited(address indexed recipient, uint256 indexed phaseId, uint256 amount, uint256 newBalance)',
   'event MerkleRootAttested(uint256 indexed tokenId, bytes32 indexed merkleRoot, address indexed attestedBy)',
@@ -194,11 +196,15 @@ function normalizeConfig(data = {}) {
 export async function loadCertificateConfig(jwt) {
   try {
     const { status, data } = await apiRequest('/certificates/config', { jwt });
+    console.log('[loadCertificateConfig] API response:', { status, enabled: data?.enabled, unavailableReasons: data?.unavailableReasons, onchain: data?.onchain });
     if (status < 400) return normalizeConfig(data);
-  } catch {
-    // O frontend estatico continua capaz de consultar a rede com configuracao publica.
+    console.warn('[loadCertificateConfig] API returned status >= 400, falling back to static config:', { status, error: data?.error });
+  } catch (err) {
+    console.error('[loadCertificateConfig] API call failed, falling back to static config:', err?.message || err);
   }
-  return normalizeConfig();
+  const fallback = normalizeConfig();
+  console.log('[loadCertificateConfig] Fallback config:', { enabled: fallback.enabled, certificateAddress: fallback.certificateAddress, unavailableReasons: fallback.unavailableReasons });
+  return fallback;
 }
 
 export async function prepareCertificateMint(payload, jwt) {

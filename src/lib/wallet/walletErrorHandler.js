@@ -315,6 +315,24 @@ export function parseWalletError(error, context = {}) {
     if (customError) {
       return customError;
     }
+    if (/unknown function/i.test(rawMessage)) {
+      const fnName = error?.methodName || error?.method || 'desconhecida';
+      const contractAddr = error?.address || error?.to || 'desconhecido';
+      const txData = error?.data || error?.transaction?.data || '';
+      const selector = txData.slice(0, 10) || 'N/A';
+      return {
+        title: 'Função Não Encontrada no Contrato',
+        message: `A função "${fnName}" não existe no contrato ${contractAddr}. Isso pode indicar que o contrato foi atualizado ou que a ABI está desatualizada.`,
+        details: {
+          nextStep: 'Atualize a página (Ctrl+F5). Se o problema persistir, contate o suporte técnico informando o nome da função e o endereço do contrato.',
+          functionName: fnName,
+          contractAddress: contractAddr,
+          selector,
+        },
+        severity: 'error',
+        code: ERROR_CODES.CALL_EXCEPTION,
+      };
+    }
     let hint = 'Possíveis causas: saldo CAS insuficiente, taxa de aprovação não concedida, ou você já está registrado.';
     if (/already registered|user already exists|agent already exists/i.test(rawMessage)) {
       hint = 'Parece que você já está registrado na blockchain.';

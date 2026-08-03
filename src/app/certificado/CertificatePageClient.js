@@ -525,7 +525,25 @@ function CertificateContent() {
       const contract = getCertificateContract(config.certificateAddress, signer);
       const balance = await cas.balanceOf(recipient);
       setCasBalance(balance.toString());
-      const useDiamond = ethers.isAddress(config.diamondAddress);
+      let useDiamond = ethers.isAddress(config.diamondAddress);
+      if (useDiamond) {
+        try {
+          const diamond = getDiamondCertificateContract(config.diamondAddress, signer);
+          const diamondCert = await diamond.getCertificateContract();
+          const trustedRole = await contract.TRUSTED_CALLER_ROLE();
+          const isTrusted = await contract.hasRole(trustedRole, config.diamondAddress);
+          if (
+            diamondCert.toLowerCase() !== config.certificateAddress.toLowerCase() ||
+            !isTrusted
+          ) {
+            useDiamond = false;
+            console.warn('[CertificatePageClient] Diamond registry/role mismatch — using direct contract. diamondCert:', diamondCert, 'isTrusted:', isTrusted);
+          }
+        } catch (guardErr) {
+          useDiamond = false;
+          console.warn('[CertificatePageClient] Diamond trust check failed — using direct contract.', guardErr);
+        }
+      }
       // Quando o fluxo passa pelo Diamond, o CertificateFacet cobra o deposito
       // (casAmount) e, se a fase tiver taxa extra configurada, tambem a taxa
       // (extraFeeAmount) via safeTransferFrom na mesma transacao.
@@ -738,17 +756,31 @@ function CertificateContent() {
               O contrato, o emissor ou uma fase ativa ainda precisam ser configurados. Certificados ja emitidos continuam consultaveis.
             </p>
             {config?.unavailableReasons?.length > 0 && (
-              <ul className="mt-2 list-inside list-disc text-xs text-amber-100/70">
-                {config.unavailableReasons.map((reason) => (
-                  <li key={reason}>{reason}</li>
-                ))}
-              </ul>
+              <div className="mt-3 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
+                <p className="text-xs font-bold uppercase tracking-wide text-amber-300">Motivos da indisponibilidade:</p>
+                <ul className="mt-2 space-y-1 text-sm text-amber-100/90">
+                  {config.unavailableReasons.map((reason) => (
+                    <li key={reason} className="font-mono">{reason}</li>
+                  ))}
+                </ul>
+              </div>
             )}
             {config?.onchain?.available === false && config?.onchain?.reason && (
-              <p className="mt-1 text-xs text-amber-100/60">
-                Motivo on-chain: {config.onchain.reason}
+              <p className="mt-2 text-sm text-amber-100/80">
+                <span className="font-semibold">Motivo on-chain:</span> <span className="font-mono">{config.onchain.reason}</span>
               </p>
             )}
+            {config?.onchain?.available === true && !config?.onchain?.issuerAuthorized && (
+              <p className="mt-2 text-sm text-amber-100/80">
+                <span className="font-semibold">Atencao:</span> O emissor ({config?.issuerAddress || 'N/A'}) nao possui ISSUER_ROLE no contrato ({config?.certificateAddress || 'N/A'}).
+              </p>
+            )}
+            <div className="mt-3 text-xs text-amber-100/50">
+              <p>Contrato: {config?.certificateAddress || 'N/A'}</p>
+              <p>Emissor: {config?.issuerAddress || 'N/A'}</p>
+              <p>Diamond: {config?.diamondAddress || 'N/A'}</p>
+              <p>Fase atual: {config?.currentPhase ? `ID ${config.currentPhase.id}, ativa=${config.currentPhase.active}` : 'N/A'}</p>
+            </div>
           </div>
         </div>
       )}
