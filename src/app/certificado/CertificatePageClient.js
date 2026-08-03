@@ -150,11 +150,9 @@ function CertificateContent() {
 
     if (context?.phase) {
       setPhase(context.phase);
-    } else if (!context) {
-      // RPC falhou — manter a fase do config carregado, não zerar
-    } else {
-      setPhase((previous) => ({ ...previous, id: '0', active: false, minted: '0' }));
     }
+    // Se o contexto não trouxe a fase (ex.: RPC falhou ou currentPhaseId é 0),
+    // mantém a fase previamente carregada pelo config, preservando skills/instructions.
     if (context) {
       setCurrentCertificate(context.certificate);
       setCurrentPhaseCasBalance(context.currentCasBalance);
