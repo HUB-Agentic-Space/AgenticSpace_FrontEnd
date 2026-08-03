@@ -18,6 +18,7 @@ export const CERTIFICATE_ABI = [
   'function activePhases(uint256 phaseId) view returns (bool)',
   'function casToken() view returns (address)',
   'function certificateOf(address recipient, uint256 phaseId) view returns (uint256)',
+  'function certificatesByRecipientAndPhase(address recipient, uint256 phaseId) view returns (uint256)',
   'function nonces(address recipient) view returns (uint256)',
   'function getPhase(uint256 phaseId) view returns (tuple(string name, bytes32 templateHash, uint256 minCasDeposit, uint256 startsAt, uint256 endsAt, uint256 minted, uint8 active, string skillsDescription, string instructions, uint256 extraFeeTypeId, uint256 tbaRebateBps))',
   'function phasePrerequisites(uint256 phaseId) view returns (uint256[])',
@@ -315,6 +316,20 @@ async function getCertificateOrFallback(contract, provider, tokenId) {
   }
 }
 
+async function certificateOfOrFallback(contract, provider, recipient, phaseId) {
+  const address = await contract.getAddress();
+  const iface = contract.interface;
+  try {
+    const data = iface.encodeFunctionData('certificateOf', [recipient, phaseId]);
+    const raw = await provider.call({ to: address, data });
+    return iface.decodeFunctionResult('certificateOf', raw)[0];
+  } catch {
+    const data = iface.encodeFunctionData('certificatesByRecipientAndPhase', [recipient, phaseId]);
+    const raw = await provider.call({ to: address, data });
+    return iface.decodeFunctionResult('certificatesByRecipientAndPhase', raw)[0];
+  }
+}
+
 export function phaseFromResult(result, phaseId) {
   return {
     id: String(phaseId),
@@ -364,10 +379,10 @@ export async function readCertificateContext(config, recipient) {
   let certificate = null;
   let currentCasBalance = '0';
   if (phaseId > BigInt('0') && recipient && ethers.isAddress(recipient)) {
-    const tokenId = await contract.certificateOf(recipient, phaseId);
+    const tokenId = await certificateOfOrFallback(contract, provider, recipient, phaseId);
     if (tokenId > BigInt('0')) {
       const [rawCert, merkleRoot, merkleRootProof] = await Promise.all([
-        contract.getCertificate(tokenId),
+        getCertificateOrFallback(contract, provider, tokenId),
         contract.certificateMerkleRoots(tokenId).catch(() => ethers.ZeroHash),
         contract.certificateMerkleRootProofs(tokenId).catch(() => ethers.ZeroHash),
       ]);
@@ -390,7 +405,7 @@ export async function readCertificateByToken(config, tokenId) {
   const provider = new ethers.JsonRpcProvider(config.rpcUrl, config.chainId, { staticNetwork: true });
   const contract = getCertificateContract(config.certificateAddress, provider);
   const [rawCertificate, merkleRoot, merkleRootProof] = await Promise.all([
-    contract.getCertificate(numericTokenId),
+    getCertificateOrFallback(contract, provider, numericTokenId),
     contract.certificateMerkleRoots(tokenId).catch(() => ethers.ZeroHash),
     contract.certificateMerkleRootProofs(tokenId).catch(() => ethers.ZeroHash),
   ]);
@@ -555,7 +570,7 @@ export async function verifyCertificateManifest(manifest, suppliedConfig) {
 
   let rawRecord;
   try {
-    rawRecord = await contract.getCertificate(tokenId);
+    rawRecord = await getCertificateOrFallback(contract, provider, tokenId);
   } catch {
     throw new Error('O token informado nao existe no contrato oficial.');
   }
@@ -593,7 +608,7 @@ export async function verifyCertificateReference({ chainId, contractAddress, tok
   const verifyAddress = isCurrentContract ? config.certificateAddress : config.legacyCertificateAddress;
   const provider = new ethers.JsonRpcProvider(config.rpcUrl, config.chainId, { staticNetwork: true });
   const contract = getCertificateContract(verifyAddress, provider);
-  const rawRecord = await contract.getCertificate(tokenId);
+  const rawRecord = await getCertificateOrFallback(contract, provider, tokenId);
   const record = certificateFromResult(rawRecord, tokenId);
   const phase = phaseFromResult(await fetchPhase(contract, provider, record.phaseId), record.phaseId);
   return {
