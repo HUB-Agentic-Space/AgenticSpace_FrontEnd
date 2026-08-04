@@ -231,18 +231,22 @@ function CertificateFrontPage({ manifest, draft }) {
     const summary = certificate.achievementSummary || '';
     const certType = certificate.certificateType || '';
     const isChallenge = Boolean(certificate.phaseId && certType && certType !== 'Sócio Fundador');
+    const courseHours = certificate.courseHours || 40;
+    const hoursSuffix = ` O treinamento equivale a ${courseHours} horas.`;
 
     if (summary) {
       return isChallenge
-        ? `concluiu o desafio ${phaseTitle}, ${summary}`
-        : `integra a fase ${phaseTitle} e ${summary}`;
+        ? `concluiu o desafio ${phaseTitle}, ${summary}${hoursSuffix}`
+        : `integra a fase ${phaseTitle} e ${summary}${hoursSuffix}`;
     }
 
     return isChallenge
       ? `concluiu o desafio ${phaseTitle}, demonstrando habilidades técnicas com dedicação autodidata, `
         + 'buscando de forma proativa conhecimento e de forma autônoma a solução do desafio para esta certificação.'
+        + hoursSuffix
       : `integra a fase ${phaseTitle} e demonstrou espírito empreendedor e dedicação ao voluntariado, `
-        + 'colaborando ativamente, com sua participação, para o crescimento do ecossistema Agentic Space.';
+        + 'colaborando ativamente, com sua participação, para o crescimento do ecossistema Agentic Space.'
+        + hoursSuffix;
   })();
 
   const bodyLines = wrapText(

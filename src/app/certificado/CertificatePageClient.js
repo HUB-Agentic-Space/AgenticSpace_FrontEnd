@@ -73,6 +73,7 @@ const DEFAULT_PHASE = {
   minCasDeposit: ethers.parseEther('50').toString(),
   active: true,
   minted: '0',
+  courseHours: 40,
 };
 
 function walletError(error, context) {
@@ -157,6 +158,7 @@ function CertificateContent() {
         name: context.phase.name || previous?.name || '',
         certificateType: context.phase.certificateType || previous?.certificateType || '',
         achievementSummary: context.phase.achievementSummary || previous?.achievementSummary || '',
+        courseHours: context.phase.courseHours || previous?.courseHours || 40,
         skillsDescription: context.phase.skillsDescription || previous?.skillsDescription || '',
         instructions: context.phase.instructions || previous?.instructions || '',
       }));
@@ -212,6 +214,7 @@ function CertificateContent() {
           name: latest.phase?.name || phase.name,
           certificateType: latest.phase?.certificateType || latest.phase?.name || phase.certificateType,
           achievementSummary: latest.phase?.achievementSummary || phase.achievementSummary,
+          courseHours: latest.phase?.courseHours || phase.courseHours || 40,
           skillsDescription: latest.phase?.skillsDescription || phase?.skillsDescription || '',
           instructions: latest.phase?.instructions || phase?.instructions || '',
         };
@@ -262,6 +265,7 @@ function CertificateContent() {
             skillsDescription: loadedConfig.currentPhase.skillsDescription || '',
             instructions: loadedConfig.currentPhase.instructions || '',
             achievementSummary: loadedConfig.currentPhase.achievementSummary || '',
+            courseHours: loadedConfig.currentPhase.courseHours || 40,
           });
         }
         if (profileResponse.status < 400) {
@@ -391,6 +395,7 @@ function CertificateContent() {
       name: certificatePhase?.name || phase?.name || '',
       certificateType: certificatePhase?.certificateType || certificatePhase?.name || phase?.certificateType || phase?.name || '',
       achievementSummary: certificatePhase?.achievementSummary || phase?.achievementSummary || '',
+      courseHours: certificatePhase?.courseHours || phase?.courseHours || 40,
       skillsDescription: certificatePhase?.skillsDescription || phase?.skillsDescription || '',
       instructions: certificatePhase?.instructions || phase?.instructions || '',
     };
@@ -797,6 +802,7 @@ function CertificateContent() {
           name: selected.phase.name || previous?.name || '',
           certificateType: selected.phase.certificateType || selected.phase.name || previous?.certificateType || '',
           achievementSummary: selected.phase.achievementSummary || previous?.achievementSummary || '',
+          courseHours: selected.phase.courseHours || previous?.courseHours || 40,
           skillsDescription: selected.phase.skillsDescription || previous?.skillsDescription || '',
           instructions: selected.phase.instructions || previous?.instructions || '',
         }));
@@ -823,6 +829,7 @@ function CertificateContent() {
         name: issuance.phase?.name || phase.name,
         certificateType: issuance.phase?.certificateType || issuance.phase?.name || phase.certificateType,
         achievementSummary: issuance.phase?.achievementSummary || phase.achievementSummary,
+        courseHours: issuance.phase?.courseHours || phase.courseHours || 40,
         skillsDescription: issuance.phase?.skillsDescription || phase?.skillsDescription || '',
         instructions: issuance.phase?.instructions || phase?.instructions || '',
       };
@@ -1035,6 +1042,7 @@ function CertificateContent() {
                         skillsDescription: ch.skillsDescription || '',
                         instructions: ch.instructions || '',
                         achievementSummary: ch.achievementSummary || '',
+                        courseHours: ch.courseHours || 40,
                         extraFeeTypeId: String(ch.extraFeeTypeId || '0'),
                         tbaRebateBps: Number(ch.tbaRebateBps || 0),
                       });
