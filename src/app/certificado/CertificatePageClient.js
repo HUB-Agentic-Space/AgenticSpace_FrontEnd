@@ -141,6 +141,7 @@ function CertificateContent() {
   const [extraFeeAmount, setExtraFeeAmount] = useState(null);
   const [extraFeeLoading, setExtraFeeLoading] = useState(false);
   const [showMintModal, setShowMintModal] = useState(false);
+  const [agreedToRules, setAgreedToRules] = useState(false);
 
   const loadCertificates = useCallback(async (activeConfig, recipient, jwt) => {
     if (!ethers.isAddress(activeConfig?.certificateAddress || '')) return;
@@ -1217,19 +1218,51 @@ function CertificateContent() {
                       </div>
                     )}
                     {!selectedChallengeRequest && (
-                      <button
-                        onClick={handleRequestCertificate}
-                        disabled={!profileName || minting}
-                        className="btn-secondary w-full"
-                      >
-                        <FileCheck2 size={17} /> Solicitar Certificado
-                      </button>
+                      <>
+                        <label className="flex items-start gap-2 rounded-xl border border-slate-700 bg-slate-950/60 p-3 text-xs text-slate-300 cursor-pointer hover:border-slate-600 transition">
+                          <input
+                            type="checkbox"
+                            checked={agreedToRules}
+                            onChange={(e) => setAgreedToRules(e.target.checked)}
+                            className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-600 bg-slate-800 text-brand-500 focus:ring-brand-500"
+                          />
+                          <span>
+                            Li e concordo com as{' '}
+                            <Link href="/certificado/regras" target="_blank" className="text-brand-400 hover:text-brand-300 underline">
+                              regras para obtenção do certificado
+                            </Link>
+                            .
+                          </span>
+                        </label>
+                        <button
+                          onClick={handleRequestCertificate}
+                          disabled={!profileName || minting || !agreedToRules}
+                          className="btn-secondary w-full"
+                        >
+                          <FileCheck2 size={17} /> Solicitar Certificado
+                        </button>
+                      </>
                     )}
                   </div>
                 )}
+                <label className="flex items-start gap-2 rounded-xl border border-slate-700 bg-slate-950/60 p-3 text-xs text-slate-300 cursor-pointer hover:border-slate-600 transition">
+                  <input
+                    type="checkbox"
+                    checked={agreedToRules}
+                    onChange={(e) => setAgreedToRules(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-600 bg-slate-800 text-brand-500 focus:ring-brand-500"
+                  />
+                  <span>
+                    Li e concordo com as{' '}
+                    <Link href="/certificado/regras" target="_blank" className="text-brand-400 hover:text-brand-300 underline">
+                      regras para obtenção do certificado
+                    </Link>
+                    .
+                  </span>
+                </label>
                 <button
                   onClick={() => setShowMintModal(true)}
-                  disabled={minting || !profileName || !phase?.active || !config?.enabled || (gasEstimate && !hasEnoughPol) || needsApproval || extraFeeLoading}
+                  disabled={minting || !profileName || !phase?.active || !config?.enabled || (gasEstimate && !hasEnoughPol) || needsApproval || extraFeeLoading || !agreedToRules}
                   className="btn-primary w-full"
                 >
                   {minting ? <Spinner size={17} /> : <Award size={17} />}

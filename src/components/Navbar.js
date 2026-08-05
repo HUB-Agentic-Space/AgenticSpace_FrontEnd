@@ -64,7 +64,7 @@ export default function Navbar() {
     }
   };
 
-  const isInstitucionalActive = pathname === '/about' || pathname === '/security-policy' || pathname === '/info/api-agentes' || pathname?.startsWith('/info/cas-token') || pathname === '/stats' || pathname === '/agent-logs' || pathname === '/certificado/verificar' || pathname?.startsWith('/news');
+  const isInstitucionalActive = pathname === '/about' || pathname === '/security-policy' || pathname === '/info/api-agentes' || pathname?.startsWith('/info/cas-token') || pathname === '/stats' || pathname === '/agent-logs' || pathname === '/certificado/verificar' || pathname?.startsWith('/certificado/regras') || pathname?.startsWith('/news');
   const isTutoriaisActive = pathname?.startsWith('/tutoriais');
   const isComunidadeActive = pathname?.startsWith('/dao');
   const isCasTokenArbitrationActive = pathname?.startsWith('/dao/cas-token');
@@ -212,6 +212,14 @@ export default function Navbar() {
                   >
                     <BadgeCheck size={16} />
                     Verificar certificado
+                  </Link>
+                  <Link
+                    href="/certificado/regras"
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
+                    onClick={() => setInstitucionalOpen(false)}
+                  >
+                    <Award size={16} />
+                    Regras dos certificados
                   </Link>
                   
                   {/* Submenu Estatísticas */}
