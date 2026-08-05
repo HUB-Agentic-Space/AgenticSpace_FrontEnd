@@ -16,6 +16,7 @@
  *   { type: 'heading', level: 1-6, text: string }
  *   { type: 'paragraph', text: string }
  *   { type: 'list', ordered: bool, items: string[] }
+ *   { type: 'code', text: string }
  *   { type: 'spacer' }
  *
  * @param {string} md - Raw markdown text
@@ -34,6 +35,19 @@ export function parseMarkdown(md) {
     // Skip empty lines
     if (line.trim() === '') {
       i++;
+      continue;
+    }
+
+    // Fenced code block: ``` ... ```
+    if (/^```/.test(line.trim())) {
+      const codeLines = [];
+      i++;
+      while (i < lines.length && !/^```/.test(lines[i].trim())) {
+        codeLines.push(lines[i]);
+        i++;
+      }
+      if (i < lines.length) i++; // skip closing ```
+      blocks.push({ type: 'code', text: codeLines.join('\n') });
       continue;
     }
 
@@ -78,7 +92,8 @@ export function parseMarkdown(md) {
       lines[i].trim() !== '' &&
       !/^(#{1,6})\s+/.test(lines[i]) &&
       !/^\d+\.\s+/.test(lines[i]) &&
-      !/^[-*]\s+/.test(lines[i])
+      !/^[-*]\s+/.test(lines[i]) &&
+      !/^```/.test(lines[i].trim())
     ) {
       paraLines.push(lines[i]);
       i++;
@@ -134,6 +149,11 @@ export function markdownToPlainText(md) {
           lines.push(`${prefix}${block.items[j]}`);
         }
         break;
+      case 'code':
+        for (const codeLine of block.text.split('\n')) {
+          lines.push(codeLine);
+        }
+        break;
     }
     lines.push(''); // blank line between blocks
   }
@@ -168,6 +188,9 @@ export function markdownToHtml(md) {
         htmlParts.push(`<${tag}>${items}</${tag}>`);
         break;
       }
+      case 'code':
+        htmlParts.push(`<pre><code>${escapeHtml(block.text)}</code></pre>`);
+        break;
     }
   }
 
@@ -243,6 +266,11 @@ export function markdownToSvgElements(md, opts = {}) {
         for (let j = 0; j < block.items.length; j++) {
           const prefix = block.ordered ? `${j + 1}. ` : '• ';
           pushWrapped(`${prefix}${block.items[j]}`, fontSize, '400');
+        }
+        break;
+      case 'code':
+        for (const codeLine of block.text.split('\n')) {
+          pushWrapped(codeLine, fontSize - 1, '400');
         }
         break;
     }

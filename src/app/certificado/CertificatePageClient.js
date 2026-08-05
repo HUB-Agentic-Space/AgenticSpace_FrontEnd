@@ -142,6 +142,7 @@ function CertificateContent() {
   const [extraFeeLoading, setExtraFeeLoading] = useState(false);
   const [showMintModal, setShowMintModal] = useState(false);
   const [agreedToRules, setAgreedToRules] = useState(false);
+  const [proofLink, setProofLink] = useState('');
 
   const loadCertificates = useCallback(async (activeConfig, recipient, jwt) => {
     if (!ethers.isAddress(activeConfig?.certificateAddress || '')) return;
@@ -458,16 +459,41 @@ function CertificateContent() {
     if (!selectedChallengeId || !session?.jwt) return;
     setError('');
     setSuccess('');
+
+    const trimmedProof = proofLink.trim();
+    if (!trimmedProof) {
+      setError('Informe a URL da prova de execução (Google Drive ou GitHub).');
+      return;
+    }
+    try {
+      const parsed = new URL(trimmedProof);
+      if (parsed.protocol !== 'https:') {
+        setError('A URL da prova deve utilizar HTTPS.');
+        return;
+      }
+      const allowed = ['drive.google.com', 'docs.google.com', 'github.com', 'gist.github.com', 'raw.githubusercontent.com'];
+      const hostname = parsed.hostname.toLowerCase();
+      const isAllowed = allowed.some((d) => hostname === d || hostname.endsWith(`.${d}`));
+      if (!isAllowed) {
+        setError('A URL da prova deve ser do Google Drive ou GitHub.');
+        return;
+      }
+    } catch {
+      setError('A URL informada não é válida. Verifique o formato do link.');
+      return;
+    }
+
     try {
       const res = await requestChallengeCertificate(
         selectedChallengeId,
-        { userName: profileName || undefined },
+        { proofLink: trimmedProof, userName: profileName || undefined },
         session.jwt,
       );
       if (res.status >= 400) {
         throw new Error(res.data?.error || res.data?.message || 'Falha ao solicitar certificado.');
       }
       setSuccess('Solicitação enviada. Aguarde a aprovação do administrador.');
+      setProofLink('');
       const updated = await listMyIssuanceRequests(session.jwt);
       setIssuanceRequests(updated || []);
     } catch (reqErr) {
@@ -1088,7 +1114,19 @@ function CertificateContent() {
                 <p className="text-xs font-semibold text-slate-400 mb-2">Minhas solicitações</p>
                 {issuanceRequests.map((req) => (
                   <div key={req.id} className="flex items-center justify-between text-xs py-1">
-                    <span className="text-slate-300">Desafio #{req.challengeId}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-300">Desafio #{req.challengeId}</span>
+                      {req.proofLink && (
+                        <a
+                          href={req.proofLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-brand-400 hover:text-brand-300 underline"
+                        >
+                          Ver prova
+                        </a>
+                      )}
+                    </div>
                     <span className={`rounded-full px-2 py-0.5 font-medium ${
                       req.status === 'approved' ? 'bg-emerald-500/15 text-emerald-300' :
                       req.status === 'rejected' ? 'bg-red-500/15 text-red-300' :
@@ -1225,6 +1263,21 @@ function CertificateContent() {
                     )}
                     {!selectedChallengeRequest && (
                       <>
+                        <div className="space-y-2">
+                          <label className="block text-xs font-medium text-slate-300">
+                            URL da prova de execução *
+                          </label>
+                          <input
+                            type="url"
+                            value={proofLink}
+                            onChange={(e) => setProofLink(e.target.value)}
+                            placeholder="https://drive.google.com/... ou https://github.com/..."
+                            className="w-full rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                          />
+                          <p className="text-xs text-slate-500">
+            Cole aqui o link do Google Drive ou GitHub com as provas de execução do desafio/projeto. O instrutor/analista irá auditar o material antes de aprovar o certificado.
+                          </p>
+                        </div>
                         <label className="flex items-start gap-2 rounded-xl border border-slate-700 bg-slate-950/60 p-3 text-xs text-slate-300 cursor-pointer hover:border-slate-600 transition">
                           <input
                             type="checkbox"
@@ -1242,7 +1295,7 @@ function CertificateContent() {
                         </label>
                         <button
                           onClick={handleRequestCertificate}
-                          disabled={!profileName || minting || !agreedToRules}
+                          disabled={!profileName || minting || !agreedToRules || !proofLink.trim()}
                           className="btn-secondary w-full"
                         >
                           <FileCheck2 size={17} /> Solicitar Certificado

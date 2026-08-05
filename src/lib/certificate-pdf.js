@@ -16,6 +16,74 @@ export const MAX_CERTIFICATE_FILE_BYTES = 15 * 1024 * 1024;
 import { markdownToPlainText, parseMarkdown } from './markdown-utils';
 import { ISSUER } from './certificates';
 
+/**
+ * Replaces Unicode characters not encodable in WinAnsi (pdf-lib StandardFonts)
+ * with ASCII-safe equivalents. Box-drawing and other special chars commonly
+ * found in code blocks/diagrams are mapped to close ASCII alternatives.
+ */
+const WIN_ANSI_REPLACEMENTS = {
+  '\u2500': '-',   // ─ horizontal line
+  '\u2501': '=',   // ━ heavy horizontal
+  '\u2502': '|',   // │ vertical line
+  '\u2503': '|',   // ┃ heavy vertical
+  '\u250c': '+',   // ┌ corner
+  '\u250f': '+',   // ┏ heavy corner
+  '\u2510': '+',   // ┐ corner
+  '\u2513': '+',   // ┓ heavy corner
+  '\u2514': '+',   // └ corner
+  '\u2517': '+',   // ┗ heavy corner
+  '\u2518': '+',   // ┘ corner
+  '\u251b': '+',   // ┛ heavy corner
+  '\u251c': '+',   // ├ tee
+  '\u251d': '+',   // ┝ tee
+  '\u2523': '+',   // ┣ heavy tee
+  '\u2524': '+',   // ┤ tee
+  '\u2525': '+',   // ┥ tee
+  '\u252b': '+',   // ┫ heavy tee
+  '\u252c': '+',   // ┬ tee top
+  '\u2533': '+',   // ┳ heavy tee top
+  '\u2534': '+',   // ┴ tee bottom
+  '\u253b': '+',   // ┻ heavy tee bottom
+  '\u253c': '+',   // ┼ cross
+  '\u254b': '+',   // ┿ heavy cross
+  '\u2550': '=',   // ═ double horizontal
+  '\u2551': '|',   // ║ double vertical
+  '\u2554': '+',   // ╔ double corner
+  '\u2557': '+',   // ╗ double corner
+  '\u255a': '+',   // ╚ double corner
+  '\u255d': '+',   // ╝ double corner
+  '\u2560': '+',   // ╠ double tee
+  '\u2563': '+',   // ╣ double tee
+  '\u2566': '+',   // ╦ double tee top
+  '\u2569': '+',   // ╩ double tee bottom
+  '\u256c': '+',   // ╬ double cross
+  '\u2591': ' ',   // ░ light shade
+  '\u2592': ' ',   // ▒ medium shade
+  '\u2593': ' ',   // ▓ dark shade
+  '\u2588': '#',   // █ full block
+  '\u25a0': '*',   // ■ black square
+  '\u25a1': '*',   // □ white square
+  '\u2022': '*',   // • bullet (already handled in lists, but may appear inline)
+  '\u2026': '...', // … ellipsis
+  '\u2014': '--',  // — em dash
+  '\u2013': '-',   // – en dash
+  '\u2018': "'",   // ' left single quote
+  '\u2019': "'",   // ' right single quote
+  '\u201c': '"',   // " left double quote
+  '\u201d': '"',   // " right double quote
+  '\u00a0': ' ',   // non-breaking space
+  '\u00ab': '<<',  // «
+  '\u00bb': '>>',  // »
+  '\u2026': '...', // … (duplicate safety)
+};
+
+function sanitizeForWinAnsi(text) {
+  if (!text) return '';
+  return String(text).replace(/[\u2500-\u257F\u2580-\u259F\u25A0-\u25FF\u2022\u2026\u2014\u2013\u2018\u2019\u201C\u201D\u00A0\u00AB\u00BB]/g, (ch) => {
+    return WIN_ANSI_REPLACEMENTS[ch] ?? '';
+  });
+}
+
 const PDF_GUIDANCE_LINKS = [
   {
     label: 'VALIDAR do ITI',
@@ -480,6 +548,7 @@ async function fetchLogoPng() {
 function drawMarkdownBlocks(page, md, {
   font, boldFont, x, y, maxWidth, baseSize, lineHeight, color, headingColor,
   pdf: pdfDoc, pageHeight, marginTop, marginBottom, drawHeader,
+  monoFont,
 }) {
   const blocks = parseMarkdown(md);
   let cursorY = y;
@@ -499,7 +568,7 @@ function drawMarkdownBlocks(page, md, {
     switch (block.type) {
       case 'heading': {
         const headingSize = baseSize + (6 - Math.min(block.level, 4));
-        const lines = wrapText(font, block.text, headingSize, maxWidth);
+        const lines = wrapText(font, sanitizeForWinAnsi(block.text), headingSize, maxWidth);
         for (const line of lines) {
           ensureSpace(lineHeight);
           if (cursorY < bottomLimit) break;
@@ -510,7 +579,7 @@ function drawMarkdownBlocks(page, md, {
         break;
       }
       case 'paragraph': {
-        const lines = wrapText(font, block.text, baseSize, maxWidth);
+        const lines = wrapText(font, sanitizeForWinAnsi(block.text), baseSize, maxWidth);
         for (const line of lines) {
           ensureSpace(lineHeight);
           if (cursorY < bottomLimit) break;
@@ -524,8 +593,8 @@ function drawMarkdownBlocks(page, md, {
         for (let j = 0; j < block.items.length; j++) {
           ensureSpace(lineHeight);
           if (cursorY < bottomLimit) break;
-          const prefix = block.ordered ? `${j + 1}. ` : '\u2022 ';
-          const fullText = `${prefix}${block.items[j]}`;
+          const prefix = block.ordered ? `${j + 1}. ` : '* ';
+          const fullText = `${prefix}${sanitizeForWinAnsi(block.items[j])}`;
           const lines = wrapText(font, fullText, baseSize, maxWidth);
           for (let k = 0; k < lines.length; k++) {
             ensureSpace(lineHeight);
@@ -536,6 +605,57 @@ function drawMarkdownBlocks(page, md, {
           }
         }
         cursorY -= lineHeight * 0.2;
+        break;
+      }
+      case 'code': {
+        const codeFont = monoFont || font;
+        const codeSize = baseSize - 0.5;
+        const codeLineHeight = lineHeight - 1;
+        const codePadX = 10;
+        const codePadY = 8;
+        const codeLines = sanitizeForWinAnsi(block.text).split('\n');
+        const codeMaxWidth = maxWidth - (codePadX * 2);
+        const wrappedCode = [];
+        for (const rawLine of codeLines) {
+          if (rawLine.trim() === '') {
+            wrappedCode.push('');
+          } else {
+            const wrapped = wrapText(codeFont, rawLine, codeSize, codeMaxWidth);
+            for (const wl of wrapped) wrappedCode.push(wl);
+          }
+        }
+        const blockHeight = wrappedCode.length * codeLineHeight + (codePadY * 2);
+        ensureSpace(blockHeight + lineHeight);
+        if (cursorY - blockHeight < bottomLimit && pdfDoc) {
+          currentPage = pdfDoc.addPage([page.getWidth(), page.getHeight()]);
+          if (drawHeader) drawHeader(currentPage);
+          cursorY = topY;
+        }
+        const bgY = cursorY - blockHeight + codePadY;
+        currentPage.drawRectangle({
+          x: x - 4,
+          y: bgY - codePadY,
+          width: maxWidth + 8,
+          height: blockHeight,
+          color: rgb(0.93, 0.93, 0.95),
+          borderColor: rgb(0.75, 0.75, 0.78),
+          borderWidth: 0.5,
+        });
+        let codeY = cursorY - codePadY;
+        for (const codeLine of wrappedCode) {
+          if (codeY < bottomLimit) break;
+          if (codeLine) {
+            currentPage.drawText(codeLine, {
+              x: x + codePadX,
+              y: codeY,
+              size: codeSize,
+              font: codeFont,
+              color: rgb(0.15, 0.15, 0.18),
+            });
+          }
+          codeY -= codeLineHeight;
+        }
+        cursorY = codeY - codePadY - lineHeight * 0.3;
         break;
       }
     }
@@ -585,6 +705,7 @@ export async function downloadChallengeInstructionsPdf(challenge) {
   const height = page.getHeight();
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const mono = await pdf.embedFont(StandardFonts.Courier);
 
   const brandOrange = rgb(0.941, 0.373, 0.251);
   const dark = rgb(0.133, 0.133, 0.133);
@@ -621,7 +742,7 @@ export async function downloadChallengeInstructionsPdf(challenge) {
     color: dark,
   });
 
-  page.drawText(challenge.name || 'Desafio', {
+  page.drawText(sanitizeForWinAnsi(challenge.name || 'Desafio'), {
     x: margin,
     y: headerBottom - 60,
     size: 16,
@@ -665,6 +786,7 @@ export async function downloadChallengeInstructionsPdf(challenge) {
     const result = drawMarkdownBlocks(currentPage, challenge.skillsDescription, {
       font: regular,
       boldFont: bold,
+      monoFont: mono,
       x: margin,
       y: contentY,
       maxWidth: contentWidth,
@@ -697,6 +819,7 @@ export async function downloadChallengeInstructionsPdf(challenge) {
     const result = drawMarkdownBlocks(currentPage, challenge.instructions, {
       font: regular,
       boldFont: bold,
+      monoFont: mono,
       x: margin,
       y: contentY,
       maxWidth: contentWidth,
