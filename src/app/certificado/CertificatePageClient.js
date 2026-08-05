@@ -879,7 +879,13 @@ function CertificateContent() {
     setExporting('instructions');
     setError('');
     try {
-      await downloadChallengeInstructionsPdf(selectedChallenge);
+      const mergedChallenge = {
+        ...selectedChallenge,
+        skillsDescription: selectedChallenge.skillsDescription || phase?.skillsDescription || '',
+        instructions: selectedChallenge.instructions || phase?.instructions || '',
+        name: selectedChallenge.name || phase?.name || 'Desafio',
+      };
+      await downloadChallengeInstructionsPdf(mergedChallenge);
     } catch (exportError) {
       setError(walletError(exportError));
     } finally {

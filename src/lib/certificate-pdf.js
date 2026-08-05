@@ -479,20 +479,31 @@ async function fetchLogoPng() {
 
 function drawMarkdownBlocks(page, md, {
   font, boldFont, x, y, maxWidth, baseSize, lineHeight, color, headingColor,
+  pdf: pdfDoc, pageHeight, marginTop, marginBottom, drawHeader,
 }) {
   const blocks = parseMarkdown(md);
   let cursorY = y;
+  let currentPage = page;
+  const bottomLimit = marginBottom || 80;
+  const topY = pageHeight ? pageHeight - (marginTop || 48) : y;
+
+  function ensureSpace(needed) {
+    if (cursorY - needed >= bottomLimit) return;
+    if (!pdfDoc) return;
+    currentPage = pdfDoc.addPage([page.getWidth(), page.getHeight()]);
+    if (drawHeader) drawHeader(currentPage);
+    cursorY = topY;
+  }
 
   for (const block of blocks) {
-    if (cursorY < 80) break;
-
     switch (block.type) {
       case 'heading': {
         const headingSize = baseSize + (6 - Math.min(block.level, 4));
         const lines = wrapText(font, block.text, headingSize, maxWidth);
         for (const line of lines) {
-          if (cursorY < 80) break;
-          page.drawText(line, { x, y: cursorY, size: headingSize, font: boldFont, color: headingColor });
+          ensureSpace(lineHeight);
+          if (cursorY < bottomLimit) break;
+          currentPage.drawText(line, { x, y: cursorY, size: headingSize, font: boldFont, color: headingColor });
           cursorY -= lineHeight;
         }
         cursorY -= lineHeight * 0.3;
@@ -501,8 +512,9 @@ function drawMarkdownBlocks(page, md, {
       case 'paragraph': {
         const lines = wrapText(font, block.text, baseSize, maxWidth);
         for (const line of lines) {
-          if (cursorY < 80) break;
-          page.drawText(line, { x, y: cursorY, size: baseSize, font, color });
+          ensureSpace(lineHeight);
+          if (cursorY < bottomLimit) break;
+          currentPage.drawText(line, { x, y: cursorY, size: baseSize, font, color });
           cursorY -= lineHeight;
         }
         cursorY -= lineHeight * 0.2;
@@ -510,14 +522,16 @@ function drawMarkdownBlocks(page, md, {
       }
       case 'list': {
         for (let j = 0; j < block.items.length; j++) {
-          if (cursorY < 80) break;
+          ensureSpace(lineHeight);
+          if (cursorY < bottomLimit) break;
           const prefix = block.ordered ? `${j + 1}. ` : '\u2022 ';
           const fullText = `${prefix}${block.items[j]}`;
           const lines = wrapText(font, fullText, baseSize, maxWidth);
           for (let k = 0; k < lines.length; k++) {
-            if (cursorY < 80) break;
+            ensureSpace(lineHeight);
+            if (cursorY < bottomLimit) break;
             const indent = k > 0 ? 18 : 0;
-            page.drawText(lines[k], { x: x + indent, y: cursorY, size: baseSize, font, color });
+            currentPage.drawText(lines[k], { x: x + indent, y: cursorY, size: baseSize, font, color });
             cursorY -= lineHeight;
           }
         }
@@ -526,7 +540,7 @@ function drawMarkdownBlocks(page, md, {
       }
     }
   }
-  return cursorY;
+  return { page: currentPage, cursorY };
 }
 
 function wrapText(font, text, size, maxWidth) {
@@ -617,26 +631,38 @@ export async function downloadChallengeInstructionsPdf(challenge) {
 
   let contentY = headerBottom - 90;
 
-  if (challenge.skillsDescription) {
-    page.drawRectangle({
-      x: margin,
-      y: contentY - 8,
-      width: contentWidth,
-      height: 4,
-      color: brandOrange,
-    });
-    contentY -= 24;
+  function drawPageHeader(p) {
+    p.drawRectangle({ x: 0, y: 0, width: p.getWidth(), height: p.getHeight(), color: paper });
+  }
 
-    page.drawText('HABILIDADES ADQUIRIDAS', {
-      x: margin,
-      y: contentY,
-      size: 13,
-      font: bold,
-      color: brandOrange,
-    });
+  function drawSectionDivider(p, y) {
+    p.drawRectangle({ x: margin, y: y - 8, width: contentWidth, height: 4, color: brandOrange });
+  }
+
+  function drawSectionTitle(p, y, title) {
+    p.drawText(title, { x: margin, y, size: 13, font: bold, color: brandOrange });
+  }
+
+  function drawFooter(p) {
+    const footerY = 50;
+    p.drawRectangle({ x: 0, y: 0, width: p.getWidth(), height: footerY + 10, color: dark });
+    p.drawRectangle({ x: 0, y: footerY + 10, width: p.getWidth(), height: 2, color: brandOrange });
+    p.drawText(ISSUER.legalName, { x: margin, y: footerY - 6, size: 9, font: bold, color: rgb(1, 1, 1) });
+    p.drawText(`CNPJ: ${ISSUER.cnpj}`, { x: margin, y: footerY - 20, size: 8, font: regular, color: muted });
+    const websiteText = `${ISSUER.website}  |  ${ISSUER.agenticSpaceWebsite}`;
+    const websiteWidth = bold.widthOfTextAtSize(websiteText, 8);
+    p.drawText(websiteText, { x: p.getWidth() - margin - websiteWidth, y: footerY - 20, size: 8, font: regular, color: muted });
+  }
+
+  let currentPage = page;
+
+  if (challenge.skillsDescription) {
+    drawSectionDivider(currentPage, contentY);
+    contentY -= 24;
+    drawSectionTitle(currentPage, contentY, 'HABILIDADES ADQUIRIDAS');
     contentY -= 22;
 
-    contentY = drawMarkdownBlocks(page, challenge.skillsDescription, {
+    const result = drawMarkdownBlocks(currentPage, challenge.skillsDescription, {
       font: regular,
       boldFont: bold,
       x: margin,
@@ -646,30 +672,29 @@ export async function downloadChallengeInstructionsPdf(challenge) {
       lineHeight: 17,
       color: slate,
       headingColor: dark,
+      pdf,
+      pageHeight: height,
+      marginTop: margin,
+      marginBottom: 70,
+      drawHeader: drawPageHeader,
     });
+    currentPage = result.page;
+    contentY = result.cursorY;
     contentY -= 16;
   }
 
   if (challenge.instructions) {
-    page.drawRectangle({
-      x: margin,
-      y: contentY - 8,
-      width: contentWidth,
-      height: 4,
-      color: brandOrange,
-    });
+    if (contentY < 100) {
+      currentPage = pdf.addPage([width, height]);
+      drawPageHeader(currentPage);
+      contentY = height - margin;
+    }
+    drawSectionDivider(currentPage, contentY);
     contentY -= 24;
-
-    page.drawText('INSTRUÇÕES', {
-      x: margin,
-      y: contentY,
-      size: 13,
-      font: bold,
-      color: brandOrange,
-    });
+    drawSectionTitle(currentPage, contentY, 'INSTRUÇÕES');
     contentY -= 22;
 
-    contentY = drawMarkdownBlocks(page, challenge.instructions, {
+    const result = drawMarkdownBlocks(currentPage, challenge.instructions, {
       font: regular,
       boldFont: bold,
       x: margin,
@@ -679,37 +704,20 @@ export async function downloadChallengeInstructionsPdf(challenge) {
       lineHeight: 17,
       color: slate,
       headingColor: dark,
+      pdf,
+      pageHeight: height,
+      marginTop: margin,
+      marginBottom: 70,
+      drawHeader: drawPageHeader,
     });
+    currentPage = result.page;
+    contentY = result.cursorY;
   }
 
-  const footerY = 50;
-  page.drawRectangle({ x: 0, y: 0, width, height: footerY + 10, color: dark });
-  page.drawRectangle({ x: 0, y: footerY + 10, width, height: 2, color: brandOrange });
-
-  page.drawText(ISSUER.legalName, {
-    x: margin,
-    y: footerY - 6,
-    size: 9,
-    font: bold,
-    color: rgb(1, 1, 1),
-  });
-  page.drawText(`CNPJ: ${ISSUER.cnpj}`, {
-    x: margin,
-    y: footerY - 20,
-    size: 8,
-    font: regular,
-    color: muted,
-  });
-
-  const websiteText = `${ISSUER.website}  |  ${ISSUER.agenticSpaceWebsite}`;
-  const websiteWidth = bold.widthOfTextAtSize(websiteText, 8);
-  page.drawText(websiteText, {
-    x: width - margin - websiteWidth,
-    y: footerY - 20,
-    size: 8,
-    font: regular,
-    color: muted,
-  });
+  const pages = pdf.getPages();
+  for (const p of pages) {
+    drawFooter(p);
+  }
 
   pdf.setTitle(`Desafio: ${challenge.name || 'Desafio'}`);
   pdf.setAuthor(ISSUER.legalName);
