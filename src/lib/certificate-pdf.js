@@ -548,7 +548,7 @@ async function fetchLogoPng() {
 function drawMarkdownBlocks(page, md, {
   font, boldFont, x, y, maxWidth, baseSize, lineHeight, color, headingColor,
   pdf: pdfDoc, pageHeight, marginTop, marginBottom, drawHeader,
-  monoFont,
+  monoFont, rgb,
 }) {
   const blocks = parseMarkdown(md);
   let cursorY = y;
@@ -787,6 +787,7 @@ export async function downloadChallengeInstructionsPdf(challenge) {
       font: regular,
       boldFont: bold,
       monoFont: mono,
+      rgb,
       x: margin,
       y: contentY,
       maxWidth: contentWidth,
@@ -820,6 +821,7 @@ export async function downloadChallengeInstructionsPdf(challenge) {
       font: regular,
       boldFont: bold,
       monoFont: mono,
+      rgb,
       x: margin,
       y: contentY,
       maxWidth: contentWidth,
