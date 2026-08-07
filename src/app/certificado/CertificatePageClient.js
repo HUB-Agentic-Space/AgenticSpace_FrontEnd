@@ -548,7 +548,11 @@ function CertificateContent() {
     try {
       const recipient = await ensureWallet();
       await loadCertificates(config, recipient, session?.jwt);
-      const freshContext = await readCertificateContext(config, recipient);
+      // Verifica elegibilidade sempre na fase/desafio que esta sendo emitido
+      // (phase.id), nunca na fase fundadora default nem no currentPhaseId()
+      // compartilhado — do contrario a emissao de um certificado poderia ser
+      // bloqueada (ou liberada indevidamente) por outro certificado.
+      const freshContext = await readCertificateContext(config, recipient, phase.id);
       if (freshContext?.certificate) {
         setSuccess(`Voce ja possui o certificado #${freshContext.certificate.tokenId} nesta fase.`);
         setMinting(false);

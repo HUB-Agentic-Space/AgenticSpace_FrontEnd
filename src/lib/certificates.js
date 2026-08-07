@@ -396,16 +396,25 @@ export function certificateFromResult(result, tokenId) {
   };
 }
 
-export async function readCertificateContext(config, recipient) {
+/**
+ * Le fase e certificado de um destinatario no contrato.
+ *
+ * IMPORTANTE: `phaseId` deve ser sempre informado explicitamente pelo
+ * chamador (a fase/desafio que esta sendo exibido ou emitido). O contrato
+ * expoe um unico `currentPhaseId()` compartilhado entre a fase fundadora e
+ * todos os desafios (qualquer `activatePhase()` o sobrescreve), portanto ele
+ * NUNCA deve ser usado para decidir "qual certificado" verificar — isso
+ * causaria a emissao/verificacao de um certificado interferir na de outro.
+ * Quando `phaseId` nao e informado, usa a fase fundadora (id "1") como
+ * padrao, nunca o ponteiro on-chain compartilhado.
+ */
+export async function readCertificateContext(config, recipient, phaseId = '1') {
   if (!ethers.isAddress(config.certificateAddress)) {
     return { phase: null, certificate: null, casBalance: '0', currentCasBalance: '0' };
   }
   const provider = new ethers.JsonRpcProvider(config.rpcUrl, config.chainId, { staticNetwork: true });
   const contract = getCertificateContract(config.certificateAddress, provider);
-  const phaseId = await contract.currentPhaseId().catch((err) => {
-    console.warn('[readCertificateContext] currentPhaseId failed', { certificateAddress: config.certificateAddress, error: err?.message || String(err) });
-    return 0n;
-  });
+  const normalizedPhaseId = BigInt(phaseId || 0);
   let phase = null;
   if (phaseId > BigInt('0')) {
     try {
