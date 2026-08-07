@@ -397,7 +397,7 @@ function CertificateContent() {
       name: certificatePhase?.name || phase?.name || '',
       certificateType: certificatePhase?.certificateType || certificatePhase?.name || phase?.certificateType || phase?.name || '',
       achievementSummary: certificatePhase?.achievementSummary || phase?.achievementSummary || '',
-      courseHours: certificatePhase?.courseHours || phase?.courseHours || 40,
+      courseHours: certificatePhase?.courseHours || phase?.courseHours || selectedChallenge?.courseHours || 40,
       skillsDescription: certificatePhase?.skillsDescription || phase?.skillsDescription || '',
       instructions: certificatePhase?.instructions || phase?.instructions || '',
     };
@@ -408,7 +408,7 @@ function CertificateContent() {
       recipientName: profileName,
       txHash: lastTxHash,
     });
-  }, [certificate, certificatePhase, config, lastTxHash, nameMatches, phase, profileName]);
+  }, [certificate, certificatePhase, config, lastTxHash, nameMatches, phase, profileName, selectedChallenge]);
 
   // A arte precisa refletir sempre o item selecionado: usa o manifesto emitido
   // apenas quando ele corresponde a fase/desafio escolhido, caso contrario cai
@@ -418,8 +418,17 @@ function CertificateContent() {
     const manifestMatchesSelection = !selectedChallengeId
       || String(manifestPhaseId) === String(selectedChallengeId);
     if (manifest && manifestMatchesSelection) return manifest;
-    return buildDraftManifest({ config, phase, recipientName: profileName, recipient: account });
-  }, [account, config, manifest, phase, profileName, selectedChallengeId]);
+    const draftPhase = {
+      ...phase,
+      courseHours: phase?.courseHours || selectedChallenge?.courseHours || 40,
+    };
+    return buildDraftManifest({ config, phase: draftPhase, recipientName: profileName, recipient: account });
+  }, [account, config, manifest, phase, profileName, selectedChallenge, selectedChallengeId]);
+
+  // O processo de emissão com a wallet deve estar completamente finalizado
+  // e sem erros antes de liberar os botões de download, impressão,
+  // compartilhamento e visualização da reserva ERC-6551.
+  const mintInProgress = minting || Boolean(step);
 
   const requiredCas = phase?.minCasDeposit || DEFAULT_PHASE.minCasDeposit;
   const hasExtraFee = Boolean(phase?.extraFeeTypeId && phase.extraFeeTypeId !== '0');
@@ -445,6 +454,17 @@ function CertificateContent() {
       (c) => String(c.onchainPhaseId || c.id) === String(selectedChallengeId),
     ) || null;
   }, [challenges, selectedChallengeId]);
+
+  // courseHours nao e um campo on-chain — phaseFromResult nao o inclui.
+  // Quando um desafio e selecionado, propaga courseHours do desafio (API)
+  // para o phase state, evitando que o valor caia para o default 40.
+  useEffect(() => {
+    if (!selectedChallenge?.courseHours) return;
+    setPhase((previous) => {
+      if (previous?.courseHours === selectedChallenge.courseHours) return previous;
+      return { ...previous, courseHours: selectedChallenge.courseHours };
+    });
+  }, [selectedChallenge]);
 
   // As habilidades e instrucoes orientam o candidato ate o certificado ser
   // efetivamente emitido on-chain; depois disso o proprio certificado ja e a evidencia.
@@ -1605,19 +1625,19 @@ function CertificateContent() {
           )}
 
           <div className="flex flex-wrap gap-3">
-            <button onClick={handlePdf} disabled={!manifest || Boolean(exporting)} className="btn-primary">
+            <button onClick={handlePdf} disabled={!manifest || mintInProgress || Boolean(exporting)} className="btn-primary">
               {exporting === 'pdf' ? <Spinner size={16} /> : <Download size={17} />} Baixar PDF
             </button>
-            <button onClick={() => window.print()} disabled={!manifest} className="btn-secondary">
+            <button onClick={() => window.print()} disabled={!manifest || mintInProgress} className="btn-secondary">
               <Printer size={17} /> Imprimir
             </button>
-            <button onClick={copyLinkedInData} disabled={!manifest || certificate?.revoked} className="btn-secondary">
+            <button onClick={copyLinkedInData} disabled={!manifest || mintInProgress || certificate?.revoked} className="btn-secondary">
               <Linkedin size={17} /> Copiar dados para LinkedIn
             </button>
-            <button onClick={shareLinkedIn} disabled={!manifest || certificate?.revoked} className="btn-secondary">
+            <button onClick={shareLinkedIn} disabled={!manifest || mintInProgress || certificate?.revoked} className="btn-secondary">
               <ExternalLink size={17} /> Compartilhar
             </button>
-            {certificate?.tokenBoundAccount && config?.explorerUrl && (
+            {certificate?.tokenBoundAccount && config?.explorerUrl && !mintInProgress && (
               <a
                 href={`${config.explorerUrl}/address/${certificate.tokenBoundAccount}`}
                 target="_blank"
