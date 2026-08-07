@@ -822,6 +822,10 @@ function CertificateContent() {
       const selected = await readCertificateByToken(config, issuance.token.tokenId);
       setCertificate(selected.certificate);
       setCertificatePhase(selected.phase);
+      // currentCertificate precisa ser atualizado tambem no caminho de sucesso
+      // — antes so era setado no fallback do catch, deixando o banner de
+      // "certificado emitido" preso ao valor anterior (de outra fase/desafio).
+      setCurrentCertificate(selected.certificate);
       setCurrentCasBalance(selected.currentCasBalance);
       setLastTxHash(issuance.transaction?.txHash || '');
       // Mantem a fase corrente e o desafio selecionado alinhados com a arte.
@@ -1083,6 +1087,39 @@ function CertificateContent() {
                         extraFeeTypeId: String(ch.extraFeeTypeId || '0'),
                         tbaRebateBps: Number(ch.tbaRebateBps || 0),
                       });
+                    } else if (config?.currentPhase?.id) {
+                      // Voltou para "Selecione um desafio..." — restaura a fase
+                      // fundadora vigente em vez de deixar os dados do ultimo
+                      // desafio selecionado exibidos no card "Fase vigente".
+                      setPhase({
+                        id: String(config.currentPhase.id),
+                        name: config.currentPhase.name || 'Sócio Fundador',
+                        certificateType: config.currentPhase.certificateType || config.currentPhase.name || '',
+                        minCasDeposit: String(config.currentPhase.casAmount || DEFAULT_PHASE.minCasDeposit),
+                        active: Boolean(config.currentPhase.active),
+                        minted: String(config.currentPhase.minted || '0'),
+                        skillsDescription: config.currentPhase.skillsDescription || '',
+                        instructions: config.currentPhase.instructions || '',
+                        achievementSummary: config.currentPhase.achievementSummary || '',
+                        courseHours: config.currentPhase.courseHours || 40,
+                      });
+                    }
+
+                    // O certificado emitido/currentCertificate precisa ser
+                    // re-escopado para a fase/desafio recem-selecionado — sem
+                    // isso o banner "Certificado #X emitido" de uma fase
+                    // permanecia exibido para outra fase/desafio nunca
+                    // solicitado nem aprovado (bug de representacao de estado).
+                    const targetPhaseId = id || String(config?.currentPhase?.id || '');
+                    const matchingIssuance = certificateHistory.find(
+                      (issuance) => String(issuance.phase?.id) === targetPhaseId
+                    );
+                    if (matchingIssuance) {
+                      selectCertificate(matchingIssuance);
+                    } else {
+                      setCertificate(null);
+                      setCertificatePhase(null);
+                      setCurrentCertificate(null);
                     }
                   }}
                   className="input"
