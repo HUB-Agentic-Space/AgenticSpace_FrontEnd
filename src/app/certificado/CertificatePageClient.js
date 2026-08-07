@@ -455,32 +455,38 @@ function CertificateContent() {
     && (selectedChallenge.skillsDescription || selectedChallenge.instructions)
   );
 
+  const challengeRequiresProofLink = selectedChallenge
+    ? selectedChallenge.requiresProofLink !== false
+    : true;
+
   async function handleRequestCertificate() {
     if (!selectedChallengeId || !session?.jwt) return;
     setError('');
     setSuccess('');
 
     const trimmedProof = proofLink.trim();
-    if (!trimmedProof) {
+    if (challengeRequiresProofLink && !trimmedProof) {
       setError('Informe a URL da prova de execução (Google Drive ou GitHub).');
       return;
     }
-    try {
-      const parsed = new URL(trimmedProof);
-      if (parsed.protocol !== 'https:') {
-        setError('A URL da prova deve utilizar HTTPS.');
+    if (challengeRequiresProofLink) {
+      try {
+        const parsed = new URL(trimmedProof);
+        if (parsed.protocol !== 'https:') {
+          setError('A URL da prova deve utilizar HTTPS.');
+          return;
+        }
+        const allowed = ['drive.google.com', 'docs.google.com', 'github.com', 'gist.github.com', 'raw.githubusercontent.com'];
+        const hostname = parsed.hostname.toLowerCase();
+        const isAllowed = allowed.some((d) => hostname === d || hostname.endsWith(`.${d}`));
+        if (!isAllowed) {
+          setError('A URL da prova deve ser do Google Drive ou GitHub.');
+          return;
+        }
+      } catch {
+        setError('A URL informada não é válida. Verifique o formato do link.');
         return;
       }
-      const allowed = ['drive.google.com', 'docs.google.com', 'github.com', 'gist.github.com', 'raw.githubusercontent.com'];
-      const hostname = parsed.hostname.toLowerCase();
-      const isAllowed = allowed.some((d) => hostname === d || hostname.endsWith(`.${d}`));
-      if (!isAllowed) {
-        setError('A URL da prova deve ser do Google Drive ou GitHub.');
-        return;
-      }
-    } catch {
-      setError('A URL informada não é válida. Verifique o formato do link.');
-      return;
     }
 
     try {
@@ -1304,6 +1310,7 @@ function CertificateContent() {
                     )}
                     {!selectedChallengeRequest && (
                       <>
+                        {challengeRequiresProofLink && (
                         <div className="space-y-2">
                           <label className="block text-xs font-medium text-slate-300">
                             URL da prova de execução *
@@ -1319,6 +1326,7 @@ function CertificateContent() {
             Cole aqui o link do Google Drive ou GitHub com as provas de execução do desafio/projeto. O instrutor/analista irá auditar o material antes de aprovar o certificado.
                           </p>
                         </div>
+                        )}
                         <label className="flex items-start gap-2 rounded-xl border border-slate-700 bg-slate-950/60 p-3 text-xs text-slate-300 cursor-pointer hover:border-slate-600 transition">
                           <input
                             type="checkbox"
@@ -1336,7 +1344,7 @@ function CertificateContent() {
                         </label>
                         <button
                           onClick={handleRequestCertificate}
-                          disabled={!profileName || minting || !agreedToRules || !proofLink.trim()}
+                          disabled={!profileName || minting || !agreedToRules || (challengeRequiresProofLink && !proofLink.trim())}
                           className="btn-secondary w-full"
                         >
                           <FileCheck2 size={17} /> Solicitar Certificado
