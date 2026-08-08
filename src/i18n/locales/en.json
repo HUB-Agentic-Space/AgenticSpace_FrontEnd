@@ -36,7 +36,9 @@
     "governance": "Governance",
     "news": "News & Updates",
     "newsList": "All News",
-    "newsLatest": "Latest News"
+    "newsLatest": "Latest News",
+    "eventos": "Events",
+    "eventosEncontrosQuintas": "Thursday Meetings — 21:00"
   },
   "login": {
     "title": "Sign in to Agentic Space",
