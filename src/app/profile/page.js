@@ -32,7 +32,8 @@ import {
   X,
   Info,
   MailCheck,
-  ArrowUpDown
+  ArrowUpDown,
+  Award
 } from 'lucide-react';
 import Spinner from '@/components/Spinner';
 import { useAuth } from '@/lib/auth-context';
@@ -112,6 +113,8 @@ function ProfileContent() {
   const [showUnlinkRequestModal, setShowUnlinkRequestModal] = useState(false);
   const [unlinkReason, setUnlinkReason] = useState('');
   const [unlinkRequestBusy, setUnlinkRequestBusy] = useState(false);
+  const [certificates, setCertificates] = useState([]);
+  const [certificatesLoading, setCertificatesLoading] = useState(true);
   const { connect: walletConnect, getProvider: getWalletProvider, account } = useWallet();
 
   const did = session?.subject?.id || '';
@@ -213,8 +216,11 @@ function ProfileContent() {
         const hasReg = regRes.status < 400 && (regRes.data?.registered || regRes.data?.receipt) && !regRes.data?.invalidated;
         const hasCert = Array.isArray(issuances) && issuances.some((i) => i.status === 'confirmed');
         setHasRegistrationAndCertificate(Boolean(hasReg && hasCert));
+        setCertificates(Array.isArray(issuances) ? issuances : []);
+        setCertificatesLoading(false);
       } catch {
         if (!cancelled) setHasRegistrationAndCertificate(false);
+        if (!cancelled) setCertificatesLoading(false);
       }
     }
     checkRegistrationAndCertificate();
@@ -736,6 +742,62 @@ function ProfileContent() {
                         <span className="font-mono text-xs text-slate-500">@{a.id}</span>
                       </span>
                       <ExternalLink size={14} className="text-slate-500" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="card">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
+                <Award size={18} className="text-brand-400" /> Meus certificados
+              </h2>
+              <Link href="/certificado" className="text-sm text-brand-400 hover:underline">
+                ver todos
+              </Link>
+            </div>
+            {certificatesLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <Spinner size={20} className="text-brand-400" />
+              </div>
+            ) : certificates.length === 0 ? (
+              <p className="text-sm text-slate-400">
+                Voce ainda nao possui certificados.{' '}
+                <Link href="/certificado" className="text-brand-400 hover:underline">
+                  Emitir certificado
+                </Link>
+                .
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {certificates.slice(0, 5).map((c) => (
+                  <li key={c.issuanceId}>
+                    <Link
+                      href="/certificado"
+                      className="flex items-center justify-between rounded-lg border border-slate-800 px-3 py-2 hover:bg-slate-800"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Award size={16} className="text-brand-400" />
+                        <span className="font-medium text-slate-100">
+                          {c.phase?.name || 'Certificado'}
+                        </span>
+                        {c.token?.tokenId && (
+                          <span className="font-mono text-xs text-slate-500">
+                            #{c.token.tokenId}
+                          </span>
+                        )}
+                      </span>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                        c.status === 'confirmed'
+                          ? 'bg-emerald-500/15 text-emerald-300'
+                          : c.status === 'revoked'
+                            ? 'bg-red-500/15 text-red-300'
+                            : 'bg-amber-500/15 text-amber-300'
+                      }`}>
+                        {c.status === 'confirmed' ? 'Emitido' : c.status === 'revoked' ? 'Revogado' : 'Pendente'}
+                      </span>
                     </Link>
                   </li>
                 ))}

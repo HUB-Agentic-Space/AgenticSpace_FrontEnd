@@ -389,6 +389,13 @@ function CertificateContent() {
     hashCertificateName(profileName, account) === certificate.nameHash
   );
 
+  const selectedChallenge = useMemo(() => {
+    if (!selectedChallengeId) return null;
+    return challenges.find(
+      (c) => String(c.onchainPhaseId || c.id) === String(selectedChallengeId),
+    ) || null;
+  }, [challenges, selectedChallengeId]);
+
   const manifest = useMemo(() => {
     if (!config || !certificate || !profileName || !nameMatches) return null;
     const effectivePhase = {
@@ -447,13 +454,6 @@ function CertificateContent() {
   const isPending = selectedChallengeRequest?.status === 'pending';
   const isRejected = selectedChallengeRequest?.status === 'rejected';
   const needsApproval = Boolean(selectedChallengeId) && !isApproved;
-
-  const selectedChallenge = useMemo(() => {
-    if (!selectedChallengeId) return null;
-    return challenges.find(
-      (c) => String(c.onchainPhaseId || c.id) === String(selectedChallengeId),
-    ) || null;
-  }, [challenges, selectedChallengeId]);
 
   // courseHours nao e um campo on-chain — phaseFromResult nao o inclui.
   // Quando um desafio e selecionado, propaga courseHours do desafio (API)
