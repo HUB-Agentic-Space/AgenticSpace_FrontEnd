@@ -1,0 +1,20 @@
+{
+  "challenges": [
+    {
+      "slug": "especialista-integracao-openclaw-hub",
+      "title": "Especialista em Integração do OpenClaw/NanoClaw e o Hub Agentic Space",
+      "description": "Configure um agente utilizando OpenClaw, NanoClaw ou plataforma compatível, documente todo o processo e integre-o ao Hub Agentic Space.",
+      "availableLanguages": ["pt", "en", "fr"],
+      "defaultLanguage": "pt",
+      "certificatePhaseId": "2"
+    },
+    {
+      "slug": "primeiro-encontro-apresentacao-cas",
+      "title": "Participação no Primeiro Encontro de Apresentação da Moeda CAS",
+      "description": "Participe do primeiro encontro de apresentação da Criptocoin Agentic Space (CAS) e demonstre habilidades básicas para debater sobre a moeda e seu ecossistema agêntico.",
+      "availableLanguages": ["pt", "en", "fr"],
+      "defaultLanguage": "pt",
+      "certificatePhaseId": "5"
+    }
+  ]
+}

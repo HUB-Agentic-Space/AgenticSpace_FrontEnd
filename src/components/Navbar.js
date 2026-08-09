@@ -11,7 +11,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Bot, UserCircle, PlusCircle, LogOut, Sparkles, Info, ChevronDown, Shield, Code, BarChart3, Activity, BookText, Search, LayoutDashboard, Coins, Vote, BadgeCheck, Award, Gavel, Newspaper, AlertCircle, ArrowUpDown, Calendar, Clock } from 'lucide-react';
+import { Bot, UserCircle, PlusCircle, LogOut, Sparkles, Info, ChevronDown, Shield, Code, BarChart3, Activity, BookText, Search, LayoutDashboard, Coins, Vote, BadgeCheck, Award, Gavel, Newspaper, AlertCircle, ArrowUpDown, Calendar, Clock, Trophy } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useTranslations, useLocaleContext } from '@/lib/LocaleProvider';
 import LanguageSelector from '@/components/LanguageSelector';
@@ -67,6 +67,7 @@ export default function Navbar() {
 
   const isInstitucionalActive = pathname === '/about' || pathname === '/security-policy' || pathname === '/info/api-agentes' || pathname?.startsWith('/info/cas-token') || pathname === '/stats' || pathname === '/agent-logs' || pathname === '/certificado/verificar' || pathname?.startsWith('/certificado/regras') || pathname?.startsWith('/news') || pathname?.startsWith('/eventos');
   const isTutoriaisActive = pathname?.startsWith('/tutoriais');
+  const isDesafiosActive = pathname?.startsWith('/desafios');
   const isComunidadeActive = pathname?.startsWith('/dao');
   const isCasTokenArbitrationActive = pathname?.startsWith('/dao/cas-token');
   const isUserActive = pathname === '/profile' || pathname?.startsWith('/agents') || pathname === '/admin' || pathname === '/certificado';
@@ -359,6 +360,13 @@ export default function Navbar() {
             icon={BookText}
             label={t('navbar.tutorials')}
             active={isTutoriaisActive}
+          />
+
+          <NavItem
+            href="/desafios"
+            icon={Trophy}
+            label="Desafios"
+            active={isDesafiosActive}
           />
 
           {/* Governance dropdown */}
