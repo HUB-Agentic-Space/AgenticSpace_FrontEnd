@@ -11,7 +11,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Award, Video, FileText, ExternalLink, Phone, Globe, MapPin, ClipboardList } from 'lucide-react';
+import { Calendar, Clock, Award, Video, FileText, ExternalLink, Phone, Globe, MapPin, ClipboardList, Mail, MessageCircle, BadgeCheck } from 'lucide-react';
 
 export default function EncontrosQuintasPage() {
   const googleCalendarLink =
@@ -183,6 +183,34 @@ export default function EncontrosQuintasPage() {
               presença</strong> durante o evento.
             </p>
           </div>
+          <div className="bg-slate-800/50 p-4 rounded-lg border-l-4 border-brand-500">
+            <p>
+              <strong className="text-white">Lista de presença obrigatória:</strong>{' '}
+              A partir do dia <strong className="text-white">13 de agosto de 2026</strong>,
+              o preenchimento da lista de presença passa a ser{' '}
+              <strong className="text-white">obrigatório</strong> para receber o
+              certificado de participação.
+            </p>
+            <p className="mt-2">
+              <strong className="text-white">Senhas de verificação:</strong>{' '}
+              Durante a live serão informadas <strong className="text-white">duas
+              senhas</strong> que devem ser preenchidas no formulário:
+            </p>
+            <ul className="list-disc list-inside mt-2 space-y-1 text-slate-400">
+              <li>
+                <strong className="text-white">1ª senha:</strong> aproximadamente{' '}
+                <strong className="text-white">21:30</strong>
+              </li>
+              <li>
+                <strong className="text-white">2ª senha:</strong> aproximadamente{' '}
+                <strong className="text-white">21:55</strong>
+              </li>
+            </ul>
+            <p className="mt-2">
+              É <strong className="text-white">fundamental</strong> informar as
+              duas senhas para garantir o recebimento do certificado.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -203,10 +231,14 @@ export default function EncontrosQuintasPage() {
             RapportCertificate.
           </p>
           <p>
-            A partir desta quinta-feira, haverá um pequeno{' '}
-            <strong className="text-white">formulário de presença</strong> a ser
-            preenchido durante o encontro para atestar sua participação e
-            garantir a emissão do certificado.
+            A partir do dia <strong className="text-white">13 de agosto de 2026</strong>,
+            o preenchimento da lista de presença passa a ser{' '}
+            <strong className="text-white">obrigatório</strong>. Durante o encontro
+            serão informadas <strong className="text-white">duas senhas de
+            verificação</strong> (aproximadamente às <strong className="text-white">21:30</strong>{' '}
+            e <strong className="text-white">21:55</strong>) que devem ser
+            preenchidas no formulário. Sem as duas senhas, o certificado não
+            será emitido.
           </p>
         </div>
       </section>
@@ -270,6 +302,55 @@ export default function EncontrosQuintasPage() {
           </div>
         </section>
       )}
+
+      {/* Já emitiu seu certificado? */}
+      <section className="card space-y-6">
+        <div className="flex items-center gap-3">
+          <BadgeCheck className="text-brand-400" size={28} />
+          <h2 className="text-2xl font-bold text-white">
+            Já emitiu seu certificado do último encontro?
+          </h2>
+        </div>
+        <div className="space-y-4 text-slate-300">
+          <p>
+            Se você participou de um encontro anterior e ainda não emitiu seu{' '}
+            <strong className="text-white">certificado de participação</strong>,
+            acesse agora a página de certificados para verificar e emitir o seu:
+          </p>
+          <div className="flex flex-wrap gap-4">
+            <a
+              href="/certificado"
+              className="btn-primary"
+            >
+              <BadgeCheck size={18} />
+              Emitir / Verificar Certificado
+            </a>
+          </div>
+          <div className="bg-slate-800/50 p-4 rounded-lg border-l-4 border-brand-500 space-y-3">
+            <p className="text-white font-medium">
+              Ficou com alguma dúvida?
+            </p>
+            <div className="flex flex-wrap gap-6">
+              <a
+                href="https://wa.me/5585985205490"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-brand-400 hover:text-brand-300"
+              >
+                <MessageCircle size={20} />
+                WhatsApp: (85) 98520-5490
+              </a>
+              <a
+                href="mailto:certificados@rapport.tec.br"
+                className="flex items-center gap-2 text-brand-400 hover:text-brand-300"
+              >
+                <Mail size={20} />
+                certificados@rapport.tec.br
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
