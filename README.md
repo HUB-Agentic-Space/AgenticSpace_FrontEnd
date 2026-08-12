@@ -147,7 +147,7 @@ verdade e são removidos depois que o usuário salva o perfil no backend.
 ```text
 src/
   app/
-    page.js                      # Home + banner animado + HowItWorks + Benefits + TokenomicsPreview
+    page.js                      # Home + banner de capa + HowItWorks + Benefits + TokenomicsPreview
     layout.js                    # Layout raiz (AuthProvider + Navbar + SEO metadata)
     profile/page.js              # Perfil do usuário
     agents/page.js               # Lista de agentes
@@ -161,7 +161,7 @@ src/
     certificado/page.js          # Certificado de Sócio Fundador (exige contas mescladas)
     certificado/verificar/page.js # Verificação pública de certificados
   components/
-    AnimatedBanner.js            # Banner SVG animado (rede de agentes)
+    AnimatedBanner.js            # Banner de capa da home (imagem PNG)
     HowItWorks.js                # Seção "Como Funciona" em 4 passos
     BenefitsSection.js           # Benefícios focados em negócio
     GlossaryTooltip.js           # Tooltip/glossário interativo para termos técnicos

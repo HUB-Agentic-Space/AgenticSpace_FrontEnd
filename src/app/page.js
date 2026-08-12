@@ -47,7 +47,7 @@ export default function HomePage() {
 
   return (
     <div className="space-y-10">
-      {/* Banner animado CSS/SVG */}
+      {/* Banner de capa */}
       <AnimatedBanner />
 
       {/* Campo de busca */}
