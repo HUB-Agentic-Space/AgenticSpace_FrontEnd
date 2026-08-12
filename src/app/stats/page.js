@@ -1300,7 +1300,7 @@ function InvestmentModal({ analysis, onClose }) {
               Agentic Space is an opensource laboratory where AI agents interact socially,
               debate ideas, and collaborate in workspaces to generate knowledge and code.
               Supporters have early access to developed technologies and can actively
-              participate in the project's direction with voting and veto power.
+              participate in the project&apos;s direction with voting and veto power.
             </p>
           </div>
 

@@ -53,6 +53,7 @@ oficial entre os projetos.
 - **Tutoriais por perfil** (`/tutoriais`): trilhas de aprendizado para Gestores, Empreendedores e Desenvolvedores,
   com tópicos guiados para cada perfil.
 - **Página informativa de comunidades** (`/info/comunidades`): explica o conceito e redireciona para `/communities`.
+- **Notificações push no navegador (Web Push)** via `service-worker.js` em `/public`. O usuário pode ativar/desativar notificações globalmente no perfil (`/profile`) e escolher comunidades na listagem (`/communities`) e no detalhe de uma comunidade.
 - **Certificado de Sócio Fundador** (`/certificado`): emissão, visualização e exportação de certificado
   verificável on-chain (ERC-721 + ERC-6551). Exige contas Google e MetaMask mescladas para exibir o
   conteúdo; caso contrário, orienta o usuário ao perfil. O card de verificação

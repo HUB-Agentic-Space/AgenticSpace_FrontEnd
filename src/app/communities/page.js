@@ -12,12 +12,16 @@ import { listCommunities, getCategories } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { useTranslations } from '@/lib/LocaleProvider';
 import DynamicMetadata from '@/components/DynamicMetadata';
+import CommunityPushToggle from '@/components/CommunityPushToggle';
+import { loadPushStatus } from '@/lib/web-push';
 
 export default function CommunitiesPage() {
   const { jwt } = useAuth();
   const t = useTranslations();
   const [communities, setCommunities] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [pushSettings, setPushSettings] = useState({});
+  const [globalPushEnabled, setGlobalPushEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all');
@@ -40,6 +44,21 @@ export default function CommunitiesPage() {
         } else {
           setError(t('communities.errorLoad'));
         }
+
+        // Buscar preferências de push do usuário autenticado
+        if (jwt) {
+          try {
+            const pushStatus = await loadPushStatus(jwt);
+            setGlobalPushEnabled(Boolean(pushStatus.webPushEnabled));
+            const settings = {};
+            for (const setting of pushStatus.communitySettings || []) {
+              settings[setting.communityPublicId] = setting.enabled;
+            }
+            setPushSettings(settings);
+          } catch (err) {
+            console.warn('Falha ao carregar preferências de push:', err);
+          }
+        }
       } catch (err) {
         console.error('Erro ao carregar comunidades:', err);
         setError(t('communities.errorLoad'));
@@ -49,7 +68,7 @@ export default function CommunitiesPage() {
     }
 
     loadData();
-  }, [jwt]);
+  }, [jwt, t]);
 
   const filteredCommunities = filter === 'all' 
     ? communities 
@@ -227,11 +246,11 @@ export default function CommunitiesPage() {
               href={`/communities/${community.public_id}`}
               className="card transition hover:border-brand-500 hover:bg-slate-800/50"
             >
-              <div className="flex items-start justify-between mb-3">
+              <div className="flex items-start justify-between mb-3 gap-2">
                 <h3 className="font-semibold text-white text-lg">
                   {community.name}
                 </h3>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   {community.context && getContextBadge(community.context)}
                   {getStatusBadge(community.status)}
                 </div>
@@ -241,21 +260,31 @@ export default function CommunitiesPage() {
                 {community.description}
               </p>
 
-              <div className="flex items-center gap-4 text-xs text-slate-500">
-                <div className="flex items-center gap-1">
-                  <Tag size={14} />
-                  <span>{getCategoryName(community.category_id)}</span>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-4 text-xs text-slate-500 min-w-0">
+                  <div className="flex items-center gap-1">
+                    <Tag size={14} />
+                    <span className="truncate">{getCategoryName(community.category_id)}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <MessageSquare size={14} />
+                    <span>{community.topics_count || 0} {community.topics_count === 1 ? 'tópico' : 'tópicos'}</span>
+                  </div>
+                  <div className="hidden sm:flex items-center gap-1">
+                    <Clock size={14} />
+                    <span>
+                      {new Date(community.created_at).toLocaleDateString('pt-BR')}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <MessageSquare size={14} />
-                  <span>{community.topics_count || 0} {community.topics_count === 1 ? 'tópico' : 'tópicos'}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Clock size={14} />
-                  <span>
-                    {new Date(community.created_at).toLocaleDateString('pt-BR')}
-                  </span>
-                </div>
+                <CommunityPushToggle
+                  communityPublicId={community.public_id}
+                  initialEnabled={pushSettings[community.public_id] === true}
+                  disabled={!globalPushEnabled}
+                  onChange={(enabled) => {
+                    setPushSettings((prev) => ({ ...prev, [community.public_id]: enabled }));
+                  }}
+                />
               </div>
 
               {community.tags && community.tags.length > 0 && (

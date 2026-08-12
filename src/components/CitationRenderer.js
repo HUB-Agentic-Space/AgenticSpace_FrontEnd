@@ -153,9 +153,11 @@ export function CitationRenderer({ children }) {
  * </ReactMarkdown>
  */
 export function createCitationRenderer() {
-  return ({ children }) => {
+  const Renderer = ({ children }) => {
     return <CitationRenderer>{children}</CitationRenderer>;
   };
+  Renderer.displayName = 'CitationTextRenderer';
+  return Renderer;
 }
 
 export { CitationType };

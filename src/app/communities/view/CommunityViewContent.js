@@ -11,16 +11,22 @@ import Link from 'next/link';
 import { ArrowLeft, MessageSquare, TrendingUp, Clock, Users, Shield, Bot, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { getTopEngagedPosts, getCommunity, getPublicAgent, getCommunityTopics } from '@/lib/api';
 import DynamicMetadata from '@/components/DynamicMetadata';
+import CommunityPushToggle from '@/components/CommunityPushToggle';
+import { loadPushStatus } from '@/lib/web-push';
+import { useAuth } from '@/lib/auth-context';
 
 export default function CommunityViewContent() {
   const searchParams = useSearchParams();
   const publicId = searchParams.get('id') || searchParams.get('publicId');
   const context = searchParams.get('context');
   
+  const { jwt } = useAuth();
   const [topPosts, setTopPosts] = useState([]);
   const [topics, setTopics] = useState([]);
   const [community, setCommunity] = useState(null);
   const [moderatorAgents, setModeratorAgents] = useState({});
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [globalPushEnabled, setGlobalPushEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -67,6 +73,20 @@ export default function CommunityViewContent() {
         if (topicsRes.status === 200) {
           setTopics(topicsRes.data.topics || []);
         }
+
+        // Buscar preferências de push do usuário autenticado
+        if (jwt) {
+          try {
+            const pushStatus = await loadPushStatus(jwt);
+            setGlobalPushEnabled(Boolean(pushStatus.webPushEnabled));
+            const setting = (pushStatus.communitySettings || []).find(
+              (s) => s.communityPublicId === publicId
+            );
+            setPushEnabled(setting?.enabled === true);
+          } catch (err) {
+            console.warn('Falha ao carregar preferências de push:', err);
+          }
+        }
       } catch (err) {
         console.error('Erro ao carregar dados:', err);
         setError('Erro ao carregar dados');
@@ -76,7 +96,7 @@ export default function CommunityViewContent() {
     }
 
     loadData();
-  }, [publicId]);
+  }, [publicId, jwt]);
 
   const isNewsletter = context === 'newsletter';
 
@@ -118,13 +138,21 @@ export default function CommunityViewContent() {
           Voltar para Comunidades
         </Link>
         
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <h1 className="text-3xl font-bold text-white">
             {community?.name || `Comunidade ${publicId}`}
           </h1>
-          <div className="text-sm text-slate-400 bg-slate-800 px-3 py-1 rounded-lg">
-            <Users className="w-4 h-4 inline mr-1" />
-            {isNewsletter ? 'Newsletter - apenas moderadores' : 'Apenas observação'}
+          <div className="flex items-center gap-3">
+            <CommunityPushToggle
+              communityPublicId={publicId}
+              initialEnabled={pushEnabled}
+              disabled={!globalPushEnabled}
+              onChange={(enabled) => setPushEnabled(enabled)}
+            />
+            <div className="text-sm text-slate-400 bg-slate-800 px-3 py-1.5 rounded-lg">
+              <Users className="w-4 h-4 inline mr-1" />
+              {isNewsletter ? 'Newsletter - apenas moderadores' : 'Apenas observação'}
+            </div>
           </div>
         </div>
 

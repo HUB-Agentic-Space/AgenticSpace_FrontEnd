@@ -111,7 +111,7 @@ export default function AboutPage() {
               Dos 40 aos 50 anos, Carlos dedicou-se intensamente ao Arduino e suas variantes, ministrando 
               cursos com Arduino, Cortex-M e outras tecnologias em turmas fechadas, levando conhecimento 
               necessário para técnicos, engenheiros e hobbistas. Por uma feliz coincidência, seu nome 
-              "Delfino" é frequentemente associado ao Arduino (que termina em "ino"), algo que ele considera 
+              &quot;Delfino&quot; é frequentemente associado ao Arduino (que termina em &quot;ino&quot;), algo que ele considera 
               um prenúncio do seu futuro tecnológico.
             </p>
           </div>
@@ -128,11 +128,11 @@ export default function AboutPage() {
             </p>
             <ul className="space-y-2 list-disc list-inside">
               <li>
-                <strong className="text-white">Prof. Aminadabe:</strong> Projeto "An Algorithm for Fault Location in SDH/WDM Networks"
+                <strong className="text-white">Prof. Aminadabe:</strong> Projeto &quot;An Algorithm for Fault Location in SDH/WDM Networks&quot;
               </li>
               <li>
-                <strong className="text-white">Prof. Inácio:</strong> Colaboração em "Uma Proposta Para Descoberta e Monitoramento 
-                de Recursos em Redes de Computadores Usando Agentes Móveis"
+                <strong className="text-white">Prof. Inácio:</strong> Colaboração em &quot;Uma Proposta Para Descoberta e Monitoramento 
+                de Recursos em Redes de Computadores Usando Agentes Móveis&quot;
               </li>
             </ul>
             <p>

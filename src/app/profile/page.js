@@ -36,6 +36,7 @@ import {
   Award
 } from 'lucide-react';
 import Spinner from '@/components/Spinner';
+import PushNotificationToggle from '@/components/PushNotificationToggle';
 import { useAuth } from '@/lib/auth-context';
 import { useTranslations } from '@/lib/LocaleProvider';
 import { listAgents } from '@/lib/api';
@@ -59,6 +60,12 @@ import {
   regenerateApiKey,
   updateProfile
 } from '@/lib/api';
+import {
+  isPushSupported,
+  enablePushNotifications,
+  disablePushNotifications,
+  loadPushStatus
+} from '@/lib/web-push';
 import { listMyCertificateIssuances } from '@/lib/certificates';
 
 /** Chave de persistencia local do perfil humano. */
@@ -73,7 +80,8 @@ const EMPTY_PROFILE = {
   github: '',
   linkedin: '',
   blog: '',
-  newsletterOptIn: false
+  newsletterOptIn: false,
+  webPushEnabled: false
 };
 
 const METAMASK_MESSAGE_PREFIX = 'Login authentication for Agentic Space';
@@ -107,6 +115,9 @@ function ProfileContent() {
   const [linkedAccounts, setLinkedAccounts] = useState([]);
   const [accountsLoading, setAccountsLoading] = useState(true);
   const [showNewsletterModal, setShowNewsletterModal] = useState(false);
+  const [pushSupported, setPushSupported] = useState(false);
+  const [pushLoading, setPushLoading] = useState(false);
+  const [pushMessage, setPushMessage] = useState('');
   const [onchainConfig, setOnchainConfig] = useState(null);
   const [showSwapModal, setShowSwapModal] = useState(false);
   const [hasRegistrationAndCertificate, setHasRegistrationAndCertificate] = useState(false);
@@ -151,6 +162,7 @@ function ProfileContent() {
         const { status, data } = await getProfile(session.jwt);
         if (status >= 400) throw new Error(data.error || 'Falha ao consultar o perfil.');
         let loaded = { ...EMPTY_PROFILE, ...(data.profile || {}) };
+        loaded.webPushEnabled = Boolean(data.profile?.webPushEnabled);
         const legacyRaw = localStorage.getItem(`${PROFILE_KEY}:${did}`);
         if (legacyRaw) {
           const legacy = { ...EMPTY_PROFILE, ...JSON.parse(legacyRaw) };
@@ -239,6 +251,47 @@ function ProfileContent() {
     update('newsletterOptIn', checked);
     if (checked) {
       setShowNewsletterModal(true);
+    }
+  }
+
+  useEffect(() => {
+    setPushSupported(isPushSupported());
+  }, []);
+
+  useEffect(() => {
+    if (!session?.jwt || !pushSupported) return;
+    let cancelled = false;
+    async function loadPush() {
+      try {
+        const status = await loadPushStatus(session.jwt);
+        if (!cancelled) {
+          setProfile((p) => ({ ...p, webPushEnabled: Boolean(status.webPushEnabled) }));
+        }
+      } catch (error) {
+        console.warn('[profile] Falha ao carregar status push:', error.message);
+      }
+    }
+    loadPush();
+    return () => { cancelled = true; };
+  }, [session?.jwt, pushSupported]);
+
+  async function handlePushToggle(enabled) {
+    if (!session?.jwt) return;
+    setPushLoading(true);
+    setPushMessage('');
+    try {
+      if (enabled) {
+        await enablePushNotifications(session.jwt);
+      } else {
+        await disablePushNotifications(session.jwt, false);
+      }
+      update('webPushEnabled', enabled);
+      setPushMessage(enabled ? 'Notificações push ativadas.' : 'Notificações push desativadas. Configurações por comunidade foram preservadas.');
+    } catch (error) {
+      setPushMessage(error.message || 'Falha ao alterar notificações push.');
+      throw error;
+    } finally {
+      setPushLoading(false);
     }
   }
 
@@ -668,6 +721,26 @@ function ProfileContent() {
             <label htmlFor="newsletterOptIn" className="text-sm text-slate-300 cursor-pointer">
               Desejo receber por e-mail novidades e atualizações sobre o que está acontecendo no site.
             </label>
+          </div>
+
+          <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4 space-y-3">
+            <PushNotificationToggle
+              enabled={profile.webPushEnabled === true}
+              onChange={handlePushToggle}
+              label="Notificações push no navegador"
+              description="Receba alertas sobre novos agentes, comunidades e atividade nas comunidades inscritas."
+              disabled={!pushSupported || pushLoading}
+            />
+            {pushMessage && (
+              <p className={`text-xs ${pushMessage.includes('Falha') || pushMessage.includes('desativadas') ? 'text-amber-400' : 'text-green-400'}`}>
+                {pushMessage}
+              </p>
+            )}
+            {!pushSupported && (
+              <p className="text-xs text-slate-500">
+                Seu navegador não suporta notificações push ou o acesso está bloqueado.
+              </p>
+            )}
           </div>
 
           <div className="flex items-center gap-3">

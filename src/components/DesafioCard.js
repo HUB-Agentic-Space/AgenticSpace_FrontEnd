@@ -7,7 +7,7 @@
  */
 
 import Link from 'next/link';
-import { Trophy, Coins, Gift, Clock } from 'lucide-react';
+import { Trophy, Coins, Gift, Clock, Lock } from 'lucide-react';
 
 const LANGUAGE_FLAGS = {
   pt: '🇧🇷',

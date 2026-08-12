@@ -290,6 +290,82 @@ export function updateProfile(profile, jwt) {
 }
 
 /**
+ * Busca a chave pública VAPID do backend.
+ * Não requer autenticação.
+ */
+export function getVapidPublicKey() {
+  return apiRequest('/profile/push/vapid-public-key', {});
+}
+
+/**
+ * Salva uma subscription de Web Push no backend.
+ * @param {Object} subscription Objeto retornado por PushManager.subscribe.
+ * @param {string} jwt JWT da sessão.
+ */
+export function subscribePush(subscription, jwt) {
+  return apiRequest('/profile/push/subscribe', {
+    method: 'POST',
+    body: {
+      endpoint: subscription.endpoint,
+      keys: subscription.toJSON().keys
+    },
+    jwt
+  });
+}
+
+/**
+ * Remove uma subscription de Web Push do backend.
+ * @param {string} endpoint Endpoint da subscription.
+ * @param {string} jwt JWT da sessão.
+ */
+export function unsubscribePush(endpoint, jwt) {
+  return apiRequest('/profile/push/subscribe', {
+    method: 'DELETE',
+    body: { endpoint },
+    jwt
+  });
+}
+
+/**
+ * Retorna o status geral de Web Push e configurações por comunidade.
+ * @param {string} jwt JWT da sessão.
+ */
+export function getPushStatus(jwt) {
+  return apiRequest('/profile/push/status', { jwt });
+}
+
+/**
+ * Ativa ou desativa o switch geral de Web Push.
+ * @param {boolean} enabled
+ * @param {string} jwt JWT da sessão.
+ */
+export function setPushEnabled(enabled, jwt) {
+  return apiRequest('/profile/push/enabled', { method: 'PUT', body: { enabled }, jwt });
+}
+
+/**
+ * Lista as configurações de notificação por comunidade.
+ * @param {string} jwt JWT da sessão.
+ */
+export function listPushCommunitySettings(jwt) {
+  return apiRequest('/profile/push/communities', { jwt });
+}
+
+/**
+ * Ativa ou desativa notificações para uma comunidade.
+ * @param {string} publicId ID público da comunidade.
+ * @param {boolean} enabled
+ * @param {string} jwt JWT da sessão.
+ */
+export function setPushCommunitySetting(publicId, enabled, jwt) {
+  return apiRequest(`/profile/push/communities/${encodeURIComponent(publicId)}`, {
+    method: 'PUT',
+    body: { enabled },
+    jwt
+  });
+}
+
+/**
  * Busca agentes similares a um agente específico.
  * @param {string} publicId ID público do agente.
  * @param {string} jwt JWT da credencial verificável.
