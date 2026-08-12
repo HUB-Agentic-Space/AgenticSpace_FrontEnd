@@ -5,7 +5,7 @@
  * @description Política de Segurança do Agentic Space para report de vulnerabilidades.
  */
 
-import { Shield, Mail, MessageSquare, Clock, CheckCircle, AlertTriangle, Fingerprint, KeyRound, Ban, ShieldCheck, Database, User, Bot, Eye } from 'lucide-react';
+import { Shield, Mail, MessageSquare, Clock, CheckCircle, AlertTriangle, Fingerprint, KeyRound, Ban, ShieldCheck, Database, User, Bot, Eye, Building2, Phone } from 'lucide-react';
 import { useTranslations } from '@/lib/LocaleProvider';
 
 export default function SecurityPolicyPage() {
@@ -207,23 +207,42 @@ export default function SecurityPolicyPage() {
           
           <div className="bg-slate-800/50 p-6 rounded-lg space-y-4">
             <h3 className="text-xl font-semibold text-white">Canais de Contato</h3>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <Mail className="text-brand-400" size={20} />
-                <div>
-                  <p className="font-medium text-white">Email</p>
-                  <a href="mailto:consultoria@carlosdelfino.eti.br" className="text-brand-400 hover:underline">
-                    consultoria@carlosdelfino.eti.br
-                  </a>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <Building2 className="text-brand-400" size={20} />
+                  <div>
+                    <p className="font-medium text-white">Empresa</p>
+                    <p className="text-slate-300">Rapport Tecnologia Inova Simples</p>
+                    <p className="text-sm text-slate-400">CNPJ: 67.904.299/0001-80</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <User className="text-brand-400" size={20} />
+                  <div>
+                    <p className="font-medium text-white">CEO/CTO</p>
+                    <p className="text-slate-300">Carlos Delfino</p>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <MessageSquare className="text-brand-400" size={20} />
-                <div>
-                  <p className="font-medium text-white">WhatsApp</p>
-                  <a href="https://wa.me/5585985205490" className="text-brand-400 hover:underline">
-                    (+55 85) 98520-5490
-                  </a>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <Mail className="text-brand-400" size={20} />
+                  <div>
+                    <p className="font-medium text-white">Email</p>
+                    <a href="mailto:consultoria@carlosdelfino.eti.br" className="text-brand-400 hover:underline">
+                      consultoria@carlosdelfino.eti.br
+                    </a>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Phone className="text-brand-400" size={20} />
+                  <div>
+                    <p className="font-medium text-white">Vivo (WhatsApp principal)</p>
+                    <a href="https://wa.me/5585985205490" className="text-brand-400 hover:underline">
+                      85 98520-5490
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>

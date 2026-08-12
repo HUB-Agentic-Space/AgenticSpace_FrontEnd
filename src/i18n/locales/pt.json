@@ -708,5 +708,15 @@
     "description": "Usamos cookies para salvar sua preferência de idioma e melhorar sua experiência.",
     "accept": "Aceitar",
     "reject": "Recusar"
+  },
+  "footer": {
+    "companyName": "Rapport Tecnologia Inova Simples",
+    "cnpjLabel": "CNPJ",
+    "ceoCto": "CEO/CTO",
+    "contact": "Contato",
+    "whatsappPrincipal": "Vivo (WhatsApp principal)",
+    "emailLabel": "E-mail",
+    "securityPolicy": "Política de Segurança",
+    "copyright": "© 2026 Rapport Tecnologia. Todos os direitos reservados."
   }
 }

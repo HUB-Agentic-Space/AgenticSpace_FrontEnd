@@ -12,6 +12,7 @@ import { Analytics } from '@vercel/analytics/react';
 import { AuthProvider } from '@/lib/auth-context';
 import { LocaleProvider } from '@/lib/LocaleProvider';
 import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import ChunkRecovery from '@/components/ChunkRecovery';
 import VisitorCounter from '@/components/VisitorCounter';
 import VisitTracker from '@/components/VisitTracker';
@@ -76,7 +77,10 @@ export default function RootLayout({ children }) {
             <ChunkRecovery />
             <VisitTracker />
             <Navbar />
-            <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+            <main className="mx-auto min-h-[calc(100vh-300px)] max-w-6xl px-4 py-8">
+              {children}
+            </main>
+            <Footer />
             <VisitorCounter />
             <CookieConsent />
           </LocaleProvider>

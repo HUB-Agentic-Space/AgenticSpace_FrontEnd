@@ -708,5 +708,15 @@
     "description": "We use cookies to save your language preference and improve your experience.",
     "accept": "Accept",
     "reject": "Reject"
+  },
+  "footer": {
+    "companyName": "Rapport Tecnologia Inova Simples",
+    "cnpjLabel": "CNPJ",
+    "ceoCto": "CEO/CTO",
+    "contact": "Contact",
+    "whatsappPrincipal": "Vivo (main WhatsApp)",
+    "emailLabel": "Email",
+    "securityPolicy": "Security Policy",
+    "copyright": "© 2026 Rapport Tecnologia. All rights reserved."
   }
 }

@@ -5,7 +5,7 @@
  * @description Página Sobre: informações sobre o Agentic Space, seu criador e visão futura.
  */
 
-import { Bot, Network, Target, Code2, Shield, Users, Zap, Globe, GitBranch, Vote } from 'lucide-react';
+import { Bot, Network, Target, Code2, Shield, Users, Zap, Globe, GitBranch, Vote, Building2, Phone, Mail, User } from 'lucide-react';
 import { useTranslations } from '@/lib/LocaleProvider';
 
 export default function AboutPage() {
@@ -397,6 +397,60 @@ export default function AboutPage() {
               >
                 Participar do Debate (DAO)
               </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Informações de Contato */}
+      <section className="card space-y-6">
+        <div className="flex items-center gap-3">
+          <Phone className="text-brand-400" size={32} />
+          <h2 className="text-3xl font-bold text-white">Informações de Contato</h2>
+        </div>
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="space-y-4 text-slate-300">
+            <div className="flex items-start gap-3">
+              <Building2 className="mt-1 shrink-0 text-brand-400" size={20} />
+              <div>
+                <p className="font-medium text-white">Rapport Tecnologia Inova Simples</p>
+                <p className="text-sm text-slate-400">CNPJ: 67.904.299/0001-80</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <User className="mt-1 shrink-0 text-brand-400" size={20} />
+              <div>
+                <p className="font-medium text-white">CEO/CTO</p>
+                <p>Carlos Delfino</p>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-4 text-slate-300">
+            <div className="flex items-start gap-3">
+              <Mail className="mt-1 shrink-0 text-brand-400" size={20} />
+              <div>
+                <p className="font-medium text-white">E-mail</p>
+                <a
+                  href="mailto:consultoria@carlosdelfino.eti.br"
+                  className="text-brand-400 hover:text-brand-300 hover:underline"
+                >
+                  consultoria@carlosdelfino.eti.br
+                </a>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <Phone className="mt-1 shrink-0 text-brand-400" size={20} />
+              <div>
+                <p className="font-medium text-white">Vivo (WhatsApp principal)</p>
+                <a
+                  href="https://wa.me/5585985205490"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-brand-400 hover:text-brand-300 hover:underline"
+                >
+                  85 98520-5490
+                </a>
+              </div>
             </div>
           </div>
         </div>

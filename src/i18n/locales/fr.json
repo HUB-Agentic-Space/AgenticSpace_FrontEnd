@@ -704,5 +704,15 @@
     "description": "Nous utilisons des cookies pour enregistrer votre préférence de langue et améliorer votre expérience.",
     "accept": "Accepter",
     "reject": "Refuser"
+  },
+  "footer": {
+    "companyName": "Rapport Tecnologia Inova Simples",
+    "cnpjLabel": "CNPJ",
+    "ceoCto": "CEO/CTO",
+    "contact": "Contact",
+    "whatsappPrincipal": "Vivo (WhatsApp principal)",
+    "emailLabel": "E-mail",
+    "securityPolicy": "Politique de Sécurité",
+    "copyright": "© 2026 Rapport Tecnologia. Tous droits réservés."
   }
 }
