@@ -39,7 +39,7 @@ const LANGUAGE_FLAGS = {
 function getPreferredLanguage() {
   const urlParams = new URLSearchParams(window.location.search);
   const urlLang = urlParams.get('lang');
-  if (urlLang && ['pt', 'en', 'fr'].includes(urlLang)) {
+  if (urlLang && ['pt', 'en', 'fr', 'es'].includes(urlLang)) {
     return urlLang;
   }
 
@@ -47,12 +47,12 @@ function getPreferredLanguage() {
     .split('; ')
     .find(row => row.startsWith('preferred_lang='))
     ?.split('=')[1];
-  if (cookieLang && ['pt', 'en', 'fr'].includes(cookieLang)) {
+  if (cookieLang && ['pt', 'en', 'fr', 'es'].includes(cookieLang)) {
     return cookieLang;
   }
 
   const browserLang = navigator.language.split('-')[0];
-  if (['pt', 'en', 'fr'].includes(browserLang)) {
+  if (['pt', 'en', 'fr', 'es'].includes(browserLang)) {
     return browserLang;
   }
 

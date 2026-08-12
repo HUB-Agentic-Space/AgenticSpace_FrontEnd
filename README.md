@@ -170,7 +170,7 @@ src/
     TokenomicsPreview.js         # Preview da tokenomia CAS na home
     Navbar.js, LoginPanel.js, ...# Componentes existentes
   lib/                           # auth-context, cliente da API e agents-store
-  i18n/locales/                  # pt.json, en.json, fr.json (com glossary e novas seções)
+  i18n/locales/                  # pt.json, en.json, fr.json, es.json (com glossary e novas seções)
 ```
 
 As rotas OAuth e de perfil são fornecidas pelo `agent-server`; o frontend

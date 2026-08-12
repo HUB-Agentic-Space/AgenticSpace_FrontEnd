@@ -6,7 +6,7 @@
       "description": "Comunicado oficial sobre práticas de manipulação de preço, Sybil, pump and dump, short and distorce, e medidas de proteção ao ecossistema CAS",
       "date": "2026-07-31",
       "category": "official",
-      "availableLanguages": ["pt", "en", "fr"],
+      "availableLanguages": ["pt", "en", "fr", "es"],
       "defaultLanguage": "pt"
     }
   ]

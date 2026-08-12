@@ -61,7 +61,11 @@ export function formatFiat(value, currency) {
 export function formatCas(value, locale = 'pt') {
   const numericValue = typeof value === 'number' ? value : Number(value);
   if (!Number.isFinite(numericValue)) return '—';
-  const numberLocale = locale === 'pt' ? 'pt-BR' : locale === 'fr' ? 'fr-FR' : 'en-US';
+  const numberLocale =
+    locale === 'pt' ? 'pt-BR' :
+    locale === 'fr' ? 'fr-FR' :
+    locale === 'es' ? 'es-ES' :
+    'en-US';
   return new Intl.NumberFormat(numberLocale, {
     minimumFractionDigits: 0,
     maximumFractionDigits: 6,
