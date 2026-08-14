@@ -38,6 +38,7 @@
     "newsList": "All News",
     "newsLatest": "Latest News",
     "eventos": "Events",
+    "eventosList": "All Events",
     "eventosEncontrosQuintas": "Thursday Meetings — 21:00"
   },
   "login": {
@@ -702,6 +703,19 @@
     "errorLoadList": "Error loading news list",
     "errorLoading": "Error loading news",
     "noNews": "No news available at this time"
+  },
+  "events": {
+    "title": "Events",
+    "viewAll": "View all",
+    "errorLoadList": "Error loading event list",
+    "errorLoading": "Error loading events",
+    "noEvents": "No events scheduled at this time",
+    "viewer": {
+      "back": "Back",
+      "errorLoading": "Error loading event",
+      "differentLanguage": "Event in another language",
+      "differentLanguageText": "This event is not available in your preferred language. Displaying version in {lang}."
+    }
   },
   "cookieConsent": {
     "title": "This site uses cookies",

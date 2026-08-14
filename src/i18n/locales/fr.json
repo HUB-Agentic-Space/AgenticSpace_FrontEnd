@@ -38,6 +38,7 @@
     "newsList": "Toutes les actualités",
     "newsLatest": "Dernière actualité",
     "eventos": "Événements",
+    "eventosList": "Tous les Événements",
     "eventosEncontrosQuintas": "Rencontres du Jeudi — 21:00"
   },
   "login": {
@@ -698,6 +699,19 @@
     "errorLoadList": "Erreur lors du chargement de la liste des actualités",
     "errorLoading": "Erreur lors du chargement des actualités",
     "noNews": "Aucune actualité disponible pour le moment"
+  },
+  "events": {
+    "title": "Événements",
+    "viewAll": "Voir tous",
+    "errorLoadList": "Erreur lors du chargement de la liste des événements",
+    "errorLoading": "Erreur lors du chargement des événements",
+    "noEvents": "Aucun événement programmé pour le moment",
+    "viewer": {
+      "back": "Retour",
+      "errorLoading": "Erreur lors du chargement de l'événement",
+      "differentLanguage": "Événement dans une autre langue",
+      "differentLanguageText": "Cet événement n'est pas disponible dans votre langue préférée. Affichage de la version en {lang}."
+    }
   },
   "cookieConsent": {
     "title": "Ce site utilise des cookies",

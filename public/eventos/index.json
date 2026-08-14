@@ -1,0 +1,14 @@
+{
+  "events": [
+    {
+      "slug": "encontros-quintas-21h",
+      "title": "Encontros de Quinta — 21:00",
+      "description": "Toda quinta-feira, às 21h, nos reunimos para conversar sobre a CAS — Cripto Moeda Agentic Space — e explorar juntos o universo da Blockchain.",
+      "availableLanguages": ["pt"],
+      "defaultLanguage": "pt",
+      "date": "2026-08-13",
+      "category": "encontro",
+      "status": "recorrente"
+    }
+  ]
+}

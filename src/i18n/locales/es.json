@@ -38,6 +38,7 @@
     "newsList": "Todas las Noticias",
     "newsLatest": "Última Noticia",
     "eventos": "Eventos",
+    "eventosList": "Todos los Eventos",
     "eventosEncontrosQuintas": "Encuentros de Jueves — 21:00"
   },
   "login": {
@@ -702,6 +703,19 @@
     "errorLoadList": "Error al cargar lista de noticias",
     "errorLoading": "Error al cargar noticias",
     "noNews": "Ninguna noticia disponible por ahora"
+  },
+  "events": {
+    "title": "Eventos",
+    "viewAll": "Ver todos",
+    "errorLoadList": "Error al cargar lista de eventos",
+    "errorLoading": "Error al cargar eventos",
+    "noEvents": "Ningún evento programado por ahora",
+    "viewer": {
+      "back": "Volver",
+      "errorLoading": "Error al cargar evento",
+      "differentLanguage": "Evento en otro idioma",
+      "differentLanguageText": "Este evento no está disponible en tu idioma preferido. Mostrando versión en {lang}."
+    }
   },
   "cookieConsent": {
     "title": "Este sitio usa cookies",

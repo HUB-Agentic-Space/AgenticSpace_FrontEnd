@@ -289,9 +289,22 @@ export default function Navbar() {
                     {eventosOpen && (
                       <div className="absolute left-full top-0 ml-1 w-56 rounded-lg bg-slate-900 border border-slate-700 shadow-xl">
                         <Link
-                          href="/eventos/encontros-quintas-21h"
+                          href="/eventos"
                           className={`flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-800 hover:text-white rounded-t-lg ${
-                            pathname === '/eventos/encontros-quintas-21h' ? 'text-brand-400' : 'text-slate-300'
+                            pathname === '/eventos' ? 'text-brand-400' : 'text-slate-300'
+                          }`}
+                          onClick={() => {
+                            setEventosOpen(false);
+                            setInstitucionalOpen(false);
+                          }}
+                        >
+                          <Calendar size={14} />
+                          {t('navbar.eventosList') || 'Todos os Eventos'}
+                        </Link>
+                        <Link
+                          href="/eventos/view?slug=encontros-quintas-21h"
+                          className={`flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-800 hover:text-white rounded-b-lg ${
+                            pathname?.startsWith('/eventos/view') ? 'text-brand-400' : 'text-slate-300'
                           }`}
                           onClick={() => {
                             setEventosOpen(false);

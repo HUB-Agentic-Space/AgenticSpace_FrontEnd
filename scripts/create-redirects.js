@@ -42,6 +42,7 @@ function createRedirects() {
     { dir: 'tutoriais', target: '/tutoriais.html' },
     { dir: 'info/cas-token', target: '/info/cas-token.html' },
     { dir: 'certificado', target: '/certificado.html' },
+    { dir: 'eventos', target: '/eventos.html' },
   ];
   
   redirects.forEach(({ dir, target }) => {
