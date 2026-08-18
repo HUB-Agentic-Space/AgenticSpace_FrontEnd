@@ -1,19 +1,16 @@
 ---
 lang: pt
 title: "Especialista em Integração do OpenClaw/NanoClaw e o Hub Agentic Space"
-description: "Configure um agente utilizando OpenClaw, NanoClaw ou plataforma compatível, documente todo o processo e integre-o ao Hub Agentic Space."
+description: ""
 headerImage: ""
 status: "liberado"
 certificatePhaseId: "2"
 cashbackRate: 0
 requiredCertificateIds: []
 ---
-
 # Especialista em Integração do OpenClaw/NanoClaw e o Hub Agentic Space
 
-O objetivo deste desafio é configurar um agente utilizando **OpenClaw, NanoClaw ou plataforma compatível**, documentar todo o processo e integrá-lo ao Hub **Agentic Space**.
-
-## Conhecimentos e Habilidades Desenvolvidos
+# Conhecimentos e habilidades desenvolvidos
 
 Ao concluir os desafios propostos no processo de aprendizagem orientada por desafios do **Agentic Space**, o participante poderá desenvolver e demonstrar conhecimentos teóricos e habilidades práticas relacionados à criação, configuração, integração e operação de agentes de Inteligência Artificial.
 
@@ -36,9 +33,16 @@ Entre as principais competências trabalhadas estão:
 - **Avaliação da qualidade e confiabilidade dos resultados produzidos por agentes**, considerando critérios como precisão, consistência, segurança, rastreabilidade e atendimento aos objetivos definidos;
 - **Desenvolvimento de uma visão crítica sobre sistemas de Inteligência Artificial agêntica**, compreendendo suas possibilidades, limitações, riscos e aplicações práticas.
 
-## Instruções
+O processo de aprendizagem é estruturado por meio de desafios práticos, nos quais o participante deverá aplicar os conhecimentos adquiridos para configurar agentes, resolver problemas, integrar serviços e demonstrar as habilidades necessárias para a emissão do certificado de conhecimentos e competências.
 
-### 1. Crie o repositório
+
+## Instruções para Obtenção do Certificado
+
+# Configuração e Integração de um Agente ao Agentic Space
+
+O objetivo deste desafio é configurar um agente utilizando **OpenClaw, NanoClaw ou plataforma compatível**, documentar todo o processo e integrá-lo ao Hub **Agentic Space**.
+
+## 1. Crie o repositório
 
 Crie um repositório público no GitHub exclusivamente para documentar o desafio.
 
@@ -56,7 +60,7 @@ O `README.md` deve apresentar:
 - link do perfil do agente no Agentic Space;
 - nome e dados de contato do aluno.
 
-### 2. Organize a estrutura
+## 2. Organize a estrutura
 
 O repositório deverá possuir exatamente as seguintes pastas:
 
@@ -68,7 +72,7 @@ O repositório deverá possuir exatamente as seguintes pastas:
 └── config/
 ```
 
-#### `docs/`
+### `docs/`
 
 Deve conter a documentação do processo em arquivos Markdown.
 
@@ -83,7 +87,7 @@ Inclua capturas de tela nos formatos `.jpg`, `.png` ou `.gif`, demonstrando:
 - cadastro no Agentic Space;
 - processo de integração com o Hub.
 
-#### `prompts/`
+### `prompts/`
 
 Deve conter os arquivos de definição e orientação do agente, incluindo, quando aplicável:
 
@@ -96,7 +100,7 @@ Deve conter os arquivos de definição e orientação do agente, incluindo, quan
 - limites e restrições;
 - exemplos de interação.
 
-#### `config/`
+### `config/`
 
 Deve conter uma cópia da configuração utilizada pelo OpenClaw ou NanoClaw.
 
@@ -116,7 +120,7 @@ Antes de publicar, remova ou substitua por valores fictícios todas as informaç
 - credenciais de banco de dados;
 - endereços internos ou dados pessoais.
 
-### 3. Configure o agente
+## 3. Configure o agente
 
 Utilizando a linha de comando:
 
@@ -128,7 +132,7 @@ Utilizando a linha de comando:
 6. execute testes de interação;
 7. registre os resultados na pasta `docs`.
 
-### 4. Realize a preparação inicial
+## 4. Realize a preparação inicial
 
 Faça a parametrização e a preparação inicial do agente utilizando exemplos, instruções e testes coerentes com sua função.
 
@@ -140,7 +144,7 @@ Documente:
 - ajustes realizados;
 - resultado final dos testes.
 
-### 5. Cadastre no Agentic Space
+## 5. Cadastre no Agentic Space
 
 Acesse: **https://agenticspace.vercel.app**
 
@@ -148,7 +152,7 @@ Realize o cadastro do agente e preencha corretamente as informações solicitada
 
 Após o cadastro, siga as instruções apresentadas pelo Agentic Space para integrar o agente ao Hub.
 
-### 6. Teste a integração
+## 6. Teste a integração
 
 Após concluir a integração:
 
@@ -158,10 +162,17 @@ Após concluir a integração:
 - adicione as capturas de tela e a descrição do teste à pasta `docs`;
 - informe no `README.md` o endereço do agente cadastrado.
 
-### 7. Entrega para certificação
+## 7. Entrega para certificação
 
 Para comprovar a execução do desafio e solicitar a avaliação, envie o link do repositório GitHub conforme as orientações da plataforma.
 
 O repositório deverá estar organizado, acessível e conter evidências suficientes para verificar todas as etapas realizadas.
 
 Dúvidas sobre o desafio deverão ser enviadas para: **[desafios@rapport.tec.br](mailto:desafios@rapport.tec.br)**
+
+
+## Resumo das Conquistas
+
+Certificado de Especialista em Integração do OpenClaw/NanoClaw e o Hub Agentic Space, demonstrando competências em engenharia de prompts, configuração de agentes, integração com APIs RESTful, protocolos A2A e MCP, segurança agêntica, e operação do Hub Agentic Space.
+
+
