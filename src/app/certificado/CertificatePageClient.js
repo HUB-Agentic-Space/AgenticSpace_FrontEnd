@@ -10,6 +10,7 @@ import {
   Award,
   BadgeCheck,
   CheckCircle2,
+  ChevronDown,
   Coins,
   Download,
   ExternalLink,
@@ -96,6 +97,130 @@ function normalizeAuthorization(value) {
   };
 }
 
+function CertificateTypeBadge({ phaseType, compact = false }) {
+  const label = phaseType === 'desafio' ? 'Desafio' : 'Fase';
+  const className = phaseType === 'desafio'
+    ? 'bg-blue-500/15 text-blue-300'
+    : 'bg-brand-500/15 text-brand-300';
+  return (
+    <span
+      className={`${compact ? 'text-[10px] px-1.5 py-0.5' : 'text-xs px-2 py-0.5'} rounded-full font-semibold ${className}`}
+      title={label}
+    >
+      {label}
+    </span>
+  );
+}
+
+function CertificateSelect({ challenges, selectedId, onSelect, placeholder }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  const selected = useMemo(() => {
+    if (!selectedId) return null;
+    return challenges.find(
+      (c) => String(c.onchainPhaseId || c.id) === String(selectedId),
+    ) || null;
+  }, [challenges, selectedId]);
+
+  useEffect(() => {
+    function onDocClick(event) {
+      if (ref.current && !ref.current.contains(event.target)) {
+        setOpen(false);
+      }
+    }
+    if (open) {
+      document.addEventListener('mousedown', onDocClick);
+      return () => document.removeEventListener('mousedown', onDocClick);
+    }
+    return undefined;
+  }, [open]);
+
+  function select(id) {
+    onSelect(id);
+    setOpen(false);
+  }
+
+  function toggle() {
+    setOpen((prev) => !prev);
+  }
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={toggle}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="input flex w-full items-center justify-between gap-2 text-left"
+      >
+        <span className="flex min-w-0 items-center gap-2">
+          {selected ? (
+            <>
+              <CertificateTypeBadge phaseType={selected.phaseType} compact />
+              <span className="truncate text-slate-100">{selected.name}</span>
+              {selected.hasCertificate === true && (
+                <span className="shrink-0 text-xs text-slate-500">(concluído)</span>
+              )}
+            </>
+          ) : (
+            <span className="truncate text-slate-500">{placeholder}</span>
+          )}
+        </span>
+        <ChevronDown
+          size={16}
+          className={`shrink-0 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`}
+        />
+      </button>
+      {open && (
+        <ul
+          role="listbox"
+          className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-xl border border-slate-700 bg-slate-900 p-1 shadow-xl"
+        >
+          <li>
+            <button
+              type="button"
+              role="option"
+              aria-selected={!selectedId}
+              onClick={() => select('')}
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-400 hover:bg-slate-800"
+            >
+              {placeholder}
+            </button>
+          </li>
+          {challenges.map((ch) => {
+            const id = String(ch.onchainPhaseId || ch.id);
+            const isSelected = id === selectedId;
+            const unlocked = ch.unlocked !== false;
+            const hasCert = ch.hasCertificate === true;
+            const suffix = !unlocked ? ' (bloqueado)' : hasCert ? ' (concluído)' : '';
+            return (
+              <li key={id}>
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  disabled={!unlocked}
+                  onClick={() => select(id)}
+                  className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm ${
+                    isSelected ? 'bg-slate-800 text-white' : 'text-slate-300 hover:bg-slate-800'
+                  } ${!unlocked ? 'cursor-not-allowed opacity-50' : ''}`}
+                >
+                  <CertificateTypeBadge phaseType={ch.phaseType} compact />
+                  <span className="min-w-0 flex-1 truncate">
+                    {ch.name}
+                    <span className="text-slate-500">{suffix}</span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function CertificateContent() {
   const { session } = useAuth();
   const {
@@ -136,6 +261,7 @@ function CertificateContent() {
   const [accountsChecked, setAccountsChecked] = useState(false);
   const [challenges, setChallenges] = useState([]);
   const [selectedChallengeId, setSelectedChallengeId] = useState(null);
+  const [comboboxOpen, setComboboxOpen] = useState(false);
   const [certificatePage, setCertificatePage] = useState('front');
   const [issuanceRequests, setIssuanceRequests] = useState([]);
   const [extraFeeAmount, setExtraFeeAmount] = useState(null);
@@ -453,7 +579,12 @@ function CertificateContent() {
   const isApproved = selectedChallengeRequest?.status === 'approved';
   const isPending = selectedChallengeRequest?.status === 'pending';
   const isRejected = selectedChallengeRequest?.status === 'rejected';
-  const needsApproval = Boolean(selectedChallengeId) && !isApproved;
+
+  const isFaseSelected = selectedChallenge?.phaseType === 'fase';
+  // Fases do site (exceto a fundadora) podem ser emitidas diretamente sem
+  // aprovação administrativa, como ocorre hoje com a fase fundadora. Apenas
+  // desafios (phaseType === 'desafio') passam pelo fluxo de solicitação/prova.
+  const needsApproval = Boolean(selectedChallengeId) && !isFaseSelected && !isApproved;
 
   // courseHours nao e um campo on-chain — phaseFromResult nao o inclui.
   // Quando um desafio e selecionado, propaga courseHours do desafio (API)
@@ -476,7 +607,7 @@ function CertificateContent() {
   );
 
   const challengeRequiresProofLink = selectedChallenge
-    ? selectedChallenge.requiresProofLink !== false
+    ? !isFaseSelected && selectedChallenge.requiresProofLink !== false
     : true;
 
   async function handleRequestCertificate() {
@@ -974,6 +1105,63 @@ function CertificateContent() {
     );
   }
 
+  const handleSelectChallenge = (id) => {
+    const selectedId = id || null;
+    setSelectedChallengeId(selectedId);
+    const ch = challenges.find(
+      (c) => String(c.id) === selectedId || String(c.onchainPhaseId) === selectedId,
+    );
+    if (ch) {
+      setPhase({
+        id: String(ch.onchainPhaseId || ch.id),
+        name: ch.name || 'Certificado',
+        certificateType: ch.name || 'Certificado',
+        minCasDeposit: String(ch.minCasDeposit || DEFAULT_PHASE.minCasDeposit),
+        active: ch.status === 'active' || ch.active === true,
+        minted: String(ch.minted || '0'),
+        skillsDescription: ch.skillsDescription || '',
+        instructions: ch.instructions || '',
+        achievementSummary: ch.achievementSummary || '',
+        courseHours: ch.courseHours || 40,
+        extraFeeTypeId: String(ch.extraFeeTypeId || '0'),
+        tbaRebateBps: Number(ch.tbaRebateBps || 0),
+      });
+    } else if (config?.currentPhase?.id) {
+      // Voltou para "Selecione um certificado..." — restaura a fase
+      // fundadora vigente em vez de deixar os dados do último
+      // certificado selecionado exibidos no card "Fase vigente".
+      setPhase({
+        id: String(config.currentPhase.id),
+        name: config.currentPhase.name || 'Sócio Fundador',
+        certificateType: config.currentPhase.certificateType || config.currentPhase.name || '',
+        minCasDeposit: String(config.currentPhase.casAmount || DEFAULT_PHASE.minCasDeposit),
+        active: Boolean(config.currentPhase.active),
+        minted: String(config.currentPhase.minted || '0'),
+        skillsDescription: config.currentPhase.skillsDescription || '',
+        instructions: config.currentPhase.instructions || '',
+        achievementSummary: config.currentPhase.achievementSummary || '',
+        courseHours: config.currentPhase.courseHours || 40,
+      });
+    }
+
+    // O certificado emitido/currentCertificate precisa ser
+    // re-escopado para a fase/desafio recém-selecionado — sem
+    // isso o banner "Certificado #X emitido" de uma fase
+    // permanecia exibido para outra fase/desafio nunca
+    // solicitado nem aprovado (bug de representacao de estado).
+    const targetPhaseId = id || String(config?.currentPhase?.id || '');
+    const matchingIssuance = certificateHistory.find(
+      (issuance) => String(issuance.phase?.id) === targetPhaseId
+    );
+    if (matchingIssuance) {
+      selectCertificate(matchingIssuance);
+    } else {
+      setCertificate(null);
+      setCertificatePhase(null);
+      setCurrentCertificate(null);
+    }
+  };
+
   if (loading || !accountsChecked) {
     return <div className="flex justify-center py-24"><Spinner size={28} /></div>;
   }
@@ -1091,78 +1279,14 @@ function CertificateContent() {
 
             {challenges.length > 0 && (
               <div>
-                <label className="label">Desafios disponíveis</label>
-                <select
-                  value={selectedChallengeId || ''}
-                  onChange={(e) => {
-                    const id = e.target.value;
-                    setSelectedChallengeId(id || null);
-                    const ch = challenges.find((c) => String(c.id) === id || String(c.onchainPhaseId) === id);
-                    if (ch) {
-                      setPhase({
-                        id: String(ch.onchainPhaseId || ch.id),
-                        name: ch.name || 'Desafio',
-                        certificateType: ch.name || 'Desafio',
-                        minCasDeposit: String(ch.minCasDeposit || DEFAULT_PHASE.minCasDeposit),
-                        active: ch.status === 'active' || ch.active === true,
-                        minted: String(ch.minted || '0'),
-                        skillsDescription: ch.skillsDescription || '',
-                        instructions: ch.instructions || '',
-                        achievementSummary: ch.achievementSummary || '',
-                        courseHours: ch.courseHours || 40,
-                        extraFeeTypeId: String(ch.extraFeeTypeId || '0'),
-                        tbaRebateBps: Number(ch.tbaRebateBps || 0),
-                      });
-                    } else if (config?.currentPhase?.id) {
-                      // Voltou para "Selecione um desafio..." — restaura a fase
-                      // fundadora vigente em vez de deixar os dados do ultimo
-                      // desafio selecionado exibidos no card "Fase vigente".
-                      setPhase({
-                        id: String(config.currentPhase.id),
-                        name: config.currentPhase.name || 'Sócio Fundador',
-                        certificateType: config.currentPhase.certificateType || config.currentPhase.name || '',
-                        minCasDeposit: String(config.currentPhase.casAmount || DEFAULT_PHASE.minCasDeposit),
-                        active: Boolean(config.currentPhase.active),
-                        minted: String(config.currentPhase.minted || '0'),
-                        skillsDescription: config.currentPhase.skillsDescription || '',
-                        instructions: config.currentPhase.instructions || '',
-                        achievementSummary: config.currentPhase.achievementSummary || '',
-                        courseHours: config.currentPhase.courseHours || 40,
-                      });
-                    }
-
-                    // O certificado emitido/currentCertificate precisa ser
-                    // re-escopado para a fase/desafio recem-selecionado — sem
-                    // isso o banner "Certificado #X emitido" de uma fase
-                    // permanecia exibido para outra fase/desafio nunca
-                    // solicitado nem aprovado (bug de representacao de estado).
-                    const targetPhaseId = id || String(config?.currentPhase?.id || '');
-                    const matchingIssuance = certificateHistory.find(
-                      (issuance) => String(issuance.phase?.id) === targetPhaseId
-                    );
-                    if (matchingIssuance) {
-                      selectCertificate(matchingIssuance);
-                    } else {
-                      setCertificate(null);
-                      setCertificatePhase(null);
-                      setCurrentCertificate(null);
-                    }
-                  }}
-                  className="input"
-                >
-                  <option value="">Selecione um desafio...</option>
-                  {challenges.map((ch) => {
-                    const id = String(ch.onchainPhaseId || ch.id);
-                    const unlocked = ch.unlocked !== false;
-                    const hasCert = ch.hasCertificate === true;
-                    return (
-                      <option key={id} value={id} disabled={!unlocked}>
-                        {ch.name}{!unlocked ? ' (bloqueado)' : hasCert ? ' (concluído)' : ''}
-                      </option>
-                    );
-                  })}
-                </select>
-                {selectedChallenge?.prerequisitePhaseIds?.length > 0 && (
+                <label className="label">Certificados disponíveis</label>
+                <CertificateSelect
+                  challenges={challenges}
+                  selectedId={selectedChallengeId || ''}
+                  onSelect={handleSelectChallenge}
+                  placeholder="Selecione um certificado..."
+                />
+                {selectedChallenge?.phaseType === 'desafio' && selectedChallenge?.prerequisitePhaseIds?.length > 0 && (
                   <p className="mt-2 text-xs text-amber-300">
                     Requer: {selectedChallenge.prerequisitePhaseIds.map((id) => {
                       const prereq = challenges.find((c) => Number(c.onchainPhaseId) === id);
@@ -1171,7 +1295,7 @@ function CertificateContent() {
                   </p>
                 )}
                 <p className="mt-2 text-xs text-slate-500">
-                  As habilidades e instruções do desafio aparecem abaixo da prévia do certificado.
+                  Habilidades, instruções e regras do certificado selecionado aparecem abaixo da prévia.
                 </p>
               </div>
             )}
@@ -1547,23 +1671,34 @@ function CertificateContent() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-widest text-brand-400">
-                    Desafio selecionado
+                    {isFaseSelected ? 'Fase selecionada' : 'Desafio selecionado'}
                   </p>
-                  <h3 className="mt-1 text-lg font-bold text-white">{selectedChallenge.name}</h3>
+                  <h3 className="mt-1 text-lg font-bold text-white">
+                    <span className="align-middle">{selectedChallenge.name}</span>
+                    <span className="ml-2 inline-flex align-middle">
+                      <CertificateTypeBadge phaseType={selectedChallenge.phaseType} />
+                    </span>
+                  </h3>
                 </div>
-                <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
-                  isApproved
-                    ? 'bg-emerald-500/15 text-emerald-300'
-                    : 'bg-amber-500/15 text-amber-300'
-                }`}>
-                  {isApproved
-                    ? 'Aprovado — pronto para emitir'
-                    : isPending
-                      ? 'Em análise'
-                      : isRejected
-                        ? 'Rejeitado'
-                        : 'Aguardando solicitação'}
-                </span>
+                {isFaseSelected ? (
+                  <span className="shrink-0 rounded-full px-3 py-1 text-xs font-semibold bg-emerald-500/15 text-emerald-300">
+                    Emissão direta
+                  </span>
+                ) : (
+                  <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
+                    isApproved
+                      ? 'bg-emerald-500/15 text-emerald-300'
+                      : 'bg-amber-500/15 text-amber-300'
+                  }`}>
+                    {isApproved
+                      ? 'Aprovado — pronto para emitir'
+                      : isPending
+                        ? 'Em análise'
+                        : isRejected
+                          ? 'Rejeitado'
+                          : 'Aguardando solicitação'}
+                  </span>
+                )}
               </div>
 
               <div className="mt-5 grid gap-6 lg:grid-cols-2">
