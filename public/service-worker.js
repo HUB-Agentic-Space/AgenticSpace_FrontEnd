@@ -9,7 +9,7 @@
 /* eslint-env serviceworker */
 /* global self, clients */
 
-const CACHE_NAME = 'agentic-space-v1';
+const CACHE_NAME = 'agentic-space-v2';
 const STATIC_ASSETS = ['/', '/favicon.ico'];
 
 self.addEventListener('install', (event) => {
@@ -20,7 +20,15 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then((cacheNames) =>
+      Promise.all(
+        cacheNames
+          .filter((name) => name !== CACHE_NAME)
+          .map((name) => caches.delete(name))
+      )
+    ).then(() => self.clients.claim())
+  );
 });
 
 self.addEventListener('push', (event) => {
