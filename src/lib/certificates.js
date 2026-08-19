@@ -20,10 +20,9 @@ export const CERTIFICATE_ABI = [
   'function certificateOf(address recipient, uint256 phaseId) view returns (uint256)',
   'function certificatesByRecipientAndPhase(address recipient, uint256 phaseId) view returns (uint256)',
   'function nonces(address recipient) view returns (uint256)',
-  'function getPhase(uint256 phaseId) view returns (tuple(string name, bytes32 templateHash, uint256 minCasDeposit, uint256 startsAt, uint256 endsAt, uint256 minted, uint8 active, string skillsDescription, string instructions, uint256 extraFeeTypeId, uint256 tbaRebateBps))',
+  'function getPhase(uint256 phaseId) view returns (tuple(string name, bytes32 templateHash, uint256 minCasDeposit, uint256 startsAt, uint256 endsAt, uint256 minted, bool active, string skillsDescription, string instructions, uint256 extraFeeTypeId, uint256 tbaRebateBps, bool allowMultipleIssuance, uint256 maxPerRecipient, uint256 maxTotalSupply))',
   'function phasePrerequisites(uint256 phaseId) view returns (uint256[])',
   'function getCertificate(uint256 tokenId) view returns (tuple(uint256 phaseId, address recipient, address tokenBoundAccount, bytes32 issuanceId, bytes32 nameHash, bytes32 metadataHash, uint256 casDeposited, uint256 issuedAt, bool revoked, bytes32 revocationReasonHash, uint256 revokedAt, bytes32 documentHash))',
-  'function tokenBoundAccount(uint256 tokenId) view returns (address)',
   'function mintCertificate((bytes32 issuanceId, address recipient, bytes32 nameHash, uint256 phaseId, bytes32 metadataHash, uint256 casAmount, uint256 nonce, uint256 deadline) auth, address issuer, bytes signature) returns (uint256 tokenId, address tokenBoundAccount_)',
   'function depositCasForMint(uint256 phaseId)',
   'function withdrawCasDeposit(uint256 phaseId)',
@@ -274,7 +273,8 @@ export function getDiamondCertificateContract(address, runner) {
 
 const PHASES_RETURN_TYPES = [
   'string', 'bytes32', 'uint256', 'uint256', 'uint256', 'uint256',
-  'uint8', 'string', 'string', 'uint256', 'uint256',
+  'bool', 'string', 'string', 'uint256', 'uint256',
+  'bool', 'uint256', 'uint256',
 ];
 
 export async function fetchPhase(contract, provider, phaseId) {
@@ -329,6 +329,9 @@ function decodePhaseResult(decoded) {
     instructions: decoded[8],
     extraFeeTypeId: decoded[9],
     tbaRebateBps: decoded[10],
+    allowMultipleIssuance: decoded[11],
+    maxPerRecipient: decoded[12],
+    maxTotalSupply: decoded[13],
   };
 }
 
@@ -370,11 +373,14 @@ export function phaseFromResult(result, phaseId) {
     startsAt: result.startsAt.toString(),
     endsAt: result.endsAt.toString(),
     minted: result.minted.toString(),
-    active: Number(result.active) === 1,
+    active: Boolean(result.active),
     skillsDescription: result.skillsDescription || '',
     instructions: result.instructions || '',
     extraFeeTypeId: result.extraFeeTypeId?.toString() || '0',
     tbaRebateBps: result.tbaRebateBps != null ? Number(result.tbaRebateBps) : 0,
+    allowMultipleIssuance: Boolean(result.allowMultipleIssuance),
+    maxPerRecipient: result.maxPerRecipient != null ? Number(result.maxPerRecipient) : 0,
+    maxTotalSupply: result.maxTotalSupply != null ? Number(result.maxTotalSupply) : 0,
   };
 }
 

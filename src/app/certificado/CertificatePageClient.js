@@ -394,6 +394,9 @@ function CertificateContent() {
             instructions: loadedConfig.currentPhase.instructions || '',
             achievementSummary: loadedConfig.currentPhase.achievementSummary || '',
             courseHours: loadedConfig.currentPhase.courseHours || 40,
+            allowMultipleIssuance: Boolean(loadedConfig.currentPhase.allowMultipleIssuance),
+            maxPerRecipient: Number(loadedConfig.currentPhase.maxPerRecipient || 0),
+            maxTotalSupply: Number(loadedConfig.currentPhase.maxTotalSupply || 0),
           });
         }
         if (profileResponse.status < 400) {
@@ -710,7 +713,10 @@ function CertificateContent() {
       // compartilhado — do contrario a emissao de um certificado poderia ser
       // bloqueada (ou liberada indevidamente) por outro certificado.
       const freshContext = await readCertificateContext(config, recipient, phase.id);
-      if (freshContext?.certificate) {
+      // Para fases multi-issuance, a existencia de um certificado NAO bloqueia
+      // nova emissao — o limite e por-recipient (maxPerRecipient) e global
+      // (maxTotalSupply), verificados on-chain no momento do mint.
+      if (freshContext?.certificate && !phase?.allowMultipleIssuance) {
         setSuccess(`Voce ja possui o certificado #${freshContext.certificate.tokenId} nesta fase.`);
         setMinting(false);
         return;
@@ -1141,6 +1147,9 @@ function CertificateContent() {
         instructions: config.currentPhase.instructions || '',
         achievementSummary: config.currentPhase.achievementSummary || '',
         courseHours: config.currentPhase.courseHours || 40,
+        allowMultipleIssuance: Boolean(config.currentPhase.allowMultipleIssuance),
+        maxPerRecipient: Number(config.currentPhase.maxPerRecipient || 0),
+        maxTotalSupply: Number(config.currentPhase.maxTotalSupply || 0),
       });
     }
 
@@ -1347,9 +1356,31 @@ function CertificateContent() {
               </div>
               <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
                 <p className="text-slate-500">Emitidos na fase</p>
-                <p className="mt-1 font-semibold text-white">{phase?.minted || '0'}</p>
+                <p className="mt-1 font-semibold text-white">
+                  {phase?.minted || '0'}
+                  {phase?.allowMultipleIssuance && phase?.maxTotalSupply
+                    ? ` / ${phase.maxTotalSupply}`
+                    : ''}
+                </p>
               </div>
             </div>
+
+            {phase?.allowMultipleIssuance && (
+              <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 space-y-2">
+                <p className="text-xs font-semibold text-emerald-300">
+                  Fase de emissão múltipla
+                </p>
+                <p className="text-xs text-slate-400">
+                  Você pode emitir até <span className="text-white font-semibold">{phase.maxPerRecipient}</span> certificado(s) nesta fase.
+                  O suprimento total da fase é limitado a <span className="text-white font-semibold">{phase.maxTotalSupply}</span>.
+                </p>
+                {context?.certificate && (
+                  <p className="text-xs text-emerald-300">
+                    Você já possui {context.certificate.revoked ? 'um certificado revogado' : '1 certificado ativo'} nesta fase.
+                  </p>
+                )}
+              </div>
+            )}
 
             {!account ? (
               <button onClick={() => connect().catch((connectError) => setWalletErrorObj(parseWalletError(connectError, { account, config })))} disabled={isConnecting} className="btn-secondary w-full">
