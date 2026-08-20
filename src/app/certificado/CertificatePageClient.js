@@ -270,10 +270,15 @@ function CertificateContent() {
   const [agreedToRules, setAgreedToRules] = useState(false);
   const [proofLink, setProofLink] = useState('');
 
-  const loadCertificates = useCallback(async (activeConfig, recipient, jwt) => {
+  const loadCertificates = useCallback(async (activeConfig, recipient, jwt, targetPhaseId) => {
     if (!ethers.isAddress(activeConfig?.certificateAddress || '')) return;
+    // Usa o phaseId da fase atualmente selecionada/vigente para verificar
+    // on-chain se o usuario ja possui certificado daquela fase especifica.
+    // Sem isso, o default '1' (Sócio Fundador) faz o frontend mostrar
+    // "Certificado #1 emitido" mesmo quando a fase vigente é outra.
+    const phaseIdForLookup = targetPhaseId || phase?.id || String(activeConfig?.currentPhase?.id || '1');
     const [contextResult, issuances] = await Promise.allSettled([
-      readCertificateContext(activeConfig, recipient),
+      readCertificateContext(activeConfig, recipient, phaseIdForLookup),
       listMyCertificateIssuances(jwt),
     ]);
     const context = contextResult.status === 'fulfilled' ? contextResult.value : null;
@@ -358,7 +363,7 @@ function CertificateContent() {
       setCurrentCertificate(null);
       setCurrentCasBalance('0');
     }
-  }, []);
+  }, [phase?.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -418,11 +423,11 @@ function CertificateContent() {
     if (!ethers.isAddress(config?.certificateAddress || '')) return;
     if (!account || !ethers.isAddress(account)) return;
     let cancelled = false;
-    loadCertificates(config, account, session?.jwt).catch((loadError) => {
+    loadCertificates(config, account, session?.jwt, phase?.id).catch((loadError) => {
       if (!cancelled) setError(walletError(loadError));
     });
     return () => { cancelled = true; };
-  }, [account, config?.certificateAddress, config?.casTokenAddress, config?.chainId, loadCertificates, session?.jwt]);
+  }, [account, config?.certificateAddress, config?.casTokenAddress, config?.chainId, loadCertificates, session?.jwt, phase?.id]);
 
   useEffect(() => {
     if (!account || !config?.casTokenAddress || !getProvider()) return;
