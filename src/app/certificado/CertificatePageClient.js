@@ -74,7 +74,7 @@ const DEFAULT_PHASE = {
   minCasDeposit: ethers.parseEther('50').toString(),
   active: true,
   minted: '0',
-  courseHours: 40,
+  courseHours: 1,
 };
 
 function walletError(error, context) {

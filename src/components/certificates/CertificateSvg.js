@@ -230,23 +230,26 @@ function CertificateFrontPage({ manifest, draft }) {
   const bodyText = (() => {
     const summary = certificate.achievementSummary || '';
     const certType = certificate.certificateType || '';
-    const isChallenge = Boolean(certificate.phaseId && certType && certType !== 'Sócio Fundador');
+    const isChallenge = Boolean(certificate.phaseId && certType && certType !== 'Sócio Fundador' && certType !== 'Sócio Mantenedor');
     const courseHours = certificate.courseHours || 40;
-    const hoursSuffix = ` O treinamento equivale a ${courseHours} horas.`;
+    // Certificados de fase (nível fundador) atestam compromisso com a fase
+    // do site, não aquisição de habilidade — não mencionam horas de curso.
+    // Certificados de desafio mantêm o sufixo de horas.
+    const hoursSuffix = isChallenge ? ` O treinamento equivale a ${courseHours} horas.` : '';
 
     if (summary) {
       return isChallenge
         ? `concluiu o desafio ${phaseTitle}, ${summary}${hoursSuffix}`
-        : `integra a fase ${phaseTitle} e ${summary}${hoursSuffix}`;
+        : `integra a fase ${phaseTitle} do site Agentic Space. ${summary}`;
     }
 
     return isChallenge
       ? `concluiu o desafio ${phaseTitle}, demonstrando habilidades técnicas com dedicação autodidata, `
         + 'buscando de forma proativa conhecimento e de forma autônoma a solução do desafio para esta certificação.'
         + hoursSuffix
-      : `integra a fase ${phaseTitle} e demonstrou espírito empreendedor e dedicação ao voluntariado, `
-        + 'colaborando ativamente, com sua participação, para o crescimento do ecossistema Agentic Space.'
-        + hoursSuffix;
+      : `integra a fase ${phaseTitle} do site Agentic Space, demonstrando espírito empreendedor `
+        + 'e dedicação ao voluntariado, colaborando ativamente, com sua participação, '
+        + 'para o crescimento do ecossistema Agentic Space.';
   })();
 
   const bodyLines = wrapText(
