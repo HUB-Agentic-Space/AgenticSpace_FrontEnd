@@ -315,7 +315,13 @@ function CertificateContent() {
       return;
     }
 
-    const latest = confirmed[0];
+    // Filtra o historico pela fase atualmente selecionada para evitar
+    // que um certificado de outra fase (ex: fase 1) seja exibido como
+    // "emitido" quando o usuario seleciona uma fase diferente (ex: fase 9).
+    const phaseConfirmed = confirmed.filter(
+      (issuance) => String(issuance.phase?.id) === String(phaseIdForLookup)
+    );
+    const latest = phaseConfirmed[0];
     if (latest?.token?.tokenId) {
       try {
         const historical = await readCertificateByToken(activeConfig, latest.token.tokenId);
