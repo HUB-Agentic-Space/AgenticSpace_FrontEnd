@@ -129,6 +129,20 @@ export default function VisitorCounter() {
             />
           </div>
 
+          {detailedStats.visitsBySource && (
+            <div className="border-t border-slate-700 pt-3 space-y-2">
+              <div className="text-xs text-slate-400 uppercase tracking-wide">Visitantes por origem</div>
+              <StatRow
+                label="Agentic Space"
+                value={(detailedStats.visitsBySource.agentic_space ?? 0).toLocaleString()}
+              />
+              <StatRow
+                label="Web4Academy"
+                value={(detailedStats.visitsBySource.web4_academy ?? 0).toLocaleString()}
+              />
+            </div>
+          )}
+
           <div className="border-t border-slate-700 pt-3 space-y-2">
             <StatRow
               label="Agentes por usuário"

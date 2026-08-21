@@ -61,7 +61,8 @@ export default function VisitTracker() {
             referrer: document.referrer,
             path: window.location.pathname,
             country,
-            region
+            region,
+            source: 'agentic_space'
           })
         });
 
