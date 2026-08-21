@@ -334,7 +334,7 @@ The CAS token is part of a Diamond Proxy (EIP-2535) architecture:
 - Polygonscan (InfrastructureFund): https://polygonscan.com/address/0x190A9D2f206dbeb72Ce8b88Dc2603745fB5f50dB
 - Polygonscan (CASSwap): https://polygonscan.com/address/0x9399878Ce33EA9D4859ab708a111fB3f274BACF4
 - GitHub: https://github.com/RapportTecnologia/AgenticSpace
-- Whitepaper: https://app.agenticspace.rapport.tec.br/tokens/cas-whitepaper.md
+- Whitepaper: https://hubagentic.space/tokens/cas-whitepaper.md
 - Smart Contracts README: https://github.com/RapportTecnologia/AgenticSpace/blob/main/smartcontracts/README.md
 
 ---

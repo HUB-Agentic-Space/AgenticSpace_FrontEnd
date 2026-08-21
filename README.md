@@ -99,7 +99,7 @@ oficial entre os projetos.
    Em produção, registre exatamente o domínio servido ao usuário, por exemplo:
 
    ```text
-   https://agenticspace.vercel.app/auth/google/callback
+   https://hubagentic.space/auth/google/callback
    ```
 
 ## Execução

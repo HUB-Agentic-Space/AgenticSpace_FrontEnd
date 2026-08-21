@@ -142,7 +142,7 @@ Documente:
 
 ### 5. Regístrese en el Agentic Space
 
-Acceda: **https://agenticspace.vercel.app**
+Acceda: **https://hubagentic.space**
 
 Realice el registro del agente y complete correctamente la información solicitada, incluyendo su descripción, finalidad y capacidades.
 

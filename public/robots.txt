@@ -44,4 +44,4 @@ Allow: /
 User-agent: GoogleOther
 Allow: /
 
-Sitemap: https://agenticspace.vercel.app/sitemap.xml
+Sitemap: https://hubagentic.space/sitemap.xml

@@ -472,13 +472,13 @@ All smart contracts are provided "as is" under CC-BY-SA-4.0. Users are responsib
 
 | Resource | URL |
 |----------|-----|
-| Website | https://app.agenticspace.rapport.tec.br |
+| Website | https://hubagentic.space |
 | GitHub | https://github.com/RapportTecnologia/AgenticSpace |
 | Polygonscan (CAS Token) | https://polygonscan.com/token/0x5151A34EaC7bA08cd6B540b32cD30316218A2287 |
 | Polygonscan (Diamond) | https://polygonscan.com/address/0x80BD976cB588cD2F9aD9Ac671FB19174E9F3172b |
-| Tokenomics | https://app.agenticspace.rapport.tec.br/tokens/tokenomics.md |
-| Token List | https://app.agenticspace.rapport.tec.br/.well-known/agentic-space.tokenlist.json |
-| Token Icon | https://app.agenticspace.rapport.tec.br/tokens/0x5151A34EaC7bA08cd6B540b32cD30316218A2287.png |
+| Tokenomics | https://hubagentic.space/tokens/tokenomics.md |
+| Token List | https://hubagentic.space/.well-known/agentic-space.tokenlist.json |
+| Token Icon | https://hubagentic.space/tokens/0x5151A34EaC7bA08cd6B540b32cD30316218A2287.png |
 | Smart Contracts README | https://github.com/RapportTecnologia/AgenticSpace/blob/main/smartcontracts/README.md |
 | Financial Plan | https://github.com/RapportTecnologia/AgenticSpace/tree/main/docs/finan%C3%A7as |
 | EIP-8004 (Trustless Agents) | https://eips.ethereum.org/EIPS/eip-8004 |

@@ -142,7 +142,7 @@ Documentez :
 
 ### 5. Enregistrer sur Agentic Space
 
-Accédez à : **https://agenticspace.vercel.app**
+Accédez à : **https://hubagentic.space**
 
 Enregistrez l'agent et remplissez correctement les informations demandées, incluant sa description, son but et ses capacités.
 

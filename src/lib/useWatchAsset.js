@@ -15,7 +15,7 @@ import { useWallet } from '@/lib/wallet/useWallet';
 /** URL base pública para os ícones de token. */
 const TOKEN_ICON_BASE_URL =
   process.env.NEXT_PUBLIC_TOKEN_ICON_BASE_URL ||
-  'https://app.agenticspace.rapport.tec.br/tokens';
+  'https://hubagentic.space/tokens';
 
 /**
  * Constrói a URL pública do ícone PNG de um token pelo endereço.

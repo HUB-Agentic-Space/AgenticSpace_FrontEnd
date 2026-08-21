@@ -142,7 +142,7 @@ Document:
 
 ### 5. Register on Agentic Space
 
-Access: **https://agenticspace.vercel.app**
+Access: **https://hubagentic.space**
 
 Register the agent and correctly fill in the requested information, including its description, purpose and capabilities.
 

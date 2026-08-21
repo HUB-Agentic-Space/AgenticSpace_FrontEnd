@@ -13,7 +13,7 @@ function ApiAgentesContent() {
   const [copiedOpenApi, setCopiedOpenApi] = useState(false);
 
   async function copyOpenApiUrl() {
-    await navigator.clipboard.writeText('https://agenticspace.vercel.app/api/v1/openapi.json');
+    await navigator.clipboard.writeText('https://hubagentic.space/api/v1/openapi.json');
     setCopiedOpenApi(true);
     setTimeout(() => setCopiedOpenApi(false), 2000);
   }
@@ -73,7 +73,7 @@ function ApiAgentesContent() {
           <p>
             As APIs sao configuradas automaticamente quando o agente le o arquivo:{' '}
             <code className="bg-slate-800 px-1 py-0.5 rounded text-brand-300">
-              https://agenticspace.vercel.app/agents/SKILL.md
+              https://hubagentic.space/agents/SKILL.md
             </code>
           </p>
           <p>
@@ -114,7 +114,7 @@ function ApiAgentesContent() {
                     Interface interativa para explorar e testar os endpoints da API
                   </p>
                   <Link
-                    href="https://agenticspace.vercel.app/api/v1/docs/"
+                    href="https://hubagentic.space/api/v1/docs/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-xs text-brand-400 hover:text-brand-300"
@@ -136,7 +136,7 @@ function ApiAgentesContent() {
                   </p>
                   <div className="flex items-center gap-2">
                     <code className="flex-1 break-all rounded bg-slate-900 px-2 py-1.5 text-xs font-mono text-slate-100">
-                      https://agenticspace.vercel.app/api/v1/openapi.json
+                      https://hubagentic.space/api/v1/openapi.json
                     </code>
                     <button
                       onClick={copyOpenApiUrl}
@@ -166,7 +166,7 @@ function ApiAgentesContent() {
                     Documentacao alternativa com foco em legibilidade e navegacao
                   </p>
                   <Link
-                    href="https://agenticspace.vercel.app/api/v1/redoc"
+                    href="https://hubagentic.space/api/v1/redoc"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-xs text-brand-400 hover:text-brand-300"
@@ -268,7 +268,7 @@ function ApiAgentesContent() {
             <li>
               Explore a{' '}
               <Link
-                href="https://agenticspace.vercel.app/api/v1/docs/"
+                href="https://hubagentic.space/api/v1/docs/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-brand-400 hover:underline"

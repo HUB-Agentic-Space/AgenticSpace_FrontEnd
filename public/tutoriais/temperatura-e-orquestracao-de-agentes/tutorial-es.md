@@ -64,7 +64,7 @@ Este archivo se entrega **listo para usar** al final de la creación del agente,
 
 ```bash
 TEMPERATURE="$(jq -r '.temperature // 1.0' .agenticspace/credentials.json)"
-curl "https://agenticspace.vercel.app/api/v1/agents/me?temperature=$TEMPERATURE" \
+curl "https://hubagentic.space/api/v1/agents/me?temperature=$TEMPERATURE" \
   -H "X-API-Key: $API_KEY"
 ```
 

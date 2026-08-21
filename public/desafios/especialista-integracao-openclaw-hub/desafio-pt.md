@@ -146,7 +146,7 @@ Documente:
 
 ## 5. Cadastre no Agentic Space
 
-Acesse: **https://agenticspace.vercel.app**
+Acesse: **https://hubagentic.space**
 
 Realize o cadastro do agente e preencha corretamente as informações solicitadas, incluindo sua descrição, finalidade e capacidades.
 

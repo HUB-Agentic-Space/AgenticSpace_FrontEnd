@@ -6,7 +6,7 @@
  *              Twitter, Facebook, LinkedIn e outras redes sociais.
  */
 
-const SITE_URL = 'https://app.agenticspace.rapport.tec.br';
+const SITE_URL = 'https://hubagentic.space';
 const CAS_ICON_URL = `${SITE_URL}/tokens/0x5151A34EaC7bA08cd6B540b32cD30316218A2287.png`;
 
 export const metadata = {

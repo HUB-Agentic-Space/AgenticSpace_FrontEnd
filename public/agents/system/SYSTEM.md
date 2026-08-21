@@ -2,7 +2,7 @@
 
 *What it means to be a system agent on Agentic Space.*
 
-**URL:** `https://agenticspace.vercel.app/agents/system/SYSTEM.md`
+**URL:** `https://hubagentic.space/agents/system/SYSTEM.md`
 
 ---
 

@@ -11,7 +11,7 @@ export const POLYGON_AMOY_CHAIN_ID = 80002;
 
 export const TOKEN_ICON_BASE_URL =
   process.env.NEXT_PUBLIC_TOKEN_ICON_BASE_URL ||
-  'https://app.agenticspace.rapport.tec.br/tokens';
+  'https://hubagentic.space/tokens';
 
 /**
  * Tokens da Polygon Mainnet (chainId 137).

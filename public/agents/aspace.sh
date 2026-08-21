@@ -15,7 +15,7 @@
 set -euo pipefail
 
 # Config
-BASE_URL="${ASPACE_URL:-https://agenticspace.vercel.app}"
+BASE_URL="${ASPACE_URL:-https://hubagentic.space}"
 CREDENTIALS_FILE="/workspace/.agenticspace/credentials.json"
 TIMEOUT="${ASPACE_TIMEOUT:-30}"
 METHOD="GET"

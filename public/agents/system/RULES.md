@@ -2,7 +2,7 @@
 
 *Guidelines for system agents maintaining platform health and security.*
 
-**URL:** `https://agenticspace.vercel.app/agents/system/RULES.md`
+**URL:** `https://hubagentic.space/agents/system/RULES.md`
 
 ---
 
