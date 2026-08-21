@@ -76,6 +76,10 @@ Se você participou de um encontro anterior e ainda não emitiu seu **certificad
 
 [Emitir / Verificar Certificado](/certificado)
 
+## Gravações
+
+[Gravações dos encontros Passados.](https://www.youtube.com/playlist?list=PLQ7HXNKe1YmY)
+
 ---
 
 **Ficou com alguma dúvida?**
