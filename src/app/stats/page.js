@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect, Suspense } from 'react';
-import { Users, Eye, Bot, TrendingUp, BarChart3, ArrowLeft, Calendar, Activity, X, Sparkles, DollarSign, Target, Zap, AlertTriangle, Server, Cpu, PiggyBank, LineChart as LineChartIcon } from 'lucide-react';
+import { Users, Eye, Bot, TrendingUp, BarChart3, ArrowLeft, Calendar, Activity, X, Sparkles, DollarSign, Target, Zap, AlertTriangle, Server, Cpu, PiggyBank, LineChart as LineChartIcon, GitBranch, Layers, GraduationCap, Coins, ExternalLink, Rocket, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 import enTranslations from '@/i18n/locales/en.json';
 import { API_BASE_URL } from '@/lib/api.js';
@@ -904,6 +904,69 @@ function StatsPageContent() {
         </div>
       </div>
 
+      {/* Ecosystem Evolution & Product Portfolio */}
+      <div className="card p-6">
+        <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+          <GitBranch className="text-brand-400" size={20} />
+          {t('stats.ecosystemEvolution')}
+        </h2>
+        <p className="text-slate-400 mb-6">
+          {t('stats.ecosystemEvolutionDesc')}
+        </p>
+
+        <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+          <Layers className="text-brand-400" size={18} />
+          {t('stats.portfolioTitle')}
+        </h3>
+        <p className="text-sm text-slate-400 mb-4">
+          {t('stats.portfolioDesc')}
+        </p>
+
+        <div className="grid gap-4 md:grid-cols-3 mb-6">
+          <ProductCard
+            icon={<Coins size={20} className="text-brand-400" />}
+            title={t('stats.productMeuDinheiroTitle')}
+            description={t('stats.productMeuDinheiroDesc')}
+            href="https://rapport.tec.br/meudinheiro"
+            badge={t('stats.knowledgeBase')}
+            ctaLabel={t('stats.visitProject')}
+          />
+          <ProductCard
+            icon={<Rocket size={20} className="text-brand-400" />}
+            title={t('stats.productCuscuzTitle')}
+            description={t('stats.productCuscuzDesc')}
+            href="https://rapport.tec.br/cuscuz"
+            badge={t('stats.knowledgeBase')}
+            ctaLabel={t('stats.visitProject')}
+          />
+          <ProductCard
+            icon={<GraduationCap size={20} className="text-brand-400" />}
+            title={t('stats.productWeb4AcademyTitle')}
+            description={t('stats.productWeb4AcademyDesc')}
+            href="https://web4academy.space"
+            badge={t('stats.certificates')}
+            ctaLabel={t('stats.visitProject')}
+          />
+        </div>
+
+        <div className="bg-brand-500/10 rounded-lg p-4 border border-brand-500/30">
+          <h3 className="font-semibold text-white mb-2 flex items-center gap-2">
+            <TrendingUp className="text-brand-400" size={16} />
+            {t('stats.investmentValueTitle')}
+          </h3>
+          <p className="text-sm text-slate-300 mb-4">
+            {t('stats.investmentValueDesc')}
+          </p>
+          <button
+            onClick={() => setShowInvestmentModal(true)}
+            className="btn-primary inline-flex items-center gap-2"
+          >
+            {t('stats.investCta')}
+            <ArrowUpRight size={16} />
+          </button>
+        </div>
+      </div>
+
       {/* Vercel Cost Projections */}
       {vercelMetrics && vercelMetrics.projections && (
         <div className="card p-6">
@@ -1217,6 +1280,32 @@ function HighlightCard({ title, description, onClick }) {
     >
       <h3 className="font-semibold text-white mb-2">{title}</h3>
       <p className="text-sm text-slate-400">{description}</p>
+    </div>
+  );
+}
+
+function ProductCard({ icon, title, description, href, badge, ctaLabel }) {
+  return (
+    <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700 flex flex-col h-full">
+      <div className="flex items-center gap-2 mb-2">
+        {icon}
+        <h3 className="font-semibold text-white text-sm flex-1">{title}</h3>
+        {badge && (
+          <span className="text-xs bg-brand-500/20 text-brand-400 px-2 py-1 rounded">
+            {badge}
+          </span>
+        )}
+      </div>
+      <p className="text-sm text-slate-400 flex-1 mb-4">{description}</p>
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1 text-sm text-brand-400 hover:text-brand-300 transition-colors"
+      >
+        {ctaLabel}
+        <ExternalLink size={14} />
+      </a>
     </div>
   );
 }

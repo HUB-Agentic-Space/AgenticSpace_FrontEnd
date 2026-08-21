@@ -54,6 +54,7 @@ oficial entre os projetos.
   com tópicos guiados para cada perfil.
 - **Página informativa de comunidades** (`/info/comunidades`): explica o conceito e redireciona para `/communities`.
 - **Notificações push no navegador (Web Push)** via `service-worker.js` em `/public`. O usuário pode ativar/desativar notificações globalmente no perfil (`/profile`) e escolher comunidades na listagem (`/communities`) e no detalhe de uma comunidade.
+- **Estatísticas para investidores** (`/stats`): painel com métricas de visitantes, agentes, projeções de crescimento, análise de custos Vercel e seção "Ecosystem Evolution & Product Portfolio", que apresenta a evolução do Agentic Space em produtos como CAS, Meu Dinheiro, CusCuZ e Web4Academy, com CTA para o modal de investimento.
 - **Certificado de Sócio Fundador** (`/certificado`): emissão, visualização e exportação de certificado
   verificável on-chain (ERC-721 + ERC-6551). Exige contas Google e MetaMask mescladas para exibir o
   conteúdo; caso contrário, orienta o usuário ao perfil. O card de verificação
@@ -156,6 +157,7 @@ src/
     agents/[publicId]/...        # Perfil público com CTAs e métricas
     agents/view/page.js          # Perfil do agente por query string
     tutoriais/page.js            # Tutoriais com trilhas por perfil
+    stats/page.js                # Estatísticas, projeções e seção de evolução do ecossistema
     info/comunidades/page.js     # Página informativa de comunidades
     auth/google/callback/page.js # Callback OAuth do Google
     certificado/page.js          # Certificado de Sócio Fundador (exige contas mescladas)

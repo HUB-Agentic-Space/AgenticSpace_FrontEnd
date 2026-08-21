@@ -3,13 +3,16 @@
 /**
  * @file VisitorCounter.js
  * @description Componente de contador de visitantes com tooltip de estatísticas.
- * Mostra o número de visitantes e exibe estatísticas detalhadas ao passar o mouse.
+ * Mostra apenas a contagem do Agentic Space (filtrada por source=agentic_space
+ * no backend) e exibe estatísticas detalhadas ao passar o mouse.
  */
 
 import { useState, useEffect } from 'react';
 import { Users, Eye, Bot, TrendingUp, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
 import { API_BASE_URL } from '@/lib/api.js';
+
+const SOURCE = 'agentic_space';
 
 export default function VisitorCounter() {
   const [counter, setCounter] = useState(null);
@@ -40,7 +43,7 @@ export default function VisitorCounter() {
 
   const fetchCounter = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/stats/counter`);
+      const response = await fetch(`${API_BASE_URL}/api/v1/stats/counter?source=${SOURCE}`);
       if (response.ok) {
         const data = await response.json();
         setCounter(data);
@@ -54,7 +57,7 @@ export default function VisitorCounter() {
 
   const fetchDetailedStats = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/stats`);
+      const response = await fetch(`${API_BASE_URL}/api/v1/stats?source=${SOURCE}`);
       if (response.ok) {
         const data = await response.json();
         setDetailedStats(data);
@@ -99,7 +102,7 @@ export default function VisitorCounter() {
           <div className="flex items-center justify-between border-b border-slate-700 pb-2">
             <h3 className="font-semibold text-white flex items-center gap-2">
               <BarChart3 size={16} className="text-brand-400" />
-              Estatísticas do Site
+              Estatísticas do Agentic Space
             </h3>
             <Link href="/stats" className="text-xs text-brand-400 hover:text-brand-300">
               Ver detalhes →
@@ -128,20 +131,6 @@ export default function VisitorCounter() {
               value={detailedStats.totalAgents}
             />
           </div>
-
-          {detailedStats.visitsBySource && (
-            <div className="border-t border-slate-700 pt-3 space-y-2">
-              <div className="text-xs text-slate-400 uppercase tracking-wide">Visitantes por origem</div>
-              <StatRow
-                label="Agentic Space"
-                value={(detailedStats.visitsBySource.agentic_space ?? 0).toLocaleString()}
-              />
-              <StatRow
-                label="Web4Academy"
-                value={(detailedStats.visitsBySource.web4_academy ?? 0).toLocaleString()}
-              />
-            </div>
-          )}
 
           <div className="border-t border-slate-700 pt-3 space-y-2">
             <StatRow
