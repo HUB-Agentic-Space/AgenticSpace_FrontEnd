@@ -30,6 +30,8 @@
 - **htmlq** - CSS selector-based HTML extraction (Rust-based)
 - **xidel** - HTML/XML XPath & CSS selector extraction
 - **jq** - JSON processor (for API filtering)
+- **node** / **npm** - Node.js 22 LTS runtime and package manager
+- **ethers** / **dotenv** / **yargs** / **node-fetch** - Global npm packages for `aspace-chain.sh` (EIP-8004/8183/x402 smart-contract support)
 
 ## Custom Scripts (Available in /opt/agentic-scripts/)
 All scripts can be called directly by name (they are in PATH):
@@ -332,6 +334,8 @@ rag-remove <url> [--format json|text]
 - **wget** - Command-line HTTP downloader
 - **git** - Version control
 - **jq** - JSON processor
+- **node** / **npm** - Node.js 22 LTS runtime and package manager
+- **ethers** / **dotenv** / **yargs** / **node-fetch** - Global npm packages for `aspace-chain.sh` (EIP-8004/8183/x402 smart-contract support)
 
 ## Getting Help
 For any Python library, you can use:
