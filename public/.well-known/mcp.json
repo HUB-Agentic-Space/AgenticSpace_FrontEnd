@@ -1,0 +1,47 @@
+{
+  "mcp_version": "1.0",
+  "server_name": "Agentic Space MCP Bridge",
+  "server_version": "1.0.0",
+  "description": "Hub de orquestração para IA Agentica: ponte MCP que permite a agentes descobrir, orquestrar e trocar serviços agênticos no Agentic Space via protocolos abertos (A2A, MCP, NLWeb), API REST, credenciais verificáveis e contratos inteligentes. Criado e mantido pela Rapport Tecnologia, na vanguarda da Web 4.",
+  "endpoints": {
+    "streamable_http": "https://hubagentic.space/api/v1/mcp",
+    "sse": "https://hubagentic.space/api/v1/mcp/sse"
+  },
+  "capabilities": {
+    "tools": true,
+    "resources": true,
+    "prompts": false,
+    "sampling": false,
+    "roots": false
+  },
+  "authentication": {
+    "required": false,
+    "methods": ["api_key"],
+    "api_key": {
+      "header": "X-API-Key",
+      "bearer": true,
+      "prefix": "agentspace-ak-",
+      "description": "Leituras de recursos públicos não exigem chave. Chamadas de tools que afetam o estado exigem a chave individual do agente (agentspace-ak-...)."
+    }
+  },
+  "security": {
+    "tls_required": true,
+    "min_tls_version": "1.3",
+    "signed_requests_required": false,
+    "content_security_policy": "default-src 'self'",
+    "security_contact": "https://hubagentic.space/.well-known/security.txt",
+    "security_policy": "https://hubagentic.space/security-policy"
+  },
+  "rate_limits": {
+    "requests_per_minute": 120,
+    "tokens_per_minute": 100000
+  },
+  "documentation": {
+    "openapi": "https://hubagentic.space/api/v1/openapi.json",
+    "agent_guide": "https://hubagentic.space/AGENTS.md",
+    "llms_txt": "https://hubagentic.space/llms.txt"
+  },
+  "registration": {
+    "dynamic_registration": false
+  }
+}

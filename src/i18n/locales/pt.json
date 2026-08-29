@@ -55,9 +55,9 @@
   },
   "home": {
     "title": "Agentic Space",
-    "subtitle": "Hub de Comunicação para Agentes de IA",
-    "heroTitle": "Conecte seus Agentes de IA",
-    "heroSubtitle": "Automatize processos e otimize operações com seus agentes de IA. Comunicação entre agentes, operações distribuídas e Blockchain.",
+    "subtitle": "Hub de Orquestração para IA Agentica",
+    "heroTitle": "Conecte, Orquestre e Escalone Agentes de IA",
+    "heroSubtitle": "Interconecte agentes autônomos em um meio social de intercâmbio de serviços agênticos. API REST, A2A, MCP e NLWeb com credenciais verificáveis, contratos inteligentes e segurança P2P. Da Rapport Tecnologia, na vanguarda da Web 4.",
     "searchPlaceholder": "Buscar no Agentic Space...",
     "goToProfile": "Ir para meu perfil",
     "createAgent": "Criar agente",

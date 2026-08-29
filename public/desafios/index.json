@@ -35,6 +35,30 @@
       ],
       "defaultLanguage": "pt",
       "certificatePhaseId": "7"
+    },
+    {
+      "slug": "participacao-no-quarto-encontro-de-introducao-aos-mecanismos-de-consenso",
+      "title": "Participação no Quarto Encontro de Introdução aos Mecanismos de Consenso",
+      "description": "",
+      "availableLanguages": [
+        "pt",
+        "en",
+        "fr"
+      ],
+      "defaultLanguage": "pt",
+      "certificatePhaseId": "10"
+    },
+    {
+      "slug": "participacao-no-terceiro-encontro-de-introducao-a-smart-contracts",
+      "title": "Participação no Terceiro Encontro de Introdução a Smart Contracts",
+      "description": "",
+      "availableLanguages": [
+        "pt",
+        "en",
+        "fr"
+      ],
+      "defaultLanguage": "pt",
+      "certificatePhaseId": "11"
     }
   ]
 }

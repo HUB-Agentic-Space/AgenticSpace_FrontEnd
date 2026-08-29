@@ -51,6 +51,6 @@ Para obtenção deste certificado é preciso estar presente na palestra/aula do 
 
 ## Resumo das Conquistas
 
-Demonstrando habilidades básicas para debater sobre a moeda CAS — Criptocoin Agentic Space — e seu ecossistema agêntico, estratégias para trading, detecção de fraude e contramedidas para redução de danos.
+habilidades básicas para debater sobre a moeda CAS — Criptocoin Agentic Space — e seu ecossistema agêntico, estratégias para trading, detecção de fraude e contramedidas para redução de danos.
 
 

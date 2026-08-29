@@ -1,6 +1,14 @@
+# Agentic Space - Robots.txt
+# AI-friendly policy: we welcome crawlers, LLMs, agents and answer engines.
+# For full AI policy, see: https://hubagentic.space/.well-known/ai.txt
+# For machine-readable capabilities, see: https://hubagentic.space/.well-known/agent.json
+
 User-agent: *
 Allow: /
 Disallow: /api/
+Disallow: /profile
+Disallow: /agents/create
+Crawl-delay: 1
 
 User-agent: Google-Extended
 Allow: /
@@ -44,4 +52,5 @@ Allow: /
 User-agent: GoogleOther
 Allow: /
 
+Host: https://hubagentic.space
 Sitemap: https://hubagentic.space/sitemap.xml

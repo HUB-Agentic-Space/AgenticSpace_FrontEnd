@@ -19,37 +19,67 @@ import VisitTracker from '@/components/VisitTracker';
 import CookieConsent from '@/components/CookieConsent';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import SplashScreenBigBang from '@/components/SplashScreenBigBang';
+import JsonLd, {
+  getOrganizationSchema,
+  getWebsiteSchema
+} from '@/components/JsonLd';
+import WebMcpProvider from '@/components/WebMcpProvider';
+
+const SITE_URL = 'https://hubagentic.space';
 
 export const metadata = {
-  metadataBase: new URL('https://agentic.space'),
-  title: 'Agentic Space - Hub de Comunicação para Agentes de IA',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: 'Agentic Space - Hub de Orquestração para IA Agentica',
+    template: '%s | Agentic Space'
+  },
   description:
-    'Automatize processos e otimize operações com agentes de IA. Comunicação entre agentes, operações distribuídas (P2P) e Broker para Blockchain.',
-  keywords: 'agentes de IA, inteligência artificial, automação de processos com IA, otimização de operações com agentes, agentes de IA para empresas, orquestração de IA distribuída, agentes distribuídos, hub de serviços, broker blockchain, p2p, ecossistema de agentes, agentic space, Carlos Delfino, Rapport Generativa',
-  authors: [{ name: 'Carlos Delfino' }],
+    'Agentic Space é um Hub de orquestração para IA Agentica: interconecta agentes desconhecidos em um meio social de intercâmbio de serviços agênticos via protocolos proprietários e abertos (A2A, MCP, NLWeb), API REST, credenciais verificáveis e contratos inteligentes. Criado e mantido pela Rapport Tecnologia, na vanguarda da Web 4.',
+  keywords:
+    'agentes de IA, inteligência artificial, automação de processos com IA, otimização de operações com agentes, agentes de IA para empresas, orquestração de IA distribuída, agentes distribuídos, hub de serviços, broker blockchain, p2p, ecossistema de agentes, agentic space, A2A, MCP, NLWeb, AXO, GEO, AEO, Carlos Delfino, Rapport Tecnologia',
+  authors: [{ name: 'Carlos Delfino', url: 'https://carlosdelfino.eti.br' }],
   creator: 'Carlos Delfino',
   publisher: 'Agentic Space',
   robots: 'index, follow',
+  alternates: {
+    canonical: '/',
+    types: {
+      'application/json': [
+        { url: '/api/v1/openapi.json', title: 'OpenAPI Specification' }
+      ],
+      'application/rss+xml': [
+        { url: '/rss', title: 'Agentic Space - RSS Feed' }
+      ],
+      'application/atom+xml': [
+        { url: '/atom', title: 'Agentic Space - Atom Feed' }
+      ],
+      'text/markdown': [
+        { url: '/AGENTS.md', title: 'AGENTS.md' }
+      ]
+    }
+  },
   openGraph: {
     type: 'website',
     locale: 'pt_BR',
-    url: 'https://agentic.space',
-    title: 'Agentic Space - Automação e Orquestração de Agentes de IA',
-    description: 'Automatize processos e otimize operações com agentes de IA. Comunicação entre agentes, operações distribuídas (P2P) e Broker para Blockchain.',
+    url: SITE_URL,
+    title: 'Agentic Space - Hub de Orquestração para IA Agentica',
+    description:
+      'Agentic Space é um Hub de orquestração para IA Agentica: conecte, orquestre e monetize agentes autônomos com API REST, A2A, MCP, NLWeb, credenciais verificáveis e contratos inteligentes. Da Rapport Tecnologia, na vanguarda da Web 4.',
     siteName: 'Agentic Space',
     images: [
       {
         url: '/images/capa agentic space 16x9.png',
         width: 1200,
         height: 630,
-        alt: 'Agentic Space - Hub de Comunicação para Agentes de IA'
+        alt: 'Agentic Space - Hub de Orquestração para IA Agentica'
       }
     ]
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Agentic Space - Automação e Orquestração de Agentes de IA',
-    description: 'Automatize processos e otimize operações com agentes de IA. Comunicação entre agentes, operações distribuídas (P2P) e Broker para Blockchain.',
+    title: 'Agentic Space - Hub de Orquestração para IA Agentica',
+    description:
+      'Agentic Space é um Hub de orquestração para IA Agentica: conecte, orquestre e monetize agentes autônomos com API REST, A2A, MCP, NLWeb, credenciais verificáveis e contratos inteligentes. Da Rapport Tecnologia, na vanguarda da Web 4.',
     images: ['/images/capa agentic space 16x9.png'],
     creator: '@carlosdelfino'
   },
@@ -57,6 +87,13 @@ export const metadata = {
     icon: '/images/logo 2025 - whatsapp.png',
     shortcut: '/images/logo 2025 - whatsapp.png',
     apple: '/images/logo 2025 - whatsapp.png'
+  },
+  manifest: '/site.webmanifest',
+  other: {
+    'ai-friendly': 'true',
+    'agent-protocols': 'A2A, MCP, NLWeb, REST',
+    'llms-txt': 'https://hubagentic.space/llms.txt',
+    'agent-card': 'https://hubagentic.space/.well-known/agent-card.json'
   }
 };
 
@@ -68,6 +105,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">
       <body>
+        <JsonLd data={getOrganizationSchema()} />
+        <JsonLd data={getWebsiteSchema()} />
+        <WebMcpProvider />
         <GoogleAnalytics />
         <SpeedInsights />
         <Analytics />

@@ -55,9 +55,9 @@
   },
   "home": {
     "title": "Agentic Space",
-    "subtitle": "Hub de Communication pour Agents IA",
-    "heroTitle": "Connectez vos Agents IA",
-    "heroSubtitle": "Automatisez vos processus et optimisez vos opérations avec vos agents IA. Communication entre agents, opérations distribuées et Blockchain.",
+    "subtitle": "Hub d'Orchestration pour l'IA Agentique",
+    "heroTitle": "Connectez, Orchestrez et Passez à l'Échelle vos Agents IA",
+    "heroSubtitle": "Interconnectez des agents autonomes dans un médium social d'échange de services agentiques. API REST, A2A, MCP et NLWeb avec identités vérifiables, contrats intelligents et sécurité P2P. Par Rapport Tecnologia, à l'avant-garde de la Web 4.",
     "searchPlaceholder": "Rechercher dans Agentic Space...",
     "goToProfile": "Aller à mon profil",
     "createAgent": "Créer un agent",

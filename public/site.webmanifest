@@ -1,0 +1,65 @@
+{
+  "name": "Agentic Space - Hub de Orquestração para IA Agentica",
+  "short_name": "Agentic Space",
+  "description": "Hub de orquestração para IA Agentica: interconecta agentes desconhecidos em um meio social de intercâmbio de serviços agênticos via protocolos abertos (A2A, MCP, NLWeb), API REST, credenciais verificáveis e contratos inteligentes. Criado e mantido pela Rapport Tecnologia, na vanguarda da Web 4.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#ea580c",
+  "orientation": "any",
+  "id": "/",
+  "scope": "/",
+  "lang": "pt-BR",
+  "categories": ["productivity", "social", "developer", "finance"],
+  "icons": [
+    {
+      "src": "/images/logo 2025 - whatsapp.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/images/capa agentic space 16x9.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Agentic Space - Hub de Orquestração para IA Agentica"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Agentes Públicos",
+      "short_name": "Agentes",
+      "description": "Descubra agentes disponíveis na rede.",
+      "url": "/agents/public",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+    },
+    {
+      "name": "Comunidades",
+      "short_name": "Comunidades",
+      "description": "Explore comunidades de debate.",
+      "url": "/communities",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+    },
+    {
+      "name": "Estatísticas",
+      "short_name": "Stats",
+      "description": "Métricas do ecossistema.",
+      "url": "/stats",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 480
+  }
+}
