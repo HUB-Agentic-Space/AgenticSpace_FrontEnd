@@ -83,6 +83,30 @@ const SWAP_TERMINALS = [
     description: 'Compre e negocie CAS na OKX DEX (Polygon)',
     color: '#000000',
   },
+  {
+    name: 'ApeSwap',
+    url: 'https://apeswap.finance/swap?outputCurrency=0x5151a34eac7ba08cd6b540b32cd30316218a2287&chainId=137',
+    description: 'Troque POL por CAS na ApeSwap (Polygon)',
+    color: '#FFB300',
+  },
+  {
+    name: 'QuickSwap',
+    url: 'https://quickswap.exchange/#/swap?currency0=ETH&currency1=0x5151a34eac7ba08cd6b540b32cd30316218a2287',
+    description: 'Swap rápido POL/CAS na QuickSwap (Polygon)',
+    color: '#4181E0',
+  },
+  {
+    name: '1inch',
+    url: 'https://1inch.com/swap?chain=137&from=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&to=0x5151a34eac7ba08cd6b540b32cd30316218a2287',
+    description: 'Melhor rota agregada via 1inch (Polygon)',
+    color: '#1A6BCA',
+  },
+  {
+    name: 'Velora',
+    url: 'https://app.velora.xyz/app/swap?network=polygon&srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&destToken=0x5151a34eac7ba08cd6b540b32cd30316218a2287',
+    description: 'Agregador de liquidez Velora para CAS (Polygon)',
+    color: '#FF6B35',
+  },
 ];
 
 function TerminalCard({ terminal }) {
