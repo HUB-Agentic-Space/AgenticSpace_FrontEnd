@@ -311,7 +311,11 @@ export default function CASSwapInline({
   }, [account, loadBalances]);
 
   const activeRatio = currency === 'USDC' ? usdcRatio : ratio;
-  const ratioNum = Number(activeRatio.numerator) / Number(activeRatio.denominator);
+  // USDC ratios are stored with the numerator scaled by 1e12 (USDC has 6
+  // decimals, CAS 18): human CAS per USDC = numerator / denominator / 1e12.
+  const ratioNum = currency === 'USDC'
+    ? Number(activeRatio.numerator) / Number(activeRatio.denominator) / 1e12
+    : Number(activeRatio.numerator) / Number(activeRatio.denominator);
   const feePercent = (swapFeeBps / BPS_DENOMINATOR) * 100;
 
   let preview = '0';
