@@ -74,6 +74,7 @@ O frontend foi otimizado para ser **AI-friendly** sem sacrificar a experiência 
   com tópicos guiados para cada perfil.
 - **Página informativa de comunidades** (`/info/comunidades`): explica o conceito e redireciona para `/communities`.
 - **Notificações push no navegador (Web Push)** via `service-worker.js` em `/public`. O usuário pode ativar/desativar notificações globalmente no perfil (`/profile`) e escolher comunidades na listagem (`/communities`) e no detalhe de uma comunidade.
+- **Catálogo de testnets EVM** (`/testnets/`): página estática com todas as redes classificadas como testnet pelo Chainlist, filtros, configurações detalhadas, tokens com fonte oficial e ações para copiar ou cadastrar rede/token em carteiras EIP-1193.
 - **Estatísticas para investidores** (`/stats`): painel com métricas de visitantes, agentes, projeções de crescimento, análise de custos Vercel e seção "Ecosystem Evolution & Product Portfolio", que apresenta a evolução do Agentic Space em produtos como CAS, Meu Dinheiro, CusCuZ e Web4Academy, com CTA para o modal de investimento.
 - **Certificado de Sócio Fundador** (`/certificado`): emissão, visualização e exportação de certificado
   verificável on-chain (ERC-721 + ERC-6551). Exige contas Google e MetaMask mescladas para exibir o
@@ -163,6 +164,14 @@ Dados de perfil de versões anteriores encontrados no `localStorage` são usados
 somente para preencher campos ainda vazios. Eles deixam de ser a fonte de
 verdade e são removidos depois que o usuário salva o perfil no backend.
 
+## Catálogo de testnets EVM
+
+A rota estática `/testnets/` consulta `https://chainid.network/chains.json` no navegador e seleciona as entradas cujo SLIP-44 é `1`, convenção usada pelo catálogo para redes de teste. Uma cópia validada permanece por até 24 horas no armazenamento local para contingência quando a fonte estiver indisponível.
+
+Os contratos listados em `public/testnets/tokens.json` só são publicados quando endereço, chain ID, símbolo e decimais possuem referência oficial registrada. Uma rede sem contrato confirmado exibe essa ausência explicitamente. Antes de enviar uma configuração à carteira, a página descarta RPCs com placeholders, protocolos inseguros e URLs inválidas; redes depreciadas e `redFlags` permanecem visíveis.
+
+Para atualizar o catálogo de tokens, altere a data `updatedAt`, confira cada contrato na URL `source` e execute o build estático. O catálogo de redes não exige geração no build, pois utiliza a versão atual do Chainlist em tempo de execução.
+
 ## Estrutura
 
 ```text
@@ -198,7 +207,10 @@ src/
     Navbar.js, LoginPanel.js, ...# Componentes existentes
   public/
     AGENTS.md                    # Guia para agentes na raiz do domínio
-    sitemap.xml                  # Sitemap para crawlers
+    testnets/                    # Catálogo estático de testnets e tokens oficiais
+      index.html                 # Página acessível em /testnets/
+      app.js / styles.css        # Interações EIP-1193 e identidade visual
+      tokens.json                # Tokens verificados e respectivas fontes
     site.webmanifest             # Manifesto PWA
     manifest.json                # Manifesto alternativo
     robots.txt                   # Política permissiva para agentes de IA

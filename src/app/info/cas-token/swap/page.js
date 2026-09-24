@@ -13,7 +13,7 @@ import Link from 'next/link';
 import CASSwapInline from '@/components/CASSwapInline';
 import { useLocaleContext, useTranslations } from '@/lib/LocaleProvider';
 import {
-  CAS_TOKEN_ADDRESS, DIAMOND_ADDRESS, USDC_ADDRESS,
+  CAS_TOKEN_ADDRESS, DIAMOND_ADDRESS, USDC_ADDRESS, BRLA_ADDRESS,
   EXPLORER_BASE, POLYGON_CHAIN_ID,
 } from '@/lib/cas-token-config';
 
@@ -148,8 +148,8 @@ export default function CASTokenSwapPage() {
         </div>
         <p className="text-xl text-slate-400 max-w-3xl mx-auto">
           Compre, venda e acompanhe o CAS na Polygon PoS. Use o swap nativo
-          CASSwap (POL/USDC), consulte terminais de preço ou escolha uma DEX
-          parceira abaixo.
+          CASSwap (CAS, POL, USDC e BRLA), consulte terminais de preço ou
+          escolha uma DEX parceira abaixo.
         </p>
         <div className="flex flex-wrap gap-3 justify-center">
           <Link
@@ -169,16 +169,50 @@ export default function CASTokenSwapPage() {
         </div>
         <p className="text-slate-400 max-w-2xl">
           Swap direto via CASSwapUSDCPOLFacet no Diamond da Agentic Space.
-          Compre CAS com POL ou USDC, ou venda CAS por POL ou USDC
-          instantaneamente. Taxa e ratio definidos on-chain.
+          Troque entre CAS, POL, USDC e BRLA em qualquer direção — rotas sem
+          CAS nas pontas (ex.: BRLA → USDC) são compostas internamente via CAS
+          como unidade de conta. Taxa e ratios definidos on-chain.
         </p>
         <CASSwapInline
           diamondAddress={DIAMOND_ADDRESS}
           casTokenAddress={CAS_TOKEN_ADDRESS}
           usdcAddress={USDC_ADDRESS}
+          brlaAddress={BRLA_ADDRESS}
           explorerUrl={EXPLORER_BASE}
           chainId={POLYGON_CHAIN_ID}
         />
+
+        {/* Como funciona o spread */}
+        <div className="card max-w-2xl mx-auto space-y-3">
+          <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            <Info size={18} className="text-brand-400" /> Como funciona o spread
+          </h3>
+          <p className="text-sm text-slate-400">
+            O CASSwap mantém reservas próprias de CAS, POL, USDC e BRLA e opera
+            com <strong className="text-slate-300">preços distintos de compra e
+            venda</strong> (spread), atualizados a cada minuto a partir das pools
+            de mercado da Polygon:
+          </p>
+          <ul className="list-disc list-inside space-y-1 text-sm text-slate-400">
+            <li>
+              <strong className="text-slate-300">Compra:</strong> ao adquirir
+              CAS, você paga o maior preço observado entre as pools válidas.
+            </li>
+            <li>
+              <strong className="text-slate-300">Venda:</strong> ao vender CAS,
+              você recebe o menor preço observado.
+            </li>
+            <li>
+              A diferença entre os dois preços, somada à taxa de swap, fica nas
+              reservas do contrato — é o que sustenta a liquidez e a
+              continuidade do próprio swap.
+            </li>
+            <li>
+              Em rotas compostas (ex.: BRLA → USDC) o CAS é apenas a unidade de
+              conta interna e os spreads das duas pernas se somam à taxa única.
+            </li>
+          </ul>
+        </div>
       </section>
 
       {/* Terminais de Preço */}

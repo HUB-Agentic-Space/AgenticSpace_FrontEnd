@@ -2,9 +2,16 @@
 
 /**
  * @file CASSwapInline.js
- * @description Inline (non-modal) swap component using the new
- *              CASSwapUSDCPOLFacet on the Diamond. Supports POL and USDC
- *              pairs for buying/selling CAS on Polygon PoS.
+ * @description Inline (non-modal) multi-asset swap component using the
+ *              CASSwapUSDCPOLFacet on the Diamond. Supports CAS, POL, USDC
+ *              and BRLA in both directions on Polygon PoS.
+ *
+ *              Rotas com CAS em uma ponta usam uma perna; rotas entre dois
+ *              ativos cotados (ex.: BRLA -> USDC) compõem `in -> CAS -> out`
+ *              on-chain, com o CAS como unidade de conta (sua reserva não se
+ *              move). Quando os seletores multi-ativo ainda não estão
+ *              instalados no Diamond, o componente degrada para as funções
+ *              legadas CAS <-> POL/USDC.
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -14,10 +21,10 @@ import {
   AlertCircle,
   CheckCircle,
   ArrowUpDown,
+  ArrowDown,
   Network,
   Wallet,
-  Coins,
-  DollarSign,
+  LogOut,
 } from 'lucide-react';
 import { useWallet } from '@/lib/wallet/useWallet';
 
@@ -49,13 +56,26 @@ async function getGasOverrides(provider) {
   }
 }
 
+// Currency ids no contrato: 0 = POL (nativo), 1 = USDC, 2 = BRLA, 3 = CAS.
+const CURRENCY_ID = { POL: 0, USDC: 1, BRLA: 2, CAS: 3 };
+
 const DIAMOND_SWAP_ABI = [
+  // Multi-asset (novo facet)
+  'function swapExact(uint8 currencyIn, uint8 currencyOut, uint256 amountIn, uint256 minOut, uint256 deadline) external payable returns (uint256)',
+  'function quoteSwap(uint8 currencyIn, uint8 currencyOut, uint256 amountIn) external view returns (uint256 amountOut, uint256 fee)',
+  'function getReservesMulti() external view returns (uint256 casBalance, uint256 polBalance, uint256 usdcBalance, uint256 brlaBalance)',
+  // Legado CAS <-> POL/USDC
   'function buyCASWithPOL(uint256 minCasOut, uint256 deadline) external payable returns (uint256)',
   'function sellCASForPOL(uint256 casAmount, uint256 minPolOut, uint256 deadline) external returns (uint256)',
   'function buyCASWithUSDC(uint256 usdcAmount, uint256 minCasOut, uint256 deadline) external returns (uint256)',
   'function sellCASForUSDC(uint256 casAmount, uint256 minUsdcOut, uint256 deadline) external returns (uint256)',
+  // Ratios e estado
   'function getRatio() external view returns (uint256 numerator, uint256 denominator)',
   'function getRatioUSDC() external view returns (uint256 numerator, uint256 denominator)',
+  'function getRatioSell() external view returns (uint256 numerator, uint256 denominator)',
+  'function getRatioUSDCSell() external view returns (uint256 numerator, uint256 denominator)',
+  'function getRatioBRLA() external view returns (uint256 numerator, uint256 denominator)',
+  'function getRatioBRLASell() external view returns (uint256 numerator, uint256 denominator)',
   'function getSwapFeeBps() external view returns (uint256)',
   'function getReserves() external view returns (uint256 casBalance, uint256 usdcBalance, uint256 polBalance)',
   'function isSwapPaused() external view returns (bool)',
@@ -69,9 +89,10 @@ const ERC20_ABI = [
   'function symbol() external view returns (string)',
 ];
 
-const BPS_DENOMINATOR = 10000;
-const SLIPPAGE_BPS = 100; // 1% padrão de slippage
-const USDC_DECIMALS = 6;
+const BPS_DENOMINATOR = 10000n;
+const SLIPPAGE_BPS = 100n; // 1% padrão de slippage
+// Fallback da taxa de swap (0,5%) exibida até getSwapFeeBps() resolver on-chain.
+const DEFAULT_SWAP_FEE_BPS = 50;
 
 const SWAP_ERRORS_ABI = [
   'error ZeroAmount()',
@@ -79,6 +100,7 @@ const SWAP_ERRORS_ABI = [
   'error InsufficientCASBalance(uint256,uint256)',
   'error InsufficientPOLBalance(uint256,uint256)',
   'error InsufficientUSDCBalance(uint256,uint256)',
+  'error InsufficientBRLABalance(uint256,uint256)',
   'error SlippageExceeded(uint256,uint256)',
   'error POLTransferFailed()',
   'error ReentrantCall()',
@@ -87,6 +109,9 @@ const SWAP_ERRORS_ABI = [
   'error ZeroAddress()',
   'error InvalidRatioArg()',
   'error InvalidCurrency(uint8)',
+  'error SameTokenSwap()',
+  'error BRLANotConfigured()',
+  'error ReverseSpread(uint8)',
   'error MsgValueMismatch(uint256,uint256)',
   'error BudgetExceeded(uint256,uint256)',
   'error InsufficientReserve(uint256,uint256)',
@@ -96,6 +121,51 @@ const SWAP_ERRORS_ABI = [
 
 const swapErrorsIface = new ethers.Interface(SWAP_ERRORS_ABI);
 
+const ERROR_NEXT_STEP = {
+  InsufficientCASBalance: 'reduza o valor de compra ou aguarde o reabastecimento de liquidez CAS.',
+  InsufficientPOLBalance: 'reduza o valor de venda ou aguarde o reabastecimento de POL.',
+  InsufficientUSDCBalance: 'reduza o valor de venda ou aguarde o reabastecimento de USDC.',
+  InsufficientBRLABalance: 'reduza o valor de venda ou aguarde o reabastecimento de BRLA.',
+  InsufficientReserve: 'aguarde o reabastecimento da reserva correspondente.',
+  SlippageExceeded: 'aumente a tolerância de slippage ou reduza o valor.',
+  SwapPaused: 'aguarde o despausamento do swap.',
+  InvalidRatio: 'o ratio ainda não foi configurado. Tente novamente mais tarde ou contate o suporte.',
+  BRLANotConfigured: 'o token BRLA ainda não foi habilitado no contrato de swap.',
+  SameTokenSwap: 'selecione dois ativos diferentes.',
+  ReverseSpread: 'os ratios estão invertidos; aguarde a correção do operador.',
+  BudgetExceeded: 'o orçamento de suporte de preço foi atingido.',
+  DeadlineExpired: 'aumente o prazo da transação e tente novamente.',
+  MsgValueMismatch: 'revise o valor de POL informado e o enviado.',
+  InvalidCurrency: 'selecione um dos ativos suportados.',
+  ZeroAmount: 'informe um valor maior que zero.',
+  SafeTransferFromFailed: 'verifique se autorizou o contrato a usar seus tokens.',
+};
+
+const ERROR_USER_MESSAGE = {
+  ZeroAmount: 'Quantidade insuficiente para swap.',
+  InvalidRatio: 'O ratio de swap ainda não foi configurado. Tente novamente em alguns instantes.',
+  InsufficientCASBalance: 'O contrato não tem CAS suficiente para esta compra.',
+  InsufficientPOLBalance: 'O contrato não tem POL suficiente para esta venda.',
+  InsufficientUSDCBalance: 'O contrato não tem USDC suficiente para esta venda.',
+  InsufficientBRLABalance: 'O contrato não tem BRLA suficiente para esta venda.',
+  SlippageExceeded: 'O valor recebido ficaria abaixo do mínimo aceitável (slippage). Tente com um valor menor.',
+  POLTransferFailed: 'Falha ao transferir POL do contrato.',
+  ReentrantCall: 'Erro de reentrância no contrato.',
+  SwapPaused: 'O swap está pausado no momento.',
+  DeadlineExpired: 'A transação expirou. Tente novamente.',
+  ZeroAddress: 'Endereço inválido no contrato.',
+  InvalidRatioArg: 'Parâmetros de ratio inválidos.',
+  InvalidCurrency: 'Moeda de swap inválida.',
+  SameTokenSwap: 'Não é possível trocar um ativo por ele mesmo.',
+  BRLANotConfigured: 'O BRLA ainda não foi habilitado neste contrato de swap.',
+  ReverseSpread: 'A configuração de spread está invertida no contrato.',
+  MsgValueMismatch: 'O valor de POL enviado não corresponde ao informado.',
+  BudgetExceeded: 'Orçamento de suporte de preço excedido.',
+  InsufficientReserve: 'Reserva insuficiente no contrato.',
+  SafeTransferFailed: 'Falha ao transferir o token.',
+  SafeTransferFromFailed: 'Falha na aprovação ou transferência do token. Verifique se autorizou o contrato.',
+};
+
 function decodeSwapError(err) {
   const rawErr = err?.data || err?.error?.data || err?.info?.error?.data;
   if (!rawErr || typeof rawErr !== 'string') return null;
@@ -103,62 +173,8 @@ function decodeSwapError(err) {
   try {
     const decoded = swapErrorsIface.parseError(rawErr);
     if (!decoded) return null;
-
-    const fmt = ethers.formatEther;
-    const fmtU = (v) => ethers.formatUnits(v, USDC_DECIMALS);
-
-    switch (decoded.name) {
-      case 'ZeroAmount':
-        return { user: 'Quantidade insuficiente para swap.', detail: 'ZeroAmount()' };
-      case 'InvalidRatio':
-        return { user: 'O ratio de swap ainda não foi configurado. Tente novamente em alguns instantes.', detail: 'InvalidRatio()' };
-      case 'InsufficientCASBalance':
-        return {
-          user: 'O contrato não tem CAS suficiente para esta compra.',
-          detail: `InsufficientCASBalance(available=${fmt(decoded.args[0])}, required=${fmt(decoded.args[1])})`,
-        };
-      case 'InsufficientPOLBalance':
-        return {
-          user: 'O contrato não tem POL suficiente para esta venda.',
-          detail: `InsufficientPOLBalance(available=${fmt(decoded.args[0])}, required=${fmt(decoded.args[1])})`,
-        };
-      case 'InsufficientUSDCBalance':
-        return {
-          user: 'O contrato não tem USDC suficiente para esta venda.',
-          detail: `InsufficientUSDCBalance(available=${fmtU(decoded.args[0])}, required=${fmtU(decoded.args[1])})`,
-        };
-      case 'SlippageExceeded':
-        return {
-          user: 'O valor recebido ficaria abaixo do mínimo aceitável (slippage). Tente com um valor menor.',
-          detail: `SlippageExceeded(minExpected=${decoded.args[0]}, actual=${decoded.args[1]})`,
-        };
-      case 'POLTransferFailed':
-        return { user: 'Falha ao transferir POL do contrato.', detail: 'POLTransferFailed()' };
-      case 'ReentrantCall':
-        return { user: 'Erro de reentrância no contrato.', detail: 'ReentrantCall()' };
-      case 'SwapPaused':
-        return { user: 'O swap está pausado no momento.', detail: 'SwapPaused()' };
-      case 'DeadlineExpired':
-        return { user: 'A transação expirou. Tente novamente.', detail: `DeadlineExpired(deadline=${decoded.args[0]}, now=${decoded.args[1]})` };
-      case 'ZeroAddress':
-        return { user: 'Endereço inválido no contrato.', detail: 'ZeroAddress()' };
-      case 'InvalidRatioArg':
-        return { user: 'Parâmetros de ratio inválidos.', detail: 'InvalidRatioArg()' };
-      case 'InvalidCurrency':
-        return { user: 'Moeda de swap inválida.', detail: `InvalidCurrency(currency=${decoded.args[0]})` };
-      case 'MsgValueMismatch':
-        return { user: 'O valor de POL enviado não corresponde ao informado.', detail: `MsgValueMismatch(expected=${decoded.args[0]}, sent=${decoded.args[1]})` };
-      case 'BudgetExceeded':
-        return { user: 'Orçamento de suporte de preço excedido.', detail: `BudgetExceeded(requested=${decoded.args[0]}, remaining=${decoded.args[1]})` };
-      case 'InsufficientReserve':
-        return { user: 'Reserva insuficiente no contrato.', detail: `InsufficientReserve(available=${decoded.args[0]}, required=${decoded.args[1]})` };
-      case 'SafeTransferFailed':
-        return { user: 'Falha ao transferir o token.', detail: 'SafeTransferFailed()' };
-      case 'SafeTransferFromFailed':
-        return { user: 'Falha na aprovação ou transferência do token. Verifique se autorizou o contrato.', detail: 'SafeTransferFromFailed()' };
-      default:
-        return { user: `Erro no contrato: ${decoded.name}`, detail: `${decoded.name}(${decoded.args.join(', ')})` };
-    }
+    const user = ERROR_USER_MESSAGE[decoded.name] || `Erro no contrato: ${decoded.name}`;
+    return { name: decoded.name, user, detail: `${decoded.name}(${decoded.args.join(', ')})` };
   } catch {
     return null;
   }
@@ -168,22 +184,7 @@ function formatUserError(err) {
   const decoded = decodeSwapError(err);
   if (decoded) {
     console.error('[CASSwapInline] contract error:', decoded.detail);
-    const steps = {
-      InsufficientCASBalance: 'reduza o valor de compra ou aguarde o reabastecimento de liquidez CAS.',
-      InsufficientPOLBalance: 'reduza o valor de venda ou aguarde o reabastecimento de POL.',
-      InsufficientUSDCBalance: 'reduza o valor de venda ou aguarde o reabastecimento de USDC.',
-      InsufficientReserve: 'aguarde o reabastecimento da reserva correspondente.',
-      SlippageExceeded: 'aumente a tolerância de slippage ou reduza o valor.',
-      SwapPaused: 'aguarde o despausamento do swap.',
-      InvalidRatio: 'o ratio ainda não foi configurado. Tente novamente mais tarde ou contate o suporte.',
-      BudgetExceeded: 'o orçamento de suporte de preço foi atingido.',
-      DeadlineExpired: 'aumente o prazo da transação e tente novamente.',
-      MsgValueMismatch: 'revisa o valor de POL informado e o enviado.',
-      InvalidCurrency: 'selecione POL ou USDC.',
-      ZeroAmount: 'informe um valor maior que zero.',
-      SafeTransferFromFailed: 'verifique se autorizou o contrato a usar seus tokens.',
-    };
-    const next = steps[decoded.name] || 'verifique o saldo, o valor e a rede e tente novamente.';
+    const next = ERROR_NEXT_STEP[decoded.name] || 'verifique o saldo, o valor e a rede e tente novamente.';
     return `${decoded.user} — Próximo passo: ${next}`;
   }
 
@@ -209,148 +210,43 @@ export default function CASSwapInline({
   diamondAddress,
   casTokenAddress,
   usdcAddress,
+  brlaAddress,
   explorerUrl,
   chainId,
 }) {
-  const [currency, setCurrency] = useState('POL');
-  const [mode, setMode] = useState('buy');
+  const TOKENS = [
+    { symbol: 'CAS', id: CURRENCY_ID.CAS, decimals: 18, native: false, address: casTokenAddress },
+    { symbol: 'POL', id: CURRENCY_ID.POL, decimals: 18, native: true, address: null },
+    { symbol: 'USDC', id: CURRENCY_ID.USDC, decimals: 6, native: false, address: usdcAddress },
+    { symbol: 'BRLA', id: CURRENCY_ID.BRLA, decimals: 18, native: false, address: brlaAddress },
+  ];
+  const tokenBySymbol = Object.fromEntries(TOKENS.map((t) => [t.symbol, t]));
+
+  const [fromSymbol, setFromSymbol] = useState('POL');
+  const [toSymbol, setToSymbol] = useState('CAS');
   const [amount, setAmount] = useState('');
-  const [ratio, setRatio] = useState({ numerator: '1', denominator: '1' });
-  const [usdcRatio, setUsdcRatio] = useState({ numerator: '1', denominator: '1' });
-  const [swapFeeBps, setSwapFeeBps] = useState(0);
+  const [swapFeeBps, setSwapFeeBps] = useState(DEFAULT_SWAP_FEE_BPS);
   const [paused, setPaused] = useState(false);
+  const [multiAsset, setMultiAsset] = useState(false);
+  const [ratios, setRatios] = useState(null); // { POL:{buy:[n,d],sell:[n,d]}, USDC:..., BRLA:... }
+  const [quote, setQuote] = useState(null); // bigint amountOut (base units do token de saída)
+  const [quoteError, setQuoteError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [quoting, setQuoting] = useState(false);
   const [txHash, setTxHash] = useState(null);
   const [error, setError] = useState('');
   const [account, setAccount] = useState(null);
-  const [casBalance, setCasBalance] = useState(null);
-  const [polBalance, setPolBalance] = useState(null);
-  const [usdcBalance, setUsdcBalance] = useState(null);
-  const [reserves, setReserves] = useState(null);
+  const [balances, setBalances] = useState({}); // symbol -> bigint string
+  const [reserves, setReserves] = useState(null); // symbol -> bigint
   const [networkName, setNetworkName] = useState('');
-  const { connect: walletConnect, getProvider } = useWallet();
+  const { connect: walletConnect, disconnect: walletDisconnect, getProvider } = useWallet();
 
   const explorer = explorerUrl || 'https://polygonscan.com';
+  const from = tokenBySymbol[fromSymbol];
+  const to = tokenBySymbol[toSymbol];
+  const isCrossPair = fromSymbol !== 'CAS' && toSymbol !== 'CAS';
 
-  const connectWallet = useCallback(async () => {
-    try {
-      const { accounts } = await walletConnect();
-      setAccount(accounts[0]);
-      const provider = getProvider();
-      if (provider) {
-        if (chainId) {
-          try {
-            await ensureNetwork();
-          } catch (netErr) {
-            setError(netErr.message || 'Falha ao alternar para Polygon Mainnet.');
-          }
-        }
-        const ep = new ethers.BrowserProvider(provider);
-        const net = await ep.getNetwork();
-        setNetworkName(net.name || `chainId ${Number(net.chainId)}`);
-      }
-    } catch (err) {
-      setError(`Falha ao conectar carteira: ${err.message}`);
-    }
-  }, [walletConnect, getProvider, chainId, ensureNetwork]);
-
-  const loadSwapInfo = useCallback(async () => {
-    const provider = getProvider();
-    if (!diamondAddress || !provider) return;
-    try {
-      const ep = new ethers.BrowserProvider(provider);
-      const swap = new ethers.Contract(diamondAddress, DIAMOND_SWAP_ABI, ep);
-      const [num, den] = await swap.getRatio();
-      setRatio({ numerator: num.toString(), denominator: den.toString() });
-      try {
-        const [uNum, uDen] = await swap.getRatioUSDC();
-        setUsdcRatio({ numerator: uNum.toString(), denominator: uDen.toString() });
-      } catch (usdcErr) {
-        console.warn('[CASSwapInline] getRatioUSDC indisponível:', usdcErr.message);
-      }
-      const fee = await swap.getSwapFeeBps();
-      setSwapFeeBps(Number(fee));
-      const isPaused = await swap.isSwapPaused();
-      setPaused(isPaused);
-      const [casBal, usdcBal, polBal] = await swap.getReserves();
-      setReserves({ casBalance: casBal, usdcBalance: usdcBal, polBalance: polBal });
-    } catch (err) {
-      console.error('[CASSwapInline] loadSwapInfo:', err.message);
-      setError('Não foi possível carregar os dados do swap. Verifique a rede e o endereço do Diamond.');
-    }
-  }, [diamondAddress, getProvider]);
-
-  const loadBalances = useCallback(async () => {
-    const provider = getProvider();
-    if (!account || !provider) return;
-    try {
-      const ep = new ethers.BrowserProvider(provider);
-      const [pol, cas, usdc] = await Promise.all([
-        ep.getBalance(account),
-        casTokenAddress ? new ethers.Contract(casTokenAddress, ERC20_ABI, ep).balanceOf(account) : 0n,
-        usdcAddress ? new ethers.Contract(usdcAddress, ERC20_ABI, ep).balanceOf(account) : 0n,
-      ]);
-      setPolBalance(pol.toString());
-      setCasBalance(cas.toString());
-      setUsdcBalance(usdc.toString());
-    } catch (err) {
-      console.error('[CASSwapInline] loadBalances:', err.message);
-    }
-  }, [casTokenAddress, usdcAddress, account, getProvider]);
-
-  useEffect(() => {
-    if (diamondAddress) {
-      loadSwapInfo();
-    }
-  }, [diamondAddress, loadSwapInfo]);
-
-  useEffect(() => {
-    if (account) {
-      loadBalances();
-    }
-  }, [account, loadBalances]);
-
-  const activeRatio = currency === 'USDC' ? usdcRatio : ratio;
-  // USDC ratios are stored with the numerator scaled by 1e12 (USDC has 6
-  // decimals, CAS 18): human CAS per USDC = numerator / denominator / 1e12.
-  const ratioNum = currency === 'USDC'
-    ? Number(activeRatio.numerator) / Number(activeRatio.denominator) / 1e12
-    : Number(activeRatio.numerator) / Number(activeRatio.denominator);
-  const feePercent = (swapFeeBps / BPS_DENOMINATOR) * 100;
-
-  let preview = '0';
-  let minOut = '0';
-  if (amount) {
-    try {
-      const amt = parseFloat(amount);
-      if (mode === 'buy') {
-        const casReceived = amt * ratioNum;
-        const fee = (casReceived * swapFeeBps) / BPS_DENOMINATOR;
-        preview = (casReceived - fee).toFixed(6);
-      } else {
-        const outReceived = amt / ratioNum;
-        const fee = (outReceived * swapFeeBps) / BPS_DENOMINATOR;
-        preview = (outReceived - fee).toFixed(6);
-      }
-
-      const previewWei = mode === 'buy'
-        ? ethers.parseEther(preview)
-        : currency === 'USDC'
-          ? ethers.parseUnits(preview, USDC_DECIMALS)
-          : ethers.parseEther(preview);
-      const minOutWei = (previewWei * BigInt(BPS_DENOMINATOR - SLIPPAGE_BPS)) / BigInt(BPS_DENOMINATOR);
-      minOut = mode === 'buy'
-        ? ethers.formatEther(minOutWei)
-        : currency === 'USDC'
-          ? ethers.formatUnits(minOutWei, USDC_DECIMALS)
-          : ethers.formatEther(minOutWei);
-    } catch {
-      preview = '0';
-      minOut = '0';
-    }
-  }
-
-  async function ensureNetwork() {
+  const ensureNetwork = useCallback(async () => {
     if (!chainId) return;
     const provider = getProvider();
     if (!provider) throw new Error('Carteira não conectada.');
@@ -379,6 +275,220 @@ export default function CASSwapInline({
         throw new Error(`Conecte-se à rede Polygon (chainId=${chainId}) na carteira.`);
       }
     }
+  }, [chainId, getProvider, explorer]);
+
+  const connectWallet = useCallback(async () => {
+    try {
+      const { accounts } = await walletConnect();
+      setAccount(accounts[0]);
+      const provider = getProvider();
+      if (provider) {
+        if (chainId) {
+          try {
+            await ensureNetwork();
+          } catch (netErr) {
+            setError(netErr.message || 'Falha ao alternar para Polygon Mainnet.');
+          }
+        }
+        const ep = new ethers.BrowserProvider(provider);
+        const net = await ep.getNetwork();
+        setNetworkName(net.name || `chainId ${Number(net.chainId)}`);
+      }
+    } catch (err) {
+      setError(`Falha ao conectar carteira: ${err.message}`);
+    }
+  }, [walletConnect, getProvider, chainId, ensureNetwork]);
+
+  const disconnectWallet = useCallback(async () => {
+    try {
+      await walletDisconnect();
+    } catch (err) {
+      console.error('[CASSwapInline] disconnect error:', err.message);
+    }
+    setAccount(null);
+    setBalances({});
+    setNetworkName('');
+    setQuote(null);
+    setAmount('');
+    setError('');
+  }, [walletDisconnect]);
+
+  const readPair = async (swap, getter) => {
+    const [n, d] = await swap[getter]();
+    return [n, d];
+  };
+
+  const loadSwapInfo = useCallback(async () => {
+    const provider = getProvider();
+    if (!diamondAddress || !provider) return;
+    try {
+      const ep = new ethers.BrowserProvider(provider);
+      const swap = new ethers.Contract(diamondAddress, DIAMOND_SWAP_ABI, ep);
+
+      // Sonda de capacidade: getReservesMulti só existe no facet multi-ativo.
+      let multi = false;
+      try {
+        const [casBal, polBal, usdcBal, brlaBal] = await swap.getReservesMulti();
+        setReserves({ CAS: casBal, POL: polBal, USDC: usdcBal, BRLA: brlaBal });
+        multi = true;
+      } catch {
+        const [casBal, usdcBal, polBal] = await swap.getReserves();
+        setReserves({ CAS: casBal, POL: polBal, USDC: usdcBal, BRLA: null });
+      }
+      setMultiAsset(multi);
+
+      const nextRatios = {};
+      try { nextRatios.POL = { buy: await readPair(swap, 'getRatio'), sell: await readPair(swap, 'getRatioSell') }; }
+      catch (e) { console.warn('[CASSwapInline] ratios POL indisponíveis:', e.message); }
+      try { nextRatios.USDC = { buy: await readPair(swap, 'getRatioUSDC'), sell: await readPair(swap, 'getRatioUSDCSell') }; }
+      catch (e) { console.warn('[CASSwapInline] ratios USDC indisponíveis:', e.message); }
+      try { nextRatios.BRLA = { buy: await readPair(swap, 'getRatioBRLA'), sell: await readPair(swap, 'getRatioBRLASell') }; }
+      catch (e) { console.warn('[CASSwapInline] ratios BRLA indisponíveis:', e.message); }
+      setRatios(nextRatios);
+
+      const fee = await swap.getSwapFeeBps();
+      setSwapFeeBps(Number(fee));
+      const isPaused = await swap.isSwapPaused();
+      setPaused(isPaused);
+    } catch (err) {
+      console.error('[CASSwapInline] loadSwapInfo:', err.message);
+      setError('Não foi possível carregar os dados do swap. Verifique a rede e o endereço do Diamond.');
+    }
+  }, [diamondAddress, getProvider]);
+
+  const loadBalances = useCallback(async () => {
+    const provider = getProvider();
+    if (!account || !provider) return;
+    try {
+      const ep = new ethers.BrowserProvider(provider);
+      const entries = await Promise.all(TOKENS.map(async (t) => {
+        if (t.native) return [t.symbol, await ep.getBalance(account)];
+        if (!t.address) return [t.symbol, 0n];
+        return [t.symbol, await new ethers.Contract(t.address, ERC20_ABI, ep).balanceOf(account)];
+      }));
+      setBalances(Object.fromEntries(entries.map(([s, b]) => [s, b.toString()])));
+    } catch (err) {
+      console.error('[CASSwapInline] loadBalances:', err.message);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [casTokenAddress, usdcAddress, brlaAddress, account, getProvider]);
+
+  useEffect(() => {
+    if (diamondAddress) {
+      loadSwapInfo();
+    }
+  }, [diamondAddress, loadSwapInfo]);
+
+  useEffect(() => {
+    if (account) {
+      loadBalances();
+    }
+  }, [account, loadBalances]);
+
+  // ------------------------------------------------------------------
+  // Cotação client-side (espelha LibCASSwap.quoteSwap) — usada como
+  // fallback quando os seletores multi-ativo ainda não estão no Diamond.
+  // ------------------------------------------------------------------
+  function clientQuote(amountIn) {
+    if (!ratios) throw new Error('Ratios não carregados.');
+    const feeBps = BigInt(swapFeeBps);
+    const rIn = fromSymbol === 'CAS' ? null : ratios[fromSymbol];
+    const rOut = toSymbol === 'CAS' ? null : ratios[toSymbol];
+
+    if (toSymbol === 'CAS') {
+      if (!rIn) throw new Error(`Ratio ${fromSymbol} indisponível.`);
+      const [num, den] = rIn.buy;
+      if (num === 0n || den === 0n) throw new Error(`Ratio ${fromSymbol} não configurado.`);
+      const fee = (amountIn * feeBps) / BPS_DENOMINATOR;
+      return ((amountIn - fee) * num) / den;
+    }
+    if (fromSymbol === 'CAS') {
+      if (!rOut) throw new Error(`Ratio ${toSymbol} indisponível.`);
+      const [num, den] = rOut.sell;
+      if (num === 0n || den === 0n) throw new Error(`Ratio ${toSymbol} não configurado.`);
+      const outEq = (amountIn * den) / num;
+      const fee = (outEq * feeBps) / BPS_DENOMINATOR;
+      return outEq - fee;
+    }
+    if (!rIn || !rOut) throw new Error('Rota indisponível até a atualização do contrato.');
+    const [inNum, inDen] = rIn.buy;
+    const [outNum, outDen] = rOut.sell;
+    if (inNum === 0n || inDen === 0n || outNum === 0n || outDen === 0n) {
+      throw new Error('Ratio da rota não configurado.');
+    }
+    const fee = (amountIn * feeBps) / BPS_DENOMINATOR;
+    const casEq = ((amountIn - fee) * inNum) / inDen;
+    return (casEq * outDen) / outNum;
+  }
+
+  // Cotação on-chain (quoteSwap) quando disponível; fallback local.
+  useEffect(() => {
+    let cancelled = false;
+    setQuote(null);
+    setQuoteError('');
+    if (!diamondAddress || !amount || parseFloat(amount) <= 0 || fromSymbol === toSymbol) return;
+    if (!multiAsset && (isCrossPair || fromSymbol === 'BRLA' || toSymbol === 'BRLA')) return;
+
+    const run = async () => {
+      setQuoting(true);
+      try {
+        const amountIn = ethers.parseUnits(amount, from.decimals);
+        let out;
+        if (multiAsset) {
+          const provider = getProvider();
+          if (!provider) return;
+          const ep = new ethers.BrowserProvider(provider);
+          const swap = new ethers.Contract(diamondAddress, DIAMOND_SWAP_ABI, ep);
+          [out] = await swap.quoteSwap(from.id, to.id, amountIn);
+        } else {
+          out = clientQuote(amountIn);
+        }
+        if (!cancelled) setQuote(out);
+      } catch (err) {
+        if (!cancelled) {
+          const decoded = decodeSwapError(err);
+          setQuoteError(decoded ? decoded.user : 'Não foi possível cotar este valor.');
+        }
+      } finally {
+        if (!cancelled) setQuoting(false);
+      }
+    };
+    const timer = setTimeout(run, 300); // debounce
+    return () => { cancelled = true; clearTimeout(timer); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [amount, fromSymbol, toSymbol, multiAsset, ratios, swapFeeBps, diamondAddress]);
+
+  const fmt = (value, decimals) => {
+    try {
+      const n = Number(ethers.formatUnits(value, decimals));
+      if (!isFinite(n)) return '0';
+      return n >= 1 ? n.toFixed(4) : n.toPrecision(4);
+    } catch {
+      return '0';
+    }
+  };
+
+  const preview = quote != null ? fmt(quote, to.decimals) : '0';
+  const minOutWei = quote != null ? (quote * (BPS_DENOMINATOR - SLIPPAGE_BPS)) / BPS_DENOMINATOR : 0n;
+  const minOut = fmt(minOutWei, to.decimals);
+  const feePercent = (swapFeeBps / Number(BPS_DENOMINATOR)) * 100;
+
+  const routeLabel = isCrossPair ? `${fromSymbol} → CAS → ${toSymbol}` : `${fromSymbol} → ${toSymbol}`;
+  const routeAvailable = multiAsset ||
+    (!isCrossPair && fromSymbol !== 'BRLA' && toSymbol !== 'BRLA');
+
+  function invertPair() {
+    setFromSymbol(toSymbol);
+    setToSymbol(fromSymbol);
+    setQuote(null);
+  }
+
+  async function ensureAllowance(token, owner, required, gasOverrides) {
+    const allowance = await token.allowance(owner, diamondAddress);
+    if (allowance < required) {
+      const approveTx = await token.approve(diamondAddress, required, gasOverrides);
+      await approveTx.wait();
+    }
   }
 
   async function handleSwap() {
@@ -405,6 +515,12 @@ export default function CASSwapInline({
         return;
       }
 
+      if (fromSymbol === toSymbol) {
+        setError('Selecione dois ativos diferentes.');
+        setLoading(false);
+        return;
+      }
+
       await ensureNetwork();
 
       const rawProvider = getProvider();
@@ -415,83 +531,60 @@ export default function CASSwapInline({
       const swap = new ethers.Contract(diamondAddress, DIAMOND_SWAP_ABI, signer);
 
       const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
-      const slippageFactor = BigInt(BPS_DENOMINATOR - SLIPPAGE_BPS);
-      const slippageDivisor = BigInt(BPS_DENOMINATOR);
+      const amountIn = ethers.parseUnits(amount, from.decimals);
 
-      if (mode === 'buy' && currency === 'POL') {
-        const polAmount = ethers.parseEther(amount);
-        if (polBalance != null && polAmount > BigInt(polBalance)) {
-          throw new Error(`Saldo insuficiente de POL: você tem ${ethers.formatEther(BigInt(polBalance))} POL. — Próximo passo: deposite mais POL na carteira.`);
-        }
-        const casExpected = ethers.parseEther(preview);
-        if (reserves != null && casExpected > reserves.casBalance) {
-          throw new Error(`O contrato CASSwap não tem CAS suficiente. Reserva: ${ethers.formatEther(reserves.casBalance)} CAS. — Próximo passo: adicione liquidez CAS ao Diamond ou reduza o valor.`);
-        }
-        const minCasOut = (casExpected * slippageFactor) / slippageDivisor;
-        await swap.buyCASWithPOL.staticCall(minCasOut, deadline, { value: polAmount });
-        const tx = await swap.buyCASWithPOL(minCasOut, deadline, { value: polAmount, ...gasOverrides });
+      // Saldo do usuário
+      const userBal = balances[fromSymbol] != null ? BigInt(balances[fromSymbol]) : null;
+      if (userBal != null && amountIn > userBal) {
+        throw new Error(`Saldo insuficiente de ${fromSymbol}: você tem ${fmt(userBal, from.decimals)} ${fromSymbol}. — Próximo passo: deposite mais ${fromSymbol} na carteira.`);
+      }
+
+      // Reserva do ativo de saída
+      const expectedOut = quote != null ? quote : clientQuote(amountIn);
+      const reserveOut = reserves?.[toSymbol];
+      if (reserveOut != null && expectedOut > reserveOut) {
+        throw new Error(`O contrato não tem ${toSymbol} suficiente. Reserva: ${fmt(reserveOut, to.decimals)} ${toSymbol}. — Próximo passo: reduza o valor ou aguarde o reabastecimento.`);
+      }
+
+      const minOut = (expectedOut * (BPS_DENOMINATOR - SLIPPAGE_BPS)) / BPS_DENOMINATOR;
+
+      // Aprovação do input ERC-20 (POL entra via msg.value)
+      if (!from.native && from.address) {
+        const token = new ethers.Contract(from.address, ERC20_ABI, signer);
+        await ensureAllowance(token, account, amountIn, gasOverrides);
+      }
+
+      if (multiAsset) {
+        const overrides = from.native ? { value: amountIn, ...gasOverrides } : gasOverrides;
+        await swap.swapExact.staticCall(from.id, to.id, amountIn, minOut, deadline, from.native ? { value: amountIn } : {});
+        const tx = await swap.swapExact(from.id, to.id, amountIn, minOut, deadline, overrides);
         await tx.wait();
         setTxHash(tx.hash);
-      } else if (mode === 'sell' && currency === 'POL') {
-        const casAmount = ethers.parseEther(amount);
-        if (casBalance != null && casAmount > BigInt(casBalance)) {
-          throw new Error(`Saldo insuficiente de CAS: você tem ${ethers.formatEther(BigInt(casBalance))} CAS. — Próximo passo: adquira CAS antes de vender.`);
+      } else {
+        // Caminho legado: apenas CAS <-> POL/USDC.
+        if (toSymbol === 'CAS' && fromSymbol === 'POL') {
+          await swap.buyCASWithPOL.staticCall(minOut, deadline, { value: amountIn });
+          const tx = await swap.buyCASWithPOL(minOut, deadline, { value: amountIn, ...gasOverrides });
+          await tx.wait();
+          setTxHash(tx.hash);
+        } else if (fromSymbol === 'CAS' && toSymbol === 'POL') {
+          await swap.sellCASForPOL.staticCall(amountIn, minOut, deadline);
+          const tx = await swap.sellCASForPOL(amountIn, minOut, deadline, gasOverrides);
+          await tx.wait();
+          setTxHash(tx.hash);
+        } else if (toSymbol === 'CAS' && fromSymbol === 'USDC') {
+          await swap.buyCASWithUSDC.staticCall(amountIn, minOut, deadline);
+          const tx = await swap.buyCASWithUSDC(amountIn, minOut, deadline, gasOverrides);
+          await tx.wait();
+          setTxHash(tx.hash);
+        } else if (fromSymbol === 'CAS' && toSymbol === 'USDC') {
+          await swap.sellCASForUSDC.staticCall(amountIn, minOut, deadline);
+          const tx = await swap.sellCASForUSDC(amountIn, minOut, deadline, gasOverrides);
+          await tx.wait();
+          setTxHash(tx.hash);
+        } else {
+          throw new Error('Esta rota requer a atualização multi-ativo do contrato. Rotas disponíveis agora: CAS ↔ POL e CAS ↔ USDC.');
         }
-        const polExpected = ethers.parseEther(preview);
-        if (reserves != null && polExpected > reserves.polBalance) {
-          throw new Error(`O contrato não tem POL suficiente. Reserva: ${ethers.formatEther(reserves.polBalance)} POL. — Próximo passo: adicione liquidez POL ao Diamond.`);
-        }
-        const cas = new ethers.Contract(casTokenAddress, ERC20_ABI, signer);
-        const allowance = await cas.allowance(account, diamondAddress);
-        if (allowance < casAmount) {
-          const approveTx = await cas.approve(diamondAddress, casAmount, gasOverrides);
-          await approveTx.wait();
-        }
-        const minPolOut = (polExpected * slippageFactor) / slippageDivisor;
-        await swap.sellCASForPOL.staticCall(casAmount, minPolOut, deadline);
-        const tx = await swap.sellCASForPOL(casAmount, minPolOut, deadline, gasOverrides);
-        await tx.wait();
-        setTxHash(tx.hash);
-      } else if (mode === 'buy' && currency === 'USDC') {
-        const usdcAmount = ethers.parseUnits(amount, USDC_DECIMALS);
-        if (usdcBalance != null && usdcAmount > BigInt(usdcBalance)) {
-          throw new Error(`Saldo insuficiente de USDC: você tem ${ethers.formatUnits(BigInt(usdcBalance), USDC_DECIMALS)} USDC. — Próximo passo: deposite mais USDC na carteira.`);
-        }
-        const casExpected = ethers.parseEther(preview);
-        if (reserves != null && casExpected > reserves.casBalance) {
-          throw new Error(`O contrato CASSwap não tem CAS suficiente. Reserva: ${ethers.formatEther(reserves.casBalance)} CAS. — Próximo passo: adicione liquidez CAS ao Diamond ou reduza o valor.`);
-        }
-        const minCasOut = (casExpected * slippageFactor) / slippageDivisor;
-        const usdc = new ethers.Contract(usdcAddress, ERC20_ABI, signer);
-        const allowance = await usdc.allowance(account, diamondAddress);
-        if (allowance < usdcAmount) {
-          const approveTx = await usdc.approve(diamondAddress, usdcAmount, gasOverrides);
-          await approveTx.wait();
-        }
-        await swap.buyCASWithUSDC.staticCall(usdcAmount, minCasOut, deadline);
-        const tx = await swap.buyCASWithUSDC(usdcAmount, minCasOut, deadline, gasOverrides);
-        await tx.wait();
-        setTxHash(tx.hash);
-      } else if (mode === 'sell' && currency === 'USDC') {
-        const casAmount = ethers.parseEther(amount);
-        if (casBalance != null && casAmount > BigInt(casBalance)) {
-          throw new Error(`Saldo insuficiente de CAS: você tem ${ethers.formatEther(BigInt(casBalance))} CAS. — Próximo passo: adquira CAS antes de vender.`);
-        }
-        const usdcExpected = ethers.parseUnits(preview, USDC_DECIMALS);
-        if (reserves != null && usdcExpected > reserves.usdcBalance) {
-          throw new Error(`O contrato não tem USDC suficiente. Reserva: ${ethers.formatUnits(reserves.usdcBalance, USDC_DECIMALS)} USDC. — Próximo passo: adicione liquidez USDC ao Diamond.`);
-        }
-        const cas = new ethers.Contract(casTokenAddress, ERC20_ABI, signer);
-        const casAllowance = await cas.allowance(account, diamondAddress);
-        if (casAllowance < casAmount) {
-          const approveTx = await cas.approve(diamondAddress, casAmount, gasOverrides);
-          await approveTx.wait();
-        }
-        const minUsdcOut = (usdcExpected * slippageFactor) / slippageDivisor;
-        await swap.sellCASForUSDC.staticCall(casAmount, minUsdcOut, deadline);
-        const tx = await swap.sellCASForUSDC(casAmount, minUsdcOut, deadline, gasOverrides);
-        await tx.wait();
-        setTxHash(tx.hash);
       }
 
       loadBalances();
@@ -503,10 +596,8 @@ export default function CASSwapInline({
     setLoading(false);
   }
 
-  const inputLabel = mode === 'buy'
-    ? `Quantidade de ${currency}`
-    : 'Quantidade de CAS';
-  const outputToken = mode === 'buy' ? 'CAS' : currency;
+  const outputReserveEmpty = reserves && reserves[toSymbol] === 0n;
+  const balance = balances[fromSymbol];
 
   return (
     <div className="card w-full max-w-md mx-auto space-y-4">
@@ -533,24 +624,24 @@ export default function CASSwapInline({
 
       {account && (
         <div className="space-y-1">
-          <p className="text-xs text-slate-500">
-            Conectado: {account.slice(0, 6)}...{account.slice(-4)}
-            {polBalance && (
-              <span className="ml-2 text-slate-400">
-                POL: {Number(ethers.formatEther(polBalance)).toFixed(4)}
-              </span>
-            )}
-            {casBalance && (
-              <span className="ml-2 text-slate-400">
-                CAS: {Number(ethers.formatEther(casBalance)).toFixed(4)}
-              </span>
-            )}
-            {usdcBalance && (
-              <span className="ml-2 text-slate-400">
-                USDC: {Number(ethers.formatUnits(usdcBalance, USDC_DECIMALS)).toFixed(2)}
-              </span>
-            )}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-slate-500">
+              Conectado: {account.slice(0, 6)}...{account.slice(-4)}
+              {TOKENS.map((t) => balances[t.symbol] != null && (
+                <span key={t.symbol} className="ml-2 text-slate-400">
+                  {t.symbol}: {fmt(balances[t.symbol], t.decimals)}
+                </span>
+              ))}
+            </p>
+            <button
+              type="button"
+              onClick={disconnectWallet}
+              className="btn-secondary px-2 py-1 text-xs"
+              aria-label="Desconectar carteira"
+            >
+              <LogOut size={12} /> Sair
+            </button>
+          </div>
           {networkName && (
             <p className="flex items-center gap-1 text-xs text-slate-500">
               <Network size={12} /> {networkName}
@@ -560,7 +651,7 @@ export default function CASSwapInline({
                     ? 'text-green-400'
                     : 'text-amber-400'
                 }>
-                  {networkName === 'matic' || networkName.includes(String(chainId)) ? ' \u2713' : ' \u26a0 rede incorreta'}
+                  {networkName === 'matic' || networkName.includes(String(chainId)) ? ' ✓' : ' ⚠ rede incorreta'}
                 </span>
               )}
             </p>
@@ -568,103 +659,159 @@ export default function CASSwapInline({
         </div>
       )}
 
-      {/* Currency selector */}
-      <div className="flex gap-2">
-        <button
-          onClick={() => setCurrency('POL')}
-          className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium flex items-center justify-center gap-1.5 ${
-            currency === 'POL' ? 'bg-brand-500 text-white' : 'bg-slate-800 text-slate-400'
-          }`}
-        >
-          <Coins size={14} /> POL
-        </button>
-        <button
-          onClick={() => setCurrency('USDC')}
-          className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium flex items-center justify-center gap-1.5 ${
-            currency === 'USDC' ? 'bg-brand-500 text-white' : 'bg-slate-800 text-slate-400'
-          }`}
-        >
-          <DollarSign size={14} /> USDC
-        </button>
-      </div>
-
-      {/* Buy/Sell selector */}
-      <div className="flex gap-2">
-        <button
-          onClick={() => setMode('buy')}
-          className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium ${
-            mode === 'buy' ? 'bg-brand-500 text-white' : 'bg-slate-800 text-slate-400'
-          }`}
-        >
-          Comprar ({currency} → CAS)
-        </button>
-        <button
-          onClick={() => setMode('sell')}
-          className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium ${
-            mode === 'sell' ? 'bg-brand-500 text-white' : 'bg-slate-800 text-slate-400'
-          }`}
-        >
-          Vender (CAS → {currency})
-        </button>
-      </div>
-
+      {/* From token */}
       <div>
-        <label className="label">{inputLabel}</label>
-        <input
-          type="number"
-          step={currency === 'USDC' ? '0.01' : '0.000001'}
-          min="0"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          placeholder="0.0"
-          className="input"
-        />
+        <div className="flex items-center justify-between">
+          <label className="label">Você paga</label>
+          {balance != null && (
+            <button
+              type="button"
+              className="text-xs text-brand-400 hover:text-brand-300"
+              onClick={() => setAmount(ethers.formatUnits(balance, from.decimals))}
+            >
+              Saldo: {fmt(balance, from.decimals)} — MAX
+            </button>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <input
+            type="number"
+            step={to.decimals === 6 || from.decimals === 6 ? '0.01' : '0.000001'}
+            min="0"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="0.0"
+            className="input flex-[3] min-w-0"
+          />
+          <select
+            value={fromSymbol}
+            onChange={(e) => {
+              const next = e.target.value;
+              setFromSymbol(next);
+              if (next === toSymbol) setToSymbol(next === 'CAS' ? 'POL' : 'CAS');
+            }}
+            className="input flex-1 min-w-0"
+          >
+            {TOKENS.map((t) => (
+              <option key={t.symbol} value={t.symbol}>{t.symbol}</option>
+            ))}
+          </select>
+        </div>
       </div>
+
+      {/* Invert */}
+      <div className="flex justify-center">
+        <button
+          type="button"
+          onClick={invertPair}
+          className="rounded-full bg-slate-800 p-2 text-slate-400 hover:text-white hover:bg-slate-700"
+          aria-label="Inverter par"
+        >
+          <ArrowDown size={16} />
+        </button>
+      </div>
+
+      {/* To token */}
+      <div>
+        <label className="label">Você recebe</label>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            readOnly
+            value={quoting ? 'cotando…' : preview}
+            className="input flex-[3] min-w-0 bg-slate-800/60"
+          />
+          <select
+            value={toSymbol}
+            onChange={(e) => {
+              const next = e.target.value;
+              setToSymbol(next);
+              if (next === fromSymbol) setFromSymbol(next === 'CAS' ? 'POL' : 'CAS');
+            }}
+            className="input flex-1 min-w-0"
+          >
+            {TOKENS.map((t) => (
+              <option key={t.symbol} value={t.symbol}>{t.symbol}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {!routeAvailable && (
+        <div className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-300">
+          <AlertCircle size={16} className="mt-0.5 shrink-0" />
+          <span>
+            A rota {routeLabel} será habilitada após a atualização multi-ativo do
+            contrato. No momento estão disponíveis CAS ↔ POL e CAS ↔ USDC.
+          </span>
+        </div>
+      )}
 
       {reserves && (
-        <div className={`rounded-lg p-3 text-sm ${reserves.casBalance === 0n ? 'border border-amber-500/40 bg-amber-500/10 text-amber-300' : 'bg-slate-800/50'}`}>
+        <div className={`rounded-lg p-3 text-sm ${outputReserveEmpty ? 'border border-amber-500/40 bg-amber-500/10 text-amber-300' : 'bg-slate-800/50'}`}>
           <div className="flex items-center justify-between">
             <span className="text-slate-500">Liquidez do contrato</span>
           </div>
           <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs mt-1">
-            <span>CAS: {ethers.formatEther(reserves.casBalance)}</span>
-            <span>POL: {ethers.formatEther(reserves.polBalance)}</span>
-            <span>USDC: {ethers.formatUnits(reserves.usdcBalance, USDC_DECIMALS)}</span>
+            {TOKENS.map((t) => reserves[t.symbol] != null && (
+              <span key={t.symbol}>{t.symbol}: {fmt(reserves[t.symbol], t.decimals)}</span>
+            ))}
           </div>
-          {reserves.casBalance === 0n && (
-            <p className="mt-1 text-xs">Sem CAS no contrato. Compras estão indisponíveis até nova liquidez ser adicionada.</p>
+          {outputReserveEmpty && (
+            <p className="mt-1 text-xs">Sem {toSymbol} no contrato. Esta direção fica indisponível até nova liquidez ser adicionada.</p>
           )}
         </div>
       )}
 
-      <div className="rounded-lg bg-slate-800/50 p-3 text-sm">
+      <div className="rounded-lg bg-slate-800/50 p-3 text-sm space-y-1">
         <div className="flex items-center justify-between">
-          <span className="text-slate-500">Ratio</span>
-          <span className="text-slate-300">
-            {mode === 'buy'
-              ? `1 ${currency} = ${ratioNum.toFixed(4)} CAS`
-              : `1 CAS = ${(1 / ratioNum).toFixed(6)} ${currency}`}
-          </span>
+          <span className="text-slate-500">Rota</span>
+          <span className="text-slate-300">{routeLabel}</span>
         </div>
+        {isCrossPair && (
+          <p className="text-xs text-slate-500">
+            Rota composta: o CAS é usado apenas como unidade de conta interna —
+            você recebe {toSymbol} diretamente.
+          </p>
+        )}
         <div className="flex items-center justify-between">
           <span className="text-slate-500">Swap Fee</span>
           <span className="text-slate-300">{feePercent.toFixed(2)}%</span>
         </div>
+        {isCrossPair && (
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500">Spread</span>
+            <span className="text-slate-300">compra + venda (2 pernas)</span>
+          </div>
+        )}
         <div className="flex items-center justify-between">
           <span className="text-slate-500">Você recebe (previsão)</span>
           <span className="font-bold text-white">
-            {preview} {outputToken}
+            {preview} {toSymbol}
           </span>
         </div>
-        {parseFloat(minOut) > 0 && (
+        {quote != null && quote > 0n && (
           <div className="flex items-center justify-between mt-1">
             <span className="text-slate-500">Mínimo a receber (slippage 1%)</span>
             <span className="text-slate-300">
-              {minOut} {outputToken}
+              {minOut} {toSymbol}
             </span>
           </div>
         )}
+        <p className="pt-1 text-xs text-slate-500">
+          O swap opera com preços de compra e venda distintos (spread) definidos
+          pelo operador a partir das pools de mercado: você compra CAS pelo maior
+          preço observado e vende pelo menor. A diferença entre os dois preços
+          financia a manutenção das reservas de liquidez do contrato.
+        </p>
       </div>
+
+      {quoteError && (
+        <div className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-300">
+          <AlertCircle size={16} className="mt-0.5 shrink-0" />
+          <span>{quoteError}</span>
+        </div>
+      )}
 
       {error && (
         <div className="flex items-start gap-2 rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
@@ -697,17 +844,16 @@ export default function CASSwapInline({
           !amount ||
           parseFloat(amount) <= 0 ||
           paused ||
-          !reserves ||
-          (mode === 'buy' && reserves.casBalance === 0n) ||
-          (mode === 'sell' && currency === 'POL' && reserves.polBalance === 0n) ||
-          (mode === 'sell' && currency === 'USDC' && reserves.usdcBalance === 0n)
+          !routeAvailable ||
+          quote == null ||
+          outputReserveEmpty
         }
         className="btn-primary w-full flex items-center justify-center gap-2"
       >
         {loading ? (
           <><Loader2 size={16} className="animate-spin" /> Processando...</>
         ) : (
-          <><ArrowUpDown size={16} /> {mode === 'buy' ? 'Comprar CAS' : 'Vender CAS'}</>
+          <><ArrowUpDown size={16} /> Trocar {fromSymbol} por {toSymbol}</>
         )}
       </button>
     </div>
