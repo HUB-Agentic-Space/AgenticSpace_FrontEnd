@@ -38,6 +38,37 @@ const BRAND_COLORS = [
 ];
 const SESSION_KEY = 'agentic_space_splash_played';
 
+function logSplash(level, message, params = '') {
+  const line =
+    `[${new Date().toISOString()}] [SplashScreenBigBang] ${level} ${message}` +
+    (params ? ` - ${params}` : '');
+  if (level === 'error') {
+    console.error(line);
+  } else {
+    console.warn(line);
+  }
+}
+
+/**
+ * Verifica se o ambiente consegue criar um contexto WebGL.
+ * Retorna false em navegadores com GPU desabilitada, headless ou sandboxed.
+ */
+function isWebGLAvailable() {
+  try {
+    if (typeof window === 'undefined' || !window.WebGLRenderingContext) {
+      return false;
+    }
+    const probe = document.createElement('canvas');
+    return Boolean(
+      probe.getContext('webgl2') ||
+        probe.getContext('webgl') ||
+        probe.getContext('experimental-webgl')
+    );
+  } catch {
+    return false;
+  }
+}
+
 function getRandomBrandColor() {
   return BRAND_COLORS[Math.floor(Math.random() * BRAND_COLORS.length)];
 }
@@ -98,8 +129,9 @@ function createExplosionParticles(count) {
 
 /**
  * Hook que orquestra a cena Three.js e o ciclo de vida da animação.
+ * Recebe onCompleteRef (ref estável) para não remontar o efeito a cada render.
  */
-function useBigBangAnimation(canvasRef, logoTexture, onComplete) {
+function useBigBangAnimation(canvasRef, logoTexture, onCompleteRef) {
   useEffect(() => {
     if (!canvasRef.current || !logoTexture) return;
 
@@ -113,14 +145,29 @@ function useBigBangAnimation(canvasRef, logoTexture, onComplete) {
     const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 100);
     camera.position.z = 5;
 
-    const renderer = new THREE.WebGLRenderer({
-      canvas,
-      antialias: true,
-      alpha: true,
-      powerPreference: 'high-performance',
-    });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        canvas,
+        antialias: true,
+        alpha: true,
+        powerPreference: 'high-performance',
+      });
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    } catch (error) {
+      // Sem WebGL o splash não pode renderizar: encerra com o overlay em vez de
+      // deixá-lo fixo sobre o site.
+      logSplash(
+        'warn',
+        'webgl_renderer_failed',
+        `fallback=skip_splash error=${error?.message || error}`
+      );
+      renderer?.dispose();
+      logoTexture.dispose();
+      onCompleteRef.current?.();
+      return;
+    }
 
     const light = new THREE.PointLight(0xffffff, 0, 10);
     light.position.set(0, 0, 0);
@@ -312,7 +359,7 @@ function useBigBangAnimation(canvasRef, logoTexture, onComplete) {
             explosionMat.dispose();
           }
           logoTexture.dispose();
-          onComplete();
+          onCompleteRef.current?.();
           return;
         }
       }
@@ -346,7 +393,7 @@ function useBigBangAnimation(canvasRef, logoTexture, onComplete) {
       }
       logoTexture.dispose();
     };
-  }, [canvasRef, logoTexture, onComplete]);
+  }, [canvasRef, logoTexture, onCompleteRef]);
 }
 
 export default function SplashScreenBigBang() {
@@ -364,6 +411,19 @@ export default function SplashScreenBigBang() {
       }
     } catch {
       // sessionStorage pode estar indisponível (modo privado)
+    }
+
+    // Sem WebGL (GPU desabilitada, headless, sandboxed) não há como animar:
+    // dispensa o splash antes de carregar a textura e evita erros do Three.js.
+    if (!isWebGLAvailable()) {
+      logSplash('warn', 'webgl_unavailable', 'fallback=skip_splash');
+      try {
+        sessionStorage.setItem(SESSION_KEY, '1');
+      } catch {
+        // Ignora se sessionStorage indisponível
+      }
+      setVisible(false);
+      return;
     }
 
     const loader = new THREE.TextureLoader();
@@ -407,9 +467,7 @@ export default function SplashScreenBigBang() {
     };
   }, []);
 
-  useBigBangAnimation(canvasRef, logoTexture, () => {
-    onCompleteRef.current?.();
-  });
+  useBigBangAnimation(canvasRef, logoTexture, onCompleteRef);
 
   if (!visible) return null;
 
