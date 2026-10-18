@@ -1,12 +1,14 @@
 import PublicAgentPageClient from './PublicAgentPageClient';
 
 export default function AgentPage({ params }) {
-  return <PublicAgentPageClient />;
+  return <PublicAgentPageClient publicId={params.publicId} />;
 }
 
+export const dynamicParams = false;
+
 export async function generateStaticParams() {
-  // Para build estático, gerar alguns parâmetros comuns
-  // Em produção, as páginas dinâmicas serão tratadas pelo servidor
+  // Compatibilidade apenas com URLs legadas já publicadas. Novos links usam
+  // /agents/view?id=..., que atende qualquer ID no único artefato estático.
   return [
     { publicId: 'test-agent' },
     { publicId: 'demo-agent' },

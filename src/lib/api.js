@@ -699,3 +699,21 @@ export function saveAgentOnchainRegistration(publicId, txHash, jwt) {
     jwt
   });
 }
+
+/**
+ * Envia uma operação pública do fluxo QR Claim.
+ * @param {string} path Sufixo do endpoint público.
+ * @param {Object} body Corpo validado pelo backend.
+ * @returns {Promise<{status: number, data: Object}>} Resposta normalizada.
+ */
+export async function qrClaimRequest(path, body) {
+  const response = await fetch(`${API_BASE_URL}${API_PREFIX}${path}`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  let data = {};
+  try { data = await response.json(); } catch { data = {}; }
+  return { status: response.status, data };
+}

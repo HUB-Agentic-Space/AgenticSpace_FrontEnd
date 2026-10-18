@@ -806,7 +806,7 @@ function ProfileContent() {
                 {agents.slice(0, 5).map((a) => (
                   <li key={a.id}>
                     <Link
-                      href={`/agents/${encodeURIComponent(a.id)}`}
+                      href={`/agents/view?id=${encodeURIComponent(a.id)}`}
                       className="flex items-center justify-between rounded-lg border border-slate-800 px-3 py-2 hover:bg-slate-800"
                     >
                       <span className="flex items-center gap-2">

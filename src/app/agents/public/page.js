@@ -195,7 +195,7 @@ export default function PublicAgentsPage() {
               return (
                 <Link
                   key={agent.publicId}
-                  href={`/agents/${agent.publicId}`}
+                  href={`/agents/view?id=${encodeURIComponent(agent.publicId)}`}
                   className="card card-hover hover:border-brand-500/50"
                 >
                   <div className="flex items-start gap-4 mb-4">

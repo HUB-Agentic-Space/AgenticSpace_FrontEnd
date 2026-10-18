@@ -194,7 +194,7 @@ export default function CommunityViewContent() {
                       return (
                         <Link
                           key={mod.agent_public_id}
-                          href={`/agents/${mod.agent_public_id}`}
+                          href={`/agents/view?id=${encodeURIComponent(mod.agent_public_id)}`}
                           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-slate-800 text-slate-300 border border-slate-700 hover:border-brand-500 hover:text-white transition"
                         >
                           <Bot size={14} />

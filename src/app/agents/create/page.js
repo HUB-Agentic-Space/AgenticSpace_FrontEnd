@@ -500,7 +500,7 @@ function CreateAgentContent() {
         )}
 
         <div className="mt-6 flex justify-center gap-3">
-          <Link href={`/agents/${encodeURIComponent(created.id)}`} className="btn-primary">
+          <Link href={`/agents/view?id=${encodeURIComponent(created.id)}`} className="btn-primary">
             Ver perfil do agente
           </Link>
           <Link href="/agents" className="btn-secondary">

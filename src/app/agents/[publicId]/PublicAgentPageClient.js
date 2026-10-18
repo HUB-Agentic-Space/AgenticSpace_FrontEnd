@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { getPublicAgent, getSimilarAgents, getAgentFollows, getAgentFollowers, getAgentCommunities, getAgentSubagents } from '@/lib/api';
 import { Activity, Clock, User, Users, MessageSquare, Globe, ChevronRight, Snowflake, BadgeCheck, Shield, GitBranch, Plug, Mail } from 'lucide-react';
@@ -10,9 +9,7 @@ import MessagesPanel from '@/components/MessagesPanel';
 import DynamicMetadata from '@/components/DynamicMetadata';
 import AgentRating from '@/components/AgentRating';
 
-export default function PublicAgentPageClient() {
-  const params = useParams();
-  const publicId = params.publicId;
+export default function PublicAgentPageClient({ publicId }) {
   
   const [agent, setAgent] = useState(null);
   const [similarAgents, setSimilarAgents] = useState([]);
@@ -186,7 +183,7 @@ export default function PublicAgentPageClient() {
                   <GitBranch className="w-4 h-4 text-brand-400" />
                   <span className="text-sm text-slate-400">Subagente de </span>
                   <Link
-                    href={`/agents/${agent.parentAgentPublicId}`}
+                    href={`/agents/view?id=${encodeURIComponent(agent.parentAgentPublicId)}`}
                     className="text-sm font-medium font-mono text-brand-400 hover:text-brand-300 underline"
                   >
                     @{agent.parentAgentPublicId}
@@ -275,7 +272,7 @@ export default function PublicAgentPageClient() {
                   {follows.slice(0, 5).map((follow) => (
                     <Link
                       key={follow.publicId}
-                      href={`/agents/${follow.publicId}`}
+                      href={`/agents/view?id=${encodeURIComponent(follow.publicId)}`}
                       className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800/60 transition-colors"
                     >
                       <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center text-white text-sm font-bold">
@@ -289,7 +286,7 @@ export default function PublicAgentPageClient() {
                   ))}
                   {follows.length > 5 && (
                     <Link
-                      href={`/agents/${publicId}?tab=follows`}
+                      href={`/agents/view?id=${encodeURIComponent(publicId)}&tab=follows`}
                       className="text-sm text-brand-400 hover:text-brand-300"
                     >
                       Ver todos ({follows.length})
@@ -308,7 +305,7 @@ export default function PublicAgentPageClient() {
                   {followers.slice(0, 5).map((follower) => (
                     <Link
                       key={follower.publicId}
-                      href={`/agents/${follower.publicId}`}
+                      href={`/agents/view?id=${encodeURIComponent(follower.publicId)}`}
                       className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800/60 transition-colors"
                     >
                       <div className="w-8 h-8 bg-gradient-to-br from-brand-400 to-brand-600 rounded-lg flex items-center justify-center text-white text-sm font-bold">
@@ -322,7 +319,7 @@ export default function PublicAgentPageClient() {
                   ))}
                   {followers.length > 5 && (
                     <Link
-                      href={`/agents/${publicId}?tab=followers`}
+                      href={`/agents/view?id=${encodeURIComponent(publicId)}&tab=followers`}
                       className="text-sm text-brand-400 hover:text-brand-300"
                     >
                       Ver todos ({followers.length})
@@ -395,7 +392,7 @@ export default function PublicAgentPageClient() {
                         {subagents.map((subagent) => (
                           <Link
                             key={subagent.publicId || subagent.id}
-                            href={`/agents/${subagent.publicId || subagent.id}`}
+                            href={`/agents/view?id=${encodeURIComponent(subagent.publicId || subagent.id)}`}
                             className="block p-4 rounded-lg border border-slate-800 hover:border-brand-500/40 hover:bg-brand-500/5 transition-colors"
                           >
                             <div className="flex items-center gap-3">
@@ -446,7 +443,7 @@ export default function PublicAgentPageClient() {
                   {similarAgents.map((similar) => (
                     <Link
                       key={similar.id}
-                      href={`/agents/${similar.id}`}
+                      href={`/agents/view?id=${encodeURIComponent(similar.id)}`}
                       className="block p-3 rounded-lg border border-slate-800 hover:border-brand-500/40 hover:bg-brand-500/5 transition-colors"
                     >
                       <div className="flex items-center gap-3 mb-2">
