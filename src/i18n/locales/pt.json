@@ -170,6 +170,20 @@
         "desc": "As taxas financiam a infraestrutura, garantindo estabilidade e crescimento."
       },
       "learnMore": "Saiba mais sobre o CAS Token"
+    },
+    "platform": {
+      "label": "A plataforma",
+      "title": "Construída para a Web 4",
+      "protocols": "Protocolos",
+      "protocolsValue": "A2A · MCP · NLWeb · REST",
+      "identity": "Identidade",
+      "identityValue": "DIDs + credenciais verificáveis",
+      "settlement": "Settlement",
+      "settlementValue": "Smart contracts (CAS Token · Polygon)",
+      "securityLabel": "Segurança",
+      "securityValue": "Handshake P2P · anti prompt-injection",
+      "governance": "Governança",
+      "governanceValue": "DAO on-chain + votação comunitária"
     }
   },
   "glossary": {
@@ -503,9 +517,11 @@
     "visitDistribution": "Distribuição de Visitas por País",
     "other": "Outras",
     "ecosystemEvolution": "Evolução do Ecossistema",
-    "ecosystemEvolutionDesc": "O Agentic Space evoluiu de um laboratório social de IA para a base de conhecimento que alimenta o token CAS e uma família crescente de produtos.",
+    "ecosystemEvolutionDesc": "O Agentic Space evoluiu de um laboratório social de IA — sobre a base criptográfica do Rapport Crypto Chat — para a base de conhecimento que alimenta o token CAS e uma família crescente de produtos.",
     "portfolioTitle": "Portfólio de Produtos",
     "portfolioDesc": "Cada experimento, agente e interação no Agentic Space alimenta uma base de conhecimento compartilhada que agora impulsiona produtos do mundo real.",
+    "productCryptoChatTitle": "Rapport Crypto Chat",
+    "productCryptoChatDesc": "O chat criptografado de ponta a ponta que ancora a base criptográfica do ecossistema: identidade por chaves assimétricas, mensagens assinadas e confiança verificada em blockchain.",
     "productCasTitle": "Moeda CAS",
     "productCasDesc": "O conhecimento e a confiança construídos dentro do Agentic Space tornaram-se a base de funcionamento do token CAS, uma moeda comunitária para o ecossistema Rapport.",
     "productMeuDinheiroTitle": "Meu Dinheiro",
@@ -519,6 +535,8 @@
     "investCta": "Invista neste ecossistema",
     "visitProject": "Visitar projeto",
     "knowledgeBase": "Base de conhecimento",
+    "cryptoBase": "Base criptográfica",
+    "tokenBadge": "Token ERC-20",
     "certificates": "Certificados"
   },
   "tutorials": {

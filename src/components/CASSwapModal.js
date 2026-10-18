@@ -24,6 +24,21 @@ import { useWallet } from '@/lib/wallet/useWallet';
 
 const MIN_PRIORITY_FEE = BigInt('25000000000');
 
+// Provider somente-leitura (RPC público) cacheado por chainId. Chamadas
+// `view` não dependem da rede selecionada na carteira.
+const readProviderCache = new Map();
+
+function getReadProvider(targetChainId) {
+  const key = targetChainId || 137;
+  let provider = readProviderCache.get(key);
+  if (!provider) {
+    const url = process.env.NEXT_PUBLIC_RPC_URL || 'https://polygon.drpc.org';
+    provider = new ethers.JsonRpcProvider(url, key, { staticNetwork: true });
+    readProviderCache.set(key, provider);
+  }
+  return provider;
+}
+
 async function getGasOverrides(provider) {
   const feeData = await provider.getFeeData();
   let maxPriorityFeePerGas = feeData.maxPriorityFeePerGas ?? BigInt('0');
@@ -150,10 +165,9 @@ export default function CASSwapModal({
   }, [walletDisconnect]);
 
   const loadSwapInfo = useCallback(async () => {
-    const provider = getProvider();
-    if (!casSwapAddress || !provider) return;
+    if (!casSwapAddress) return;
     try {
-      const ep = new ethers.BrowserProvider(provider);
+      const ep = getReadProvider(chainId);
       const swap = new ethers.Contract(casSwapAddress, CASSWAP_ABI, ep);
       const [num, den] = await swap.getRatio();
       setRatio({ numerator: num.toString(), denominator: den.toString() });
@@ -162,20 +176,19 @@ export default function CASSwapModal({
     } catch (err) {
       console.error('[CASSwapModal] loadSwapInfo:', err.message);
     }
-  }, [casSwapAddress, getProvider]);
+  }, [casSwapAddress, chainId]);
 
   const loadCasBalance = useCallback(async () => {
-    const provider = getProvider();
-    if (!casTokenAddress || !account || !provider) return;
+    if (!casTokenAddress || !account) return;
     try {
-      const ep = new ethers.BrowserProvider(provider);
+      const ep = getReadProvider(chainId);
       const cas = new ethers.Contract(casTokenAddress, CAS_TOKEN_ABI, ep);
       const bal = await cas.balanceOf(account);
       setCasBalance(bal.toString());
     } catch (err) {
       console.error('[CASSwapModal] loadCasBalance:', err.message);
     }
-  }, [casTokenAddress, account, getProvider]);
+  }, [casTokenAddress, account, chainId]);
 
   useEffect(() => {
     if (open && casSwapAddress) {

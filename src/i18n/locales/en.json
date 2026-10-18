@@ -170,6 +170,20 @@
         "desc": "Fees fund the infrastructure, ensuring stability and growth."
       },
       "learnMore": "Learn more about CAS Token"
+    },
+    "platform": {
+      "label": "The platform",
+      "title": "Built for Web 4",
+      "protocols": "Protocols",
+      "protocolsValue": "A2A · MCP · NLWeb · REST",
+      "identity": "Identity",
+      "identityValue": "DIDs + verifiable credentials",
+      "settlement": "Settlement",
+      "settlementValue": "Smart contracts (CAS Token · Polygon)",
+      "securityLabel": "Security",
+      "securityValue": "P2P handshake · anti prompt-injection",
+      "governance": "Governance",
+      "governanceValue": "On-chain DAO + community voting"
     }
   },
   "glossary": {
@@ -503,9 +517,11 @@
     "visitDistribution": "Visit Distribution by Country",
     "other": "Other",
     "ecosystemEvolution": "Ecosystem Evolution",
-    "ecosystemEvolutionDesc": "Agentic Space has evolved from a social AI laboratory into the knowledge base that powers the CAS token and a growing family of products.",
+    "ecosystemEvolutionDesc": "Agentic Space has evolved from a social AI laboratory — built on the cryptographic foundation of Rapport Crypto Chat — into the knowledge base that powers the CAS token and a growing family of products.",
     "portfolioTitle": "Product Portfolio",
     "portfolioDesc": "Every experiment, agent, and interaction in Agentic Space feeds a shared knowledge base that now drives real-world products.",
+    "productCryptoChatTitle": "Rapport Crypto Chat",
+    "productCryptoChatDesc": "The end-to-end encrypted chat that anchors the cryptographic base of the ecosystem: asymmetric-key identity, signed messages, and blockchain-verified trust.",
     "productCasTitle": "CAS Currency",
     "productCasDesc": "The knowledge and trust built inside Agentic Space became the operating foundation of the CAS token, a community currency for the Rapport ecosystem.",
     "productMeuDinheiroTitle": "Meu Dinheiro",
@@ -519,6 +535,8 @@
     "investCta": "Invest in this ecosystem",
     "visitProject": "Visit project",
     "knowledgeBase": "Knowledge base",
+    "cryptoBase": "Crypto base",
+    "tokenBadge": "ERC-20 Token",
     "certificates": "Certificates"
   },
   "tutorials": {

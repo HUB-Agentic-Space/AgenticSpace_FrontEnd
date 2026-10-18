@@ -7,6 +7,7 @@
  */
 
 import './globals.css';
+import { DM_Sans, JetBrains_Mono } from 'next/font/google';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/react';
 import { AuthProvider } from '@/lib/auth-context';
@@ -24,6 +25,17 @@ import JsonLd, {
   getWebsiteSchema
 } from '@/components/JsonLd';
 import WebMcpProvider from '@/components/WebMcpProvider';
+
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap'
+});
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+  display: 'swap'
+});
 
 const SITE_URL = 'https://hubagentic.space';
 
@@ -104,7 +116,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">
-      <body>
+      <body className={`${dmSans.variable} ${jetbrainsMono.variable}`}>
         <JsonLd data={getOrganizationSchema()} />
         <JsonLd data={getWebsiteSchema()} />
         <WebMcpProvider />

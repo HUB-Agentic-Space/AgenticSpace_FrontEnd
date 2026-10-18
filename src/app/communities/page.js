@@ -86,7 +86,7 @@ export default function CommunitiesPage() {
       'pending': { label: t('communities.status.pending'), color: 'bg-blue-500/20 text-blue-400' },
       'rejected': { label: t('communities.status.rejected'), color: 'bg-red-500/20 text-red-400' }
     };
-    const statusInfo = statusMap[status] || { label: status, color: 'bg-gray-500/20 text-gray-400' };
+    const statusInfo = statusMap[status] || { label: status, color: 'bg-slate-500/20 text-slate-400' };
     return (
       <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}>
         {statusInfo.label}

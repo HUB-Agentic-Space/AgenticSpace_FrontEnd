@@ -4,34 +4,150 @@
 
 :root {
   color-scheme: dark;
+
+  /* Design tokens no estilo RTK (rtk-ai.app) sobre a paleta Rapport */
+  --bg: #020617;
+  --bg-alt: #0b1120;
+  --bg-card: #0f172a;
+  --bg-card-hover: #182238;
+  --bg-elevated: #1e293b;
+  --bg-glass: rgba(2, 6, 23, 0.82);
+  --border: #1e293b;
+  --border-light: #334155;
+  --text: #e2e8f0;
+  --text-bright: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --accent: #f97316;
+  --accent-hover: #ea580c;
+  --accent-dim: rgba(249, 115, 22, 0.12);
+  --accent-glow: rgba(249, 115, 22, 0.25);
+  --text-on-accent: #020617;
 }
 
 body {
   @apply bg-slate-950 text-slate-100 antialiased;
+  font-family: var(--font-sans), 'DM Sans', system-ui, sans-serif;
 }
 
-.card {
-  @apply rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-lg backdrop-blur;
+/* ── Tipografia estilo RTK ─────────────────────────────────────────────── */
+
+/* Eyebrow numerado: "01 / O problema" */
+.eyebrow {
+  @apply font-mono text-xs font-medium uppercase tracking-[0.2em] text-brand-400;
 }
+
+/* Título de seção com palavra em itálico */
+.section-title {
+  @apply text-3xl font-bold tracking-tight text-slate-50 md:text-4xl;
+}
+
+.section-title em,
+.hero-accent {
+  @apply italic text-brand-400;
+}
+
+/* Linha de meta em mono: "Open source · Apache 2.0 · Rust" */
+.meta-mono {
+  @apply font-mono text-xs text-slate-500;
+}
+
+/* ── Cards e superfícies ───────────────────────────────────────────────── */
+
+.card {
+  @apply rounded-xl border border-slate-800 bg-slate-900/70 p-6;
+}
+
+.card-hover {
+  @apply transition hover:border-slate-700 hover:bg-ink-hover;
+}
+
+/* ── Botões ────────────────────────────────────────────────────────────── */
 
 .btn {
   @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50;
 }
 
 .btn-primary {
-  @apply btn bg-brand-600 text-white hover:bg-brand-500;
+  @apply btn bg-brand-500 font-semibold text-slate-950 hover:bg-brand-400;
 }
 
 .btn-secondary {
-  @apply btn border border-slate-700 bg-slate-800 text-slate-100 hover:bg-slate-700;
+  @apply btn border border-slate-700 bg-slate-900 text-slate-200 hover:border-slate-500 hover:bg-slate-800;
 }
+
+/* ── Formulários ───────────────────────────────────────────────────────── */
 
 .input {
   @apply w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500;
 }
 
 .label {
-  @apply mb-1 block text-sm font-medium text-slate-300;
+  @apply mb-1 block font-mono text-xs font-medium uppercase tracking-wider text-slate-400;
+}
+
+/* ── Componentes RTK ───────────────────────────────────────────────────── */
+
+/* Stat: número grande + label em mono */
+.stat-value {
+  @apply text-3xl font-bold tracking-tight text-slate-50 md:text-4xl;
+}
+
+.stat-label {
+  @apply mt-1 font-mono text-xs text-slate-500;
+}
+
+/* Spec table: linhas label/valor com borda */
+.spec-table {
+  @apply divide-y divide-slate-800 rounded-xl border border-slate-800 bg-slate-900/70;
+}
+
+.spec-row {
+  @apply flex items-baseline justify-between gap-4 px-5 py-3;
+}
+
+.spec-key {
+  @apply font-mono text-xs uppercase tracking-wider text-slate-500;
+}
+
+.spec-value {
+  @apply text-sm font-medium text-slate-200;
+}
+
+/* Terminal: bloco de código com header */
+.terminal {
+  @apply overflow-hidden rounded-xl border border-slate-800 bg-ink-alt font-mono text-sm;
+}
+
+.terminal-header {
+  @apply flex items-center gap-2 border-b border-slate-800 bg-slate-900/60 px-4 py-2;
+}
+
+.terminal-dot {
+  @apply h-2.5 w-2.5 rounded-full bg-slate-700;
+}
+
+.terminal-body {
+  @apply overflow-x-auto p-4 text-slate-300;
+}
+
+.terminal-body .prompt {
+  @apply select-none text-brand-400;
+}
+
+/* Kbd: tecla de atalho */
+.kbd {
+  @apply inline-flex items-center rounded-md border border-slate-700 bg-slate-800/80 px-1.5 py-0.5 font-mono text-[10px] font-medium text-slate-400;
+}
+
+/* Link com seta: "Ver mais →" */
+.link-arrow {
+  @apply inline-flex items-center gap-1 font-medium text-brand-400 transition hover:text-brand-300;
+}
+
+/* Chip/tag mono */
+.chip {
+  @apply inline-flex items-center gap-1.5 rounded-md border border-slate-800 bg-slate-900 px-2.5 py-1 font-mono text-xs text-slate-400;
 }
 
 /* Certificado A4 paisagem */

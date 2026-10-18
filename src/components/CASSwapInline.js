@@ -30,6 +30,22 @@ import { useWallet } from '@/lib/wallet/useWallet';
 
 const MIN_PRIORITY_FEE = BigInt('25000000000');
 
+// Provider somente-leitura (RPC público) cacheado por chainId. Todas as
+// chamadas `view` usam este provider: o resultado não depende da rede
+// selecionada na carteira e funciona sem carteira conectada.
+const readProviderCache = new Map();
+
+function getReadProvider(targetChainId) {
+  const key = targetChainId || 137;
+  let provider = readProviderCache.get(key);
+  if (!provider) {
+    const url = process.env.NEXT_PUBLIC_RPC_URL || 'https://polygon.drpc.org';
+    provider = new ethers.JsonRpcProvider(url, key, { staticNetwork: true });
+    readProviderCache.set(key, provider);
+  }
+  return provider;
+}
+
 async function getGasOverrides(provider) {
   try {
     const feeData = await provider.getFeeData();
@@ -117,6 +133,8 @@ const SWAP_ERRORS_ABI = [
   'error InsufficientReserve(uint256,uint256)',
   'error SafeTransferFailed()',
   'error SafeTransferFromFailed()',
+  // Erro do fallback do Diamond (selector sem facet registrado).
+  'error FunctionNotFound(bytes4)',
 ];
 
 const swapErrorsIface = new ethers.Interface(SWAP_ERRORS_ABI);
@@ -139,6 +157,7 @@ const ERROR_NEXT_STEP = {
   InvalidCurrency: 'selecione um dos ativos suportados.',
   ZeroAmount: 'informe um valor maior que zero.',
   SafeTransferFromFailed: 'verifique se autorizou o contrato a usar seus tokens.',
+  FunctionNotFound: 'a função não está registrada no Diamond; verifique se o contrato foi atualizado.',
 };
 
 const ERROR_USER_MESSAGE = {
@@ -164,6 +183,7 @@ const ERROR_USER_MESSAGE = {
   InsufficientReserve: 'Reserva insuficiente no contrato.',
   SafeTransferFailed: 'Falha ao transferir o token.',
   SafeTransferFromFailed: 'Falha na aprovação ou transferência do token. Verifique se autorizou o contrato.',
+  FunctionNotFound: 'A função chamada não existe neste contrato (facet ausente no Diamond).',
 };
 
 function decodeSwapError(err) {
@@ -319,10 +339,9 @@ export default function CASSwapInline({
   };
 
   const loadSwapInfo = useCallback(async () => {
-    const provider = getProvider();
-    if (!diamondAddress || !provider) return;
+    if (!diamondAddress) return;
     try {
-      const ep = new ethers.BrowserProvider(provider);
+      const ep = getReadProvider(chainId);
       const swap = new ethers.Contract(diamondAddress, DIAMOND_SWAP_ABI, ep);
 
       // Sonda de capacidade: getReservesMulti só existe no facet multi-ativo.
@@ -352,15 +371,14 @@ export default function CASSwapInline({
       setPaused(isPaused);
     } catch (err) {
       console.error('[CASSwapInline] loadSwapInfo:', err.message);
-      setError('Não foi possível carregar os dados do swap. Verifique a rede e o endereço do Diamond.');
+      setError('Não foi possível carregar os dados do swap. Verifique o RPC público e o endereço do Diamond.');
     }
-  }, [diamondAddress, getProvider]);
+  }, [diamondAddress, chainId]);
 
   const loadBalances = useCallback(async () => {
-    const provider = getProvider();
-    if (!account || !provider) return;
+    if (!account) return;
     try {
-      const ep = new ethers.BrowserProvider(provider);
+      const ep = getReadProvider(chainId);
       const entries = await Promise.all(TOKENS.map(async (t) => {
         if (t.native) return [t.symbol, await ep.getBalance(account)];
         if (!t.address) return [t.symbol, 0n];
@@ -371,7 +389,7 @@ export default function CASSwapInline({
       console.error('[CASSwapInline] loadBalances:', err.message);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [casTokenAddress, usdcAddress, brlaAddress, account, getProvider]);
+  }, [casTokenAddress, usdcAddress, brlaAddress, account, chainId]);
 
   useEffect(() => {
     if (diamondAddress) {
@@ -435,9 +453,7 @@ export default function CASSwapInline({
         const amountIn = ethers.parseUnits(amount, from.decimals);
         let out;
         if (multiAsset) {
-          const provider = getProvider();
-          if (!provider) return;
-          const ep = new ethers.BrowserProvider(provider);
+          const ep = getReadProvider(chainId);
           const swap = new ethers.Contract(diamondAddress, DIAMOND_SWAP_ABI, ep);
           [out] = await swap.quoteSwap(from.id, to.id, amountIn);
         } else {
@@ -456,7 +472,7 @@ export default function CASSwapInline({
     const timer = setTimeout(run, 300); // debounce
     return () => { cancelled = true; clearTimeout(timer); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [amount, fromSymbol, toSymbol, multiAsset, ratios, swapFeeBps, diamondAddress]);
+  }, [amount, fromSymbol, toSymbol, multiAsset, ratios, swapFeeBps, diamondAddress, chainId]);
 
   const fmt = (value, decimals) => {
     try {

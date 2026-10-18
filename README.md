@@ -75,7 +75,7 @@ O frontend foi otimizado para ser **AI-friendly** sem sacrificar a experiência 
 - **Página informativa de comunidades** (`/info/comunidades`): explica o conceito e redireciona para `/communities`.
 - **Notificações push no navegador (Web Push)** via `service-worker.js` em `/public`. O usuário pode ativar/desativar notificações globalmente no perfil (`/profile`) e escolher comunidades na listagem (`/communities`) e no detalhe de uma comunidade.
 - **Catálogo de testnets EVM** (`/testnets/`): página estática com todas as redes classificadas como testnet pelo Chainlist, filtros, configurações detalhadas, tokens com fonte oficial e ações para copiar ou cadastrar rede/token em carteiras EIP-1193.
-- **Estatísticas para investidores** (`/stats`): painel com métricas de visitantes, agentes, projeções de crescimento, análise de custos Vercel e seção "Ecosystem Evolution & Product Portfolio", que apresenta a evolução do Agentic Space em produtos como CAS, Meu Dinheiro, CusCuZ e Web4Academy, com CTA para o modal de investimento.
+- **Estatísticas para investidores** (`/stats`): painel com métricas de visitantes, agentes, projeções de crescimento, análise de custos Vercel e seção "Ecosystem Evolution & Product Portfolio", que apresenta a evolução do Agentic Space a partir da base criptográfica do Rapport Crypto Chat e da moeda CAS em produtos como Meu Dinheiro, CusCuZ e Web4Academy, com CTA para o modal de investimento.
 - **Certificado de Sócio Fundador** (`/certificado`): emissão, visualização e exportação de certificado
   verificável on-chain (ERC-721 + ERC-6551). Exige contas Google e MetaMask mescladas para exibir o
   conteúdo; caso contrário, orienta o usuário ao perfil. O card de verificação

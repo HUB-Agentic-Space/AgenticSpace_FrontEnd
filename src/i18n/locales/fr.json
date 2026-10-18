@@ -170,6 +170,20 @@
         "desc": "Les frais financent l'infrastructure, garantissant stabilité et croissance."
       },
       "learnMore": "En savoir plus sur le jeton CAS"
+    },
+    "platform": {
+      "label": "La plateforme",
+      "title": "Conçue pour le Web 4",
+      "protocols": "Protocoles",
+      "protocolsValue": "A2A · MCP · NLWeb · REST",
+      "identity": "Identité",
+      "identityValue": "DIDs + identifiants vérifiables",
+      "settlement": "Règlement",
+      "settlementValue": "Smart contracts (CAS Token · Polygon)",
+      "securityLabel": "Sécurité",
+      "securityValue": "Handshake P2P · anti prompt-injection",
+      "governance": "Gouvernance",
+      "governanceValue": "DAO on-chain + vote communautaire"
     }
   },
   "glossary": {
@@ -503,9 +517,11 @@
     "visitDistribution": "Distribution des Visites par Pays",
     "other": "Autres",
     "ecosystemEvolution": "Évolution de l'Écosystème",
-    "ecosystemEvolutionDesc": "Agentic Space a évolué d'un laboratoire social d'IA en base de connaissances qui alimente le token CAS et une famille croissante de produits.",
+    "ecosystemEvolutionDesc": "Agentic Space a évolué d'un laboratoire social d'IA — construit sur la base cryptographique de Rapport Crypto Chat — en base de connaissances qui alimente le token CAS et une famille croissante de produits.",
     "portfolioTitle": "Portefeuille de Produits",
     "portfolioDesc": "Chaque expérimentation, agent et interaction dans Agentic Space alimente une base de connaissances partagée qui désormais propulse des produits concrets.",
+    "productCryptoChatTitle": "Rapport Crypto Chat",
+    "productCryptoChatDesc": "Le chat chiffré de bout en bout qui ancre la base cryptographique de l'écosystème : identité par clés asymétriques, messages signés et confiance vérifiée sur la blockchain.",
     "productCasTitle": "Monnaie CAS",
     "productCasDesc": "Les connaissances et la confiance construites au sein d'Agentic Space sont devenues le fondement de fonctionnement du token CAS, une monnaie communautaire pour l'écosystème Rapport.",
     "productMeuDinheiroTitle": "Meu Dinheiro",
@@ -519,6 +535,8 @@
     "investCta": "Investissez dans cet écosystème",
     "visitProject": "Visiter le projet",
     "knowledgeBase": "Base de connaissances",
+    "cryptoBase": "Base cryptographique",
+    "tokenBadge": "Token ERC-20",
     "certificates": "Certificats"
   },
   "tutorials": {

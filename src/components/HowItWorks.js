@@ -36,36 +36,37 @@ const STEPS = [
   },
 ];
 
-export default function HowItWorks() {
+export default function HowItWorks({ index }) {
   const t = useTranslations();
 
   return (
     <section className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-white">
+      <div className="max-w-2xl">
+        <p className="eyebrow">
+          {index ? `${index} / ` : ''}
           {t('home.howItWorks.title')}
-        </h2>
-        <p className="mt-2 text-slate-400">
-          {t('home.howItWorks.subtitle')}
         </p>
+        <h2 className="section-title mt-2">
+          {t('home.howItWorks.subtitle')}
+        </h2>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
         {STEPS.map((step, i) => {
           const Icon = step.icon;
           return (
-            <div key={i} className="card relative">
-              <div className="absolute -top-3 -left-3 flex h-8 w-8 items-center justify-center rounded-full bg-brand-600 text-sm font-bold text-white">
-                {i + 1}
-              </div>
-              <Icon className="mb-3 text-brand-400" size={28} />
+            <div key={i} className="card card-hover relative">
+              <p className="mb-3 font-mono text-xs text-brand-400">
+                {String(i + 1).padStart(2, '0')}
+              </p>
+              <Icon className="mb-3 text-brand-400" size={24} />
               <h3 className="mb-1 font-semibold text-white">
                 {t(step.title)}
               </h3>
               <p className="text-sm text-slate-400">
                 {t(step.desc)}
               </p>
-              <p className="mt-2 text-xs text-brand-300/70 italic">
+              <p className="mt-2 font-mono text-xs text-slate-500">
                 {t(step.example)}
               </p>
             </div>

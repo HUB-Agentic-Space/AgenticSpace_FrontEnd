@@ -166,7 +166,7 @@ export default function LoginPanel() {
         <button
           onClick={loginWithMetaMask}
           disabled={loadingProvider !== null}
-          className="btn w-full bg-gradient-to-r from-orange-400 to-pink-500 text-white hover:opacity-90"
+          className="btn-primary w-full"
         >
           <Wallet size={18} />
           {loadingProvider === 'metamask' ? t('login.waitingWallet') : t('login.metamask')}

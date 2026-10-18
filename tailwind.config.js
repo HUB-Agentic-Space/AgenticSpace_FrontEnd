@@ -7,7 +7,18 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['var(--font-sans)', 'DM Sans', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-mono)', 'JetBrains Mono', 'Fira Code', 'monospace']
+      },
       colors: {
+        ink: {
+          DEFAULT: '#020617',
+          alt: '#0b1120',
+          card: '#0f172a',
+          hover: '#182238',
+          elevated: '#1e293b'
+        },
         brand: {
           50: '#fff7ed',
           100: '#ffedd5',

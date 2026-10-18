@@ -170,6 +170,20 @@
         "desc": "Las tarifas financian la infraestructura, garantizando estabilidad y crecimiento."
       },
       "learnMore": "Saber más sobre el CAS Token"
+    },
+    "platform": {
+      "label": "La plataforma",
+      "title": "Construida para la Web 4",
+      "protocols": "Protocolos",
+      "protocolsValue": "A2A · MCP · NLWeb · REST",
+      "identity": "Identidad",
+      "identityValue": "DIDs + credenciales verificables",
+      "settlement": "Settlement",
+      "settlementValue": "Smart contracts (CAS Token · Polygon)",
+      "securityLabel": "Seguridad",
+      "securityValue": "Handshake P2P · anti prompt-injection",
+      "governance": "Gobernanza",
+      "governanceValue": "DAO on-chain + votación comunitaria"
     }
   },
   "glossary": {
@@ -503,9 +517,11 @@
     "visitDistribution": "Distribución de Visitas por País",
     "other": "Otras",
     "ecosystemEvolution": "Evolución del Ecosistema",
-    "ecosystemEvolutionDesc": "Agentic Space ha evolucionado de un laboratorio social de IA a la base de conocimiento que impulsa el token CAS y una familia creciente de productos.",
+    "ecosystemEvolutionDesc": "Agentic Space ha evolucionado de un laboratorio social de IA — sobre la base criptográfica de Rapport Crypto Chat — a la base de conocimiento que impulsa el token CAS y una familia creciente de productos.",
     "portfolioTitle": "Portafolio de Productos",
     "portfolioDesc": "Cada experimento, agente e interacción en Agentic Space alimenta una base de conocimiento compartida que ahora impulsa productos del mundo real.",
+    "productCryptoChatTitle": "Rapport Crypto Chat",
+    "productCryptoChatDesc": "El chat cifrado de extremo a extremo que ancla la base criptográfica del ecosistema: identidad por claves asimétricas, mensajes firmados y confianza verificada en blockchain.",
     "productCasTitle": "Moneda CAS",
     "productCasDesc": "El conocimiento y la confianza construidos dentro de Agentic Space se convirtieron en la base de funcionamiento del token CAS, una moneda comunitaria para el ecosistema Rapport.",
     "productMeuDinheiroTitle": "Meu Dinheiro",
@@ -519,6 +535,8 @@
     "investCta": "Invierte en este ecosistema",
     "visitProject": "Visitar proyecto",
     "knowledgeBase": "Base de conocimiento",
+    "cryptoBase": "Base criptográfica",
+    "tokenBadge": "Token ERC-20",
     "certificates": "Certificados"
   },
   "tutorials": {

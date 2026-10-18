@@ -9,7 +9,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { AlertTriangle, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useTranslations, useLocaleContext } from '@/lib/LocaleProvider';
 import NewsCard, { formatDate } from '@/components/NewsCard';
 import matter from 'gray-matter';
@@ -55,7 +55,7 @@ async function loadNewsMetadata(slug, lang) {
   }
 }
 
-export default function NewsHighlight() {
+export default function NewsHighlight({ index }) {
   const t = useTranslations();
   const { locale } = useLocaleContext();
   const [latestNews, setLatestNews] = useState([]);
@@ -110,15 +110,15 @@ export default function NewsHighlight() {
   }
 
   return (
-    <section className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <AlertTriangle className="text-yellow-400" size={24} />
-          <h2 className="text-2xl font-bold text-white">{t('news.highlightTitle')}</h2>
-        </div>
+    <section className="space-y-6">
+      <div className="flex items-end justify-between gap-4">
+        <p className="eyebrow">
+          {index ? `${index} / ` : ''}
+          {t('news.highlightTitle')}
+        </p>
         <Link
           href="/news"
-          className="flex items-center gap-1 text-sm text-brand-400 hover:text-brand-300 transition"
+          className="link-arrow shrink-0 text-sm"
         >
           {t('news.viewAll')}
           <ArrowRight size={16} />

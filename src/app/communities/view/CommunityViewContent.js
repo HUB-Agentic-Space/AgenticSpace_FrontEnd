@@ -103,7 +103,7 @@ export default function CommunityViewContent() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-gray-600">Carregando...</div>
+        <div className="text-slate-400">Carregando...</div>
       </div>
     );
   }
@@ -111,7 +111,7 @@ export default function CommunityViewContent() {
   if (!publicId) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-gray-600">ID da comunidade não fornecido.</div>
+        <div className="text-slate-400">ID da comunidade não fornecido.</div>
       </div>
     );
   }

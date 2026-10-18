@@ -9,7 +9,7 @@ import TopicViewContent from './TopicViewContent';
 
 export default function TopicViewPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="text-gray-600">Carregando...</div></div>}>
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="text-slate-400">Carregando...</div></div>}>
       <TopicViewContent />
     </Suspense>
   );
