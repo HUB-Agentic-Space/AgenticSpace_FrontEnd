@@ -8,9 +8,10 @@
  *              comprado/trocado na Polygon PoS.
  */
 
-import { ExternalLink, ArrowUpDown, Info, BarChart3, Terminal } from 'lucide-react';
+import { ExternalLink, ArrowUpDown, Info, BarChart3, Terminal, CreditCard } from 'lucide-react';
 import Link from 'next/link';
 import CASSwapInline from '@/components/CASSwapInline';
+import OnrampPanel from '@/components/OnrampPanel';
 import { useLocaleContext, useTranslations } from '@/lib/LocaleProvider';
 import {
   CAS_TOKEN_ADDRESS, DIAMOND_ADDRESS, USDC_ADDRESS, BRLA_ADDRESS,
@@ -147,9 +148,10 @@ export default function CASTokenSwapPage() {
           <h1 className="text-5xl font-bold text-white">Terminal de Operações</h1>
         </div>
         <p className="text-xl text-slate-400 max-w-3xl mx-auto">
-          Compre, venda e acompanhe o CAS na Polygon PoS. Use o swap nativo
-          CASSwap (CAS, POL, USDC e BRLA), consulte terminais de preço ou
-          escolha uma DEX parceira abaixo.
+          Compre, venda e acompanhe o CAS na Polygon PoS. Adicione fundos com
+          moeda fiduciária via onramp (USDC/EURC), use o swap nativo CASSwap
+          (CAS, POL, USDC e BRLA), consulte terminais de preço ou escolha uma
+          DEX parceira abaixo.
         </p>
         <div className="flex flex-wrap gap-3 justify-center">
           <Link
@@ -159,6 +161,23 @@ export default function CASTokenSwapPage() {
             <Info size={16} /> {tt('navbar.casTokenInfo')}
           </Link>
         </div>
+      </section>
+
+      {/* Onramp fiat → cripto (Circle Onramp Kit) */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3">
+          <CreditCard className="text-brand-400" size={28} />
+          <h2 className="text-3xl font-bold text-white">Adicione Fundos (Fiat)</h2>
+        </div>
+        <p className="text-slate-400 max-w-2xl">
+          Converta moeda fiduciária em <strong className="text-slate-300">USDC</strong>{' '}
+          ou <strong className="text-slate-300">EURC</strong> sem sair do site:
+          o widget hospedado pela Circle (Onramp Kit) cuida de KYC, pagamento e
+          entrega na rede escolhida — Polygon, Arc e demais redes suportadas
+          pelo provedor. Para BRLA, compre USDC e faça o swap no CASSwap logo
+          abaixo.
+        </p>
+        <OnrampPanel />
       </section>
 
       {/* CASSwap nativo */}

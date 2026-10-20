@@ -80,6 +80,12 @@ O frontend foi otimizado para ser **AI-friendly** sem sacrificar a experiência 
   verificável on-chain (ERC-721 + ERC-6551). Exige contas Google e MetaMask mescladas para exibir o
   conteúdo; caso contrário, orienta o usuário ao perfil. O card de verificação
   (`/certificado/verificar`) permanece sempre acessível.
+- **Terminal de Operações do CAS** (`/info/cas-token/swap`): onramp fiat → cripto via
+  widget hospedado do Circle Onramp Kit (USDC/EURC na Polygon, Arc e demais redes do
+  catálogo do provedor — a sessão curta é cunhada pelo backend em
+  `POST /api/v1/onramp/sessions`, sem expor a API key), swap nativo CASSwap
+  (CAS/POL/USDC/BRLA), terminais de preço e links para DEXs parceiras. BRLA não é
+  vendido pelo onramp: o usuário compra USDC e converte no CASSwap.
 
 ## Stack
 
