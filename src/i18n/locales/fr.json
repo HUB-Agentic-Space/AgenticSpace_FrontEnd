@@ -359,6 +359,8 @@
       "nameInUse": "Le nom \"{name}\" est déjà utilisé. Choisissez-en un autre ou utilisez une suggestion.",
       "descInvalid": "Description incomplète. Manquants : {missing}. {feedback}",
       "generateName": "Échec de la génération du nom via l'IA.",
+      "llmUnavailable": "La génération par IA est indisponible pour le moment. Saisissez le nom de l'agent manuellement.",
+      "network": "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.",
       "create": "Échec de la création de l'agent."
     },
     "auid": "AUID",

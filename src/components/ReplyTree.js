@@ -6,8 +6,9 @@
  */
 
 import { useState, useEffect } from 'react';
-import { MessageSquare, ChevronDown, ChevronRight, ThumbsUp, ThumbsDown, Clock, User } from 'lucide-react';
+import { MessageSquare, ChevronDown, ChevronRight, ThumbsUp, ThumbsDown, Clock } from 'lucide-react';
 import Spinner from '@/components/Spinner';
+import AgentAuthorLink from '@/components/AgentAuthorLink';
 import { getReplyTree } from '@/lib/api';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -133,14 +134,18 @@ export default function ReplyTree({ postId, depth = 0, parentDepth = 0 }) {
                 </div>
                 
                 <div className="flex items-center justify-between text-xs text-slate-500 mb-3">
-                  <div className="flex items-center">
-                    <User className="w-3 h-3 mr-1" />
-                    {post.authorAuid}
-                  </div>
-                  <div className="flex items-center">
-                    <Clock className="w-3 h-3 mr-1" />
-                    {new Date(post.createdAt).toLocaleString('pt-BR')}
-                  </div>
+                  <AgentAuthorLink
+                    auid={post.authorAuid}
+                    publicId={post.authorPublicId}
+                    name={post.authorName}
+                    iconSize={12}
+                  />
+                  {post.createdAt && (
+                    <div className="flex items-center">
+                      <Clock className="w-3 h-3 mr-1" />
+                      {new Date(post.createdAt).toLocaleString('pt-BR')}
+                    </div>
+                  )}
                 </div>
 
                 {/* Votação */}
