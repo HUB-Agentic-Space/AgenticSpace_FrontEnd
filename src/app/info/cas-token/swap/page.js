@@ -3,9 +3,9 @@
 /**
  * @file page.js (rota '/info/cas-token/swap')
  * @description Terminal de Operações do CAS Token. Exibe o swap nativo CASSwap
- *              (POL/CAS) inline, terminais de preço (GeckoTerminal, DEX Screener)
- *              e terminais de swap em DEXs parceiras onde o CAS pode ser
- *              comprado/trocado na Polygon PoS.
+ *              (POL/CAS) inline, terminais de preço (GeckoTerminal, DexPaprika,
+ *              DEX Screener) e terminais de swap em DEXs parceiras onde o CAS
+ *              pode ser comprado/trocado na Polygon PoS.
  */
 
 import { ExternalLink, ArrowUpDown, Info, BarChart3, Terminal, CreditCard } from 'lucide-react';
@@ -50,6 +50,24 @@ const PRICE_TERMINALS = [
     url: 'https://www.geckoterminal.com/polygon_pos/pools/0x2275bfc0b1e26fb36a42e26fa1e5e4d823e62bc3',
     description: 'Par WETH/CAS na Dfyn (Polygon PoS)',
     color: '#6F5DE0',
+  },
+  {
+    name: 'DexPaprika — SushiSwap',
+    url: 'https://dexpaprika.com/polygon/pool/0x265d86d4d43c32037b032097e8bfb6893e1c3964?utm_source=hubagentic.space',
+    description: 'Analytics e liquidez da pool CAS/WPOL na SushiSwap',
+    color: '#E87722',
+  },
+  {
+    name: 'DexPaprika — Uniswap V3',
+    url: 'https://dexpaprika.com/polygon/pool/0x2a37bca556c39418b779901f9b2988414ee550dc?utm_source=hubagentic.space',
+    description: 'Analytics e liquidez da pool CAS/WPOL na Uniswap V3',
+    color: '#FF007A',
+  },
+  {
+    name: 'DexPaprika — QuickSwap V2',
+    url: 'https://dexpaprika.com/polygon/pool/0xf77bd26fe17adb1bc99be6cd63414b2a7819690e?utm_source=hubagentic.space',
+    description: 'Analytics e liquidez da pool CAS/WPOL na QuickSwap V2',
+    color: '#4181E0',
   },
   {
     name: 'DEX Screener — SushiSwap',
