@@ -11,7 +11,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Bot, UserCircle, PlusCircle, LogOut, Sparkles, Info, ChevronDown, Shield, Code, BarChart3, Activity, BookText, Search, LayoutDashboard, Coins, Vote, BadgeCheck, Award, Gavel, Newspaper, AlertCircle, ArrowUpDown, Calendar, Clock, Trophy } from 'lucide-react';
+import { Bot, UserCircle, PlusCircle, LogOut, Info, ChevronDown, Shield, Code, BarChart3, Activity, BookText, Search, LayoutDashboard, Coins, Vote, BadgeCheck, Award, Gavel, Newspaper, AlertCircle, ArrowUpDown, Calendar, Clock, Trophy } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useTranslations, useLocaleContext } from '@/lib/LocaleProvider';
 import LanguageSelector from '@/components/LanguageSelector';
@@ -26,7 +26,7 @@ function NavItem({ href, icon: Icon, label, active }) {
     <Link
       href={href}
       className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
-        active ? 'bg-brand-600 text-white' : 'text-slate-300 hover:bg-slate-800'
+        active ? 'bg-brand-500/10 text-brand-300' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white'
       }`}
     >
       <Icon size={18} />
@@ -73,10 +73,12 @@ export default function Navbar() {
   const isUserActive = pathname === '/profile' || pathname?.startsWith('/agents') || pathname === '/admin' || pathname === '/certificado';
 
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-950/80 backdrop-blur">
-      <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-        <Link href="/" className="flex items-center gap-2 text-lg font-bold text-white">
-          <Sparkles className="text-brand-400" size={22} />
+    <header className="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur">
+      <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
+        <Link href="/" className="flex items-center gap-2.5 text-[15px] font-semibold tracking-tight text-white">
+          <span className="flex h-7 w-7 items-center justify-center rounded-md border border-brand-500/40 bg-brand-500/15 font-mono text-[11px] font-bold text-brand-400">
+            AS
+          </span>
           Agentic Space
         </Link>
 
@@ -92,7 +94,7 @@ export default function Navbar() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={t('navbar.searchPlaceholder')}
-                  className="w-64 pl-9 pr-8 py-1.5 bg-slate-800 border border-slate-700 rounded-md text-white text-sm placeholder-slate-400 focus:outline-none focus:border-brand-500"
+                  className="w-64 rounded-lg border border-slate-700 bg-slate-900 py-1.5 pl-9 pr-8 font-mono text-sm text-white placeholder-slate-500 focus:border-brand-500 focus:outline-none"
                   autoFocus
                 />
                 <button
@@ -101,7 +103,7 @@ export default function Navbar() {
                     setSearchOpen(false);
                     setSearchQuery('');
                   }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
                 >
                   ✕
                 </button>
@@ -109,10 +111,12 @@ export default function Navbar() {
             ) : (
               <button
                 onClick={() => setSearchOpen(true)}
-                className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-md transition"
+                className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900/60 px-3 py-1.5 text-sm text-slate-500 transition hover:border-slate-700 hover:text-slate-300"
                 title="Buscar"
               >
-                <Search size={18} />
+                <Search size={14} />
+                <span className="hidden lg:inline">{t('common.search')}</span>
+                <kbd className="kbd hidden lg:inline-flex">⌘K</kbd>
               </button>
             )}
           </div>
@@ -123,7 +127,7 @@ export default function Navbar() {
               <button
                 onClick={() => setInstitucionalOpen(!institucionalOpen)}
                 className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                  isInstitucionalActive ? 'bg-brand-600 text-white' : 'text-slate-300 hover:bg-slate-800'
+                  isInstitucionalActive ? 'bg-brand-500/10 text-brand-300' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white'
                 }`}
               >
                 <Info size={18} />
@@ -132,10 +136,10 @@ export default function Navbar() {
               </button>
 
               {institucionalOpen && (
-                <div className="absolute right-0 mt-2 w-56 rounded-lg bg-slate-900 border border-slate-700 shadow-xl">
+                <div className="absolute right-0 mt-2 w-56 rounded-xl border border-slate-800 bg-slate-900/95 shadow-2xl backdrop-blur">
                   <Link
                     href="/about"
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-slate-400 hover:bg-slate-800/70 hover:text-white"
                     onClick={() => setInstitucionalOpen(false)}
                   >
                     <Info size={16} />
@@ -143,7 +147,7 @@ export default function Navbar() {
                   </Link>
                   <Link
                     href="/security-policy"
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-slate-400 hover:bg-slate-800/70 hover:text-white"
                     onClick={() => setInstitucionalOpen(false)}
                   >
                     <Shield size={16} />
@@ -151,7 +155,7 @@ export default function Navbar() {
                   </Link>
                   <Link
                     href="/info/api-agentes"
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-slate-400 hover:bg-slate-800/70 hover:text-white"
                     onClick={() => setInstitucionalOpen(false)}
                   >
                     <Code size={16} />
@@ -176,7 +180,7 @@ export default function Navbar() {
                     </button>
 
                     {casTokenMenuOpen && (
-                      <div className="absolute left-full top-0 ml-1 w-48 rounded-lg bg-slate-900 border border-slate-700 shadow-xl">
+                      <div className="absolute left-full top-0 ml-1 w-48 rounded-xl border border-slate-800 bg-slate-900/95 shadow-2xl backdrop-blur">
                         <Link
                           href="/info/cas-token"
                           className={`flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-800 hover:text-white rounded-t-lg ${
@@ -209,7 +213,7 @@ export default function Navbar() {
                   </div>
                   <Link
                     href="/certificado/verificar"
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-slate-400 hover:bg-slate-800/70 hover:text-white"
                     onClick={() => setInstitucionalOpen(false)}
                   >
                     <BadgeCheck size={16} />
@@ -217,7 +221,7 @@ export default function Navbar() {
                   </Link>
                   <Link
                     href="/certificado/regras"
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-slate-400 hover:bg-slate-800/70 hover:text-white"
                     onClick={() => setInstitucionalOpen(false)}
                   >
                     <Award size={16} />
@@ -231,7 +235,7 @@ export default function Navbar() {
                         e.stopPropagation();
                         setEstatisticasOpen(!estatisticasOpen);
                       }}
-                      className="flex w-full items-center justify-between px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
+                      className="flex w-full items-center justify-between px-4 py-2 text-sm text-slate-400 hover:bg-slate-800/70 hover:text-white"
                     >
                       <div className="flex items-center gap-2">
                         <BarChart3 size={16} />
@@ -241,10 +245,10 @@ export default function Navbar() {
                     </button>
                     
                     {estatisticasOpen && (
-                      <div className="absolute left-full top-0 ml-1 w-48 rounded-lg bg-slate-900 border border-slate-700 shadow-xl">
+                      <div className="absolute left-full top-0 ml-1 w-48 rounded-xl border border-slate-800 bg-slate-900/95 shadow-2xl backdrop-blur">
                         <Link
                           href="/stats"
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white rounded-t-lg"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-slate-400 hover:bg-slate-800/70 hover:text-white rounded-t-lg"
                           onClick={() => {
                             setEstatisticasOpen(false);
                             setInstitucionalOpen(false);
@@ -255,7 +259,7 @@ export default function Navbar() {
                         </Link>
                         <Link
                           href="/agent-logs"
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white rounded-b-lg"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-slate-400 hover:bg-slate-800/70 hover:text-white rounded-b-lg"
                           onClick={() => {
                             setEstatisticasOpen(false);
                             setInstitucionalOpen(false);
@@ -287,7 +291,7 @@ export default function Navbar() {
                     </button>
 
                     {eventosOpen && (
-                      <div className="absolute left-full top-0 ml-1 w-56 rounded-lg bg-slate-900 border border-slate-700 shadow-xl">
+                      <div className="absolute left-full top-0 ml-1 w-56 rounded-xl border border-slate-800 bg-slate-900/95 shadow-2xl backdrop-blur">
                         <Link
                           href="/eventos"
                           className={`flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-800 hover:text-white rounded-t-lg ${
@@ -337,10 +341,10 @@ export default function Navbar() {
                     </button>
 
                     {newsOpen && (
-                      <div className="absolute left-full top-0 ml-1 w-56 rounded-lg bg-slate-900 border border-slate-700 shadow-xl">
+                      <div className="absolute left-full top-0 ml-1 w-56 rounded-xl border border-slate-800 bg-slate-900/95 shadow-2xl backdrop-blur">
                         <Link
                           href="/news"
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white rounded-t-lg"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-slate-400 hover:bg-slate-800/70 hover:text-white rounded-t-lg"
                           onClick={() => {
                             setNewsOpen(false);
                             setInstitucionalOpen(false);
@@ -351,7 +355,7 @@ export default function Navbar() {
                         </Link>
                         <Link
                           href="/news/view?slug=governanca-cas-2026-07-31"
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white rounded-b-lg"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-slate-400 hover:bg-slate-800/70 hover:text-white rounded-b-lg"
                           onClick={() => {
                             setNewsOpen(false);
                             setInstitucionalOpen(false);
@@ -387,7 +391,7 @@ export default function Navbar() {
             <button
               onClick={() => setGovernanceOpen(!governanceOpen)}
               className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                isComunidadeActive ? 'bg-brand-600 text-white' : 'text-slate-300 hover:bg-slate-800'
+                isComunidadeActive ? 'bg-brand-500/10 text-brand-300' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white'
               }`}
             >
               <Vote size={18} />
@@ -396,7 +400,7 @@ export default function Navbar() {
             </button>
 
             {governanceOpen && (
-              <div className="absolute left-0 mt-2 w-56 rounded-lg bg-slate-900 border border-slate-700 shadow-xl">
+              <div className="absolute left-0 mt-2 w-56 rounded-xl border border-slate-800 bg-slate-900/95 shadow-2xl backdrop-blur">
                 <Link
                   href="/dao"
                   className={`flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-800 hover:text-white ${
@@ -426,7 +430,7 @@ export default function Navbar() {
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                 className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                  isUserActive ? 'bg-brand-600 text-white' : 'text-slate-300 hover:bg-slate-800'
+                  isUserActive ? 'bg-brand-500/10 text-brand-300' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white'
                 }`}
               >
                 <UserCircle size={18} />
@@ -435,7 +439,7 @@ export default function Navbar() {
               </button>
 
               {userMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 rounded-lg bg-slate-900 border border-slate-700 shadow-xl">
+                <div className="absolute right-0 mt-2 w-56 rounded-xl border border-slate-800 bg-slate-900/95 shadow-2xl backdrop-blur">
                   <Link
                     href="/profile"
                     className={`flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-800 hover:text-white ${
@@ -494,7 +498,7 @@ export default function Navbar() {
                       setUserMenuOpen(false);
                       handleLogout();
                     }}
-                    className="flex w-full items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
+                    className="flex w-full items-center gap-2 px-4 py-2 text-sm text-slate-400 hover:bg-slate-800/70 hover:text-white"
                   >
                     <LogOut size={16} />
                     {t('navbar.logout')}
@@ -504,7 +508,9 @@ export default function Navbar() {
             </div>
           )}
           {!isAuthenticated && (
-            <span className="text-sm text-slate-400">{t('home.publicView')}</span>
+            <Link href="/auth" className="btn-primary hidden sm:inline-flex">
+              {t('navbar.login')} →
+            </Link>
           )}
         </div>
       </nav>

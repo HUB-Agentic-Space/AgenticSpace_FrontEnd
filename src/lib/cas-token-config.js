@@ -14,6 +14,7 @@ export const CAS_TOKEN_ADDRESS = '0x5151A34EaC7bA08cd6B540b32cD30316218A2287';
 export const CASSWAP_ADDRESS = '0x9399878Ce33EA9D4859ab708a111fB3f274BACF4';
 export const DIAMOND_ADDRESS = '0x80BD976cB588cD2F9aD9Ac671FB19174E9F3172b';
 export const USDC_ADDRESS = '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359';
+export const BRLA_ADDRESS = process.env.NEXT_PUBLIC_BRLA_ADDRESS || '0xe6a537a407488807f0bbeb0038b79004f19dddfb';
 export const INFRA_FUND_ADDRESS = '0x190A9D2f206dbeb72Ce8b88Dc2603745fB5f50dB';
 export const CERTIFICATE_ADDRESS = process.env.NEXT_PUBLIC_CERTIFICATE_ADDRESS || '';
 
@@ -29,17 +30,29 @@ export const CASSWAP_READ_ABI = [
 export const CASSWAP_DIAMOND_READ_ABI = [
   'function getRatio() external view returns (uint256 numerator, uint256 denominator)',
   'function getRatioUSDC() external view returns (uint256 numerator, uint256 denominator)',
+  'function getRatioSell() external view returns (uint256 numerator, uint256 denominator)',
+  'function getRatioUSDCSell() external view returns (uint256 numerator, uint256 denominator)',
+  'function getRatioBRLA() external view returns (uint256 numerator, uint256 denominator)',
+  'function getRatioBRLASell() external view returns (uint256 numerator, uint256 denominator)',
+  'function quoteSwap(uint8 currencyIn, uint8 currencyOut, uint256 amountIn) external view returns (uint256 amountOut, uint256 fee)',
   'function getSwapFeeBps() external view returns (uint256)',
   'function getReserves() external view returns (uint256 casBalance, uint256 usdcBalance, uint256 polBalance)',
+  'function getReservesMulti() external view returns (uint256 casBalance, uint256 polBalance, uint256 usdcBalance, uint256 brlaBalance)',
   'function isSwapPaused() external view returns (bool)',
 ];
 
 export const CASSWAP_DIAMOND_WRITE_ABI = [
+  'function swapExact(uint8 currencyIn, uint8 currencyOut, uint256 amountIn, uint256 minOut, uint256 deadline) external payable returns (uint256)',
   'function buyCASWithPOL(uint256 minCasOut, uint256 deadline) external payable returns (uint256)',
   'function sellCASForPOL(uint256 casAmount, uint256 minPolOut, uint256 deadline) external returns (uint256)',
   'function buyCASWithUSDC(uint256 usdcAmount, uint256 minCasOut, uint256 deadline) external returns (uint256)',
   'function sellCASForUSDC(uint256 casAmount, uint256 minUsdcOut, uint256 deadline) external returns (uint256)',
+  'function buyCASWithBRLA(uint256 brlaAmount, uint256 minCasOut, uint256 deadline) external returns (uint256)',
+  'function sellCASForBRLA(uint256 casAmount, uint256 minBrlaOut, uint256 deadline) external returns (uint256)',
 ];
+
+// Currency ids do CASSwapUSDCPOLFacet: 0 = POL (nativo), 1 = USDC, 2 = BRLA, 3 = CAS.
+export const SWAP_CURRENCY_ID = Object.freeze({ POL: 0, USDC: 1, BRLA: 2, CAS: 3 });
 
 export const CAS_TOKEN_READ_ABI = [
   'function totalSupply() external view returns (uint256)',

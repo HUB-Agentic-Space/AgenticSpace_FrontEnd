@@ -83,15 +83,23 @@ export function getGoogleRedirectUri() {
  * @returns {Promise<{ status: number, data: Object }>}
  */
 export async function apiPost(path, body, jwt) {
-  const response = await fetch(`${API_BASE_URL}${API_PREFIX}${path}`, {
-    method: 'POST',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(jwt ? { Authorization: `Bearer ${jwt}` } : {})
-    },
-    body: JSON.stringify(body)
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}${API_PREFIX}${path}`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(jwt ? { Authorization: `Bearer ${jwt}` } : {})
+      },
+      body: JSON.stringify(body)
+    });
+  } catch (networkError) {
+    throw Object.assign(
+      new Error('Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.'),
+      { code: 'NETWORK_ERROR', cause: networkError }
+    );
+  }
   notifyUnauthorized(response);
 
   let data = {};
@@ -104,16 +112,24 @@ export async function apiPost(path, body, jwt) {
 }
 
 export async function apiRequest(path, { method = 'GET', body, jwt, apiKey } = {}) {
-  const response = await fetch(`${API_BASE_URL}${API_PREFIX}${path}`, {
-    method,
-    credentials: 'include',
-    headers: {
-      ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
-      ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
-      ...(apiKey ? { 'X-API-Key': apiKey } : {})
-    },
-    ...(body === undefined ? {} : { body: JSON.stringify(body) })
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}${API_PREFIX}${path}`, {
+      method,
+      credentials: 'include',
+      headers: {
+        ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+        ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
+        ...(apiKey ? { 'X-API-Key': apiKey } : {})
+      },
+      ...(body === undefined ? {} : { body: JSON.stringify(body) })
+    });
+  } catch (networkError) {
+    throw Object.assign(
+      new Error('Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.'),
+      { code: 'NETWORK_ERROR', cause: networkError }
+    );
+  }
   notifyUnauthorized(response);
 
   let data = {};
@@ -392,7 +408,10 @@ export function getAgentCommunities(publicId) {
  * @returns {Promise<{ status: number, data: { posts: Array<Object> } }>}
  */
 export function getAgentPostsByPublicId(publicId, limit = 50) {
-  return apiRequest(`/agents/${encodeURIComponent(publicId)}/posts?limit=${limit}`, {});
+  return normalizeResponse(
+    apiRequest(`/agents/${encodeURIComponent(publicId)}/posts?limit=${limit}`, {}),
+    (data) => ({ ...data, posts: (data.posts || []).map(normalizePost) })
+  );
 }
 
 /**
@@ -568,51 +587,127 @@ export function getAgentMessages(publicId, apiKey, status) {
 /* -------------------------------------------------------------------------- */
 
 /**
+ * Normaliza um post para o formato camelCase consumido pela UI.
+ *
+ * O backend pode responder em snake_case (Supabase) ou camelCase (Neo4j);
+ * esta função preserva os campos originais e adiciona os aliases camelCase
+ * (`authorAuid`, `authorName`, `authorPublicId`, `createdAt`, ...) para que os
+ * componentes não dependam do backend ativo.
+ *
+ * @param {Object} post Post retornado pela API.
+ * @returns {Object} Post com campos normalizados (aliases camelCase).
+ */
+export function normalizePost(post) {
+  if (!post || typeof post !== 'object') return post;
+  return {
+    ...post,
+    authorAuid: post.authorAuid ?? post.author_auid ?? null,
+    authorName: post.authorName ?? post.author_name ?? null,
+    authorPublicId: post.authorPublicId ?? post.author_public_id ?? null,
+    createdAt: post.createdAt ?? post.created_at ?? null,
+    frozenUntil: post.frozenUntil ?? post.frozen_until ?? null,
+    engagementScore: post.engagementScore ?? post.engagement_score ?? null,
+    topicId: post.topicId ?? post.topic_id ?? null,
+    communityPublicId: post.communityPublicId ?? post.community_public_id ?? null,
+    parentId: post.parentId ?? post.parent_id ?? null
+  };
+}
+
+/**
+ * Normaliza um tópico da listagem de comunidade para camelCase.
+ *
+ * @param {Object} topic Tópico retornado pela API.
+ * @returns {Object} Tópico com aliases camelCase.
+ */
+export function normalizeTopic(topic) {
+  if (!topic || typeof topic !== 'object') return topic;
+  return {
+    ...topic,
+    createdAt: topic.createdAt ?? topic.created_at ?? null,
+    engagementScore: topic.engagementScore ?? topic.engagement_score ?? null,
+    repliesCount: topic.repliesCount ?? topic.replies_count ?? null,
+    agentsCount: topic.agentsCount ?? topic.agents_count ?? null,
+    totalScore: topic.totalScore ?? topic.total_score ?? null,
+    communityPublicId: topic.communityPublicId ?? topic.community_public_id ?? null,
+    authorAuid: topic.authorAuid ?? topic.author_auid ?? null,
+    authorName: topic.authorName ?? topic.author_name ?? null,
+    authorPublicId: topic.authorPublicId ?? topic.author_public_id ?? null
+  };
+}
+
+/**
+ * Aplica uma função de normalização a um campo da resposta da API.
+ *
+ * @param {Promise<{ status: number, data: Object }>} promise Resposta de apiRequest.
+ * @param {(data: Object) => Object} normalize Função que transforma `data`.
+ * @returns {Promise<{ status: number, data: Object }>}
+ */
+async function normalizeResponse(promise, normalize) {
+  const res = await promise;
+  if (res.status !== 200 || !res.data || typeof res.data !== 'object') return res;
+  return { ...res, data: normalize(res.data) };
+}
+
+/**
  * Busca um post por ID (apenas leitura).
  */
 export function getPost(jwt, postId) {
-  return apiRequest(`/posts/${encodeURIComponent(postId)}`, {
-    method: 'GET',
-    jwt
-  });
+  return normalizeResponse(
+    apiRequest(`/posts/${encodeURIComponent(postId)}`, { method: 'GET', jwt }),
+    (data) => ({ ...data, post: normalizePost(data.post) })
+  );
 }
 
 /**
  * Lista posts de um tópico (apenas leitura).
  */
 export function getTopicPosts(jwt, topicId) {
-  return apiRequest(`/topics/${encodeURIComponent(topicId)}/posts`, {
-    method: 'GET',
-    jwt
-  });
+  return normalizeResponse(
+    apiRequest(`/topics/${encodeURIComponent(topicId)}/posts`, { method: 'GET', jwt }),
+    (data) => ({ ...data, posts: (data.posts || []).map(normalizePost) })
+  );
 }
 
 /**
  * Retorna árvore de respostas para um post (apenas leitura).
  */
 export function getReplyTree(jwt, postId) {
-  return apiRequest(`/posts/${encodeURIComponent(postId)}/replies`, {
-    method: 'GET',
-    jwt
-  });
+  return normalizeResponse(
+    apiRequest(`/posts/${encodeURIComponent(postId)}/replies`, { method: 'GET', jwt }),
+    (data) => ({
+      ...data,
+      replies: (data.replies || []).map((reply) =>
+        reply && reply.post ? { ...reply, post: normalizePost(reply.post) } : reply
+      )
+    })
+  );
 }
 
 /**
  * Lista os posts mais engajados de uma comunidade (apenas leitura).
  */
 export function getTopEngagedPosts(jwt, publicId, limit = 20) {
-  return apiRequest(`/communities/${encodeURIComponent(publicId)}/top-engaged`, {
-    method: 'GET',
-    jwt,
-    params: { limit }
-  });
+  return normalizeResponse(
+    apiRequest(`/communities/${encodeURIComponent(publicId)}/top-engaged`, {
+      method: 'GET',
+      jwt,
+      params: { limit }
+    }),
+    (data) => ({ ...data, posts: (data.posts || []).map(normalizePost) })
+  );
 }
 
+/**
+ * Lista os tópicos de uma comunidade com métricas (apenas leitura).
+ */
 export function getCommunityTopics(publicId, limit = 20, offset = 0) {
-  return apiRequest(`/communities/${encodeURIComponent(publicId)}/topics`, {
-    method: 'GET',
-    params: { limit, offset }
-  });
+  return normalizeResponse(
+    apiRequest(`/communities/${encodeURIComponent(publicId)}/topics`, {
+      method: 'GET',
+      params: { limit, offset }
+    }),
+    (data) => ({ ...data, topics: (data.topics || []).map(normalizeTopic) })
+  );
 }
 
 /* -------------------------------------------------------------------------- */
@@ -698,4 +793,22 @@ export function saveAgentOnchainRegistration(publicId, txHash, jwt) {
     body: { txHash },
     jwt
   });
+}
+
+/**
+ * Envia uma operação pública do fluxo QR Claim.
+ * @param {string} path Sufixo do endpoint público.
+ * @param {Object} body Corpo validado pelo backend.
+ * @returns {Promise<{status: number, data: Object}>} Resposta normalizada.
+ */
+export async function qrClaimRequest(path, body) {
+  const response = await fetch(`${API_BASE_URL}${API_PREFIX}${path}`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  let data = {};
+  try { data = await response.json(); } catch { data = {}; }
+  return { status: response.status, data };
 }

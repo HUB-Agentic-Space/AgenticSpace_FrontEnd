@@ -7,7 +7,7 @@
  */
 
 import Link from 'next/link';
-import { Coins, Shield, Users, Zap, ArrowRight } from 'lucide-react';
+import { Shield, Users, Zap, ArrowRight } from 'lucide-react';
 import { useTranslations } from '@/lib/LocaleProvider';
 
 const BENEFITS = [
@@ -28,29 +28,29 @@ const BENEFITS = [
   },
 ];
 
-export default function TokenomicsPreview() {
+export default function TokenomicsPreview({ index }) {
   const t = useTranslations();
 
   return (
     <section className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Coins className="text-brand-400" size={28} />
-        <div>
-          <h2 className="text-2xl font-bold text-white">
-            {t('home.tokenomics.title')}
-          </h2>
-          <p className="text-sm text-slate-400">
-            {t('home.tokenomics.subtitle')}
-          </p>
-        </div>
+      <div className="max-w-2xl">
+        <p className="eyebrow">
+          {index ? `${index} / ` : ''}
+          {t('home.tokenomics.title')}
+        </p>
+        <h2 className="section-title mt-2">
+          {t('home.tokenomics.subtitle')}
+        </h2>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
         {BENEFITS.map((b, i) => {
           const Icon = b.icon;
           return (
-            <div key={i} className="card">
-              <Icon className="mb-3 text-brand-400" size={24} />
+            <div key={i} className="card card-hover">
+              <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-md border border-brand-500/30 bg-brand-500/10">
+                <Icon className="text-brand-400" size={20} />
+              </div>
               <h3 className="mb-1 font-semibold text-white">
                 {t(b.titleKey)}
               </h3>
@@ -62,15 +62,13 @@ export default function TokenomicsPreview() {
         })}
       </div>
 
-      <div className="text-center">
-        <Link
-          href="/info/cas-token"
-          className="inline-flex items-center gap-2 text-brand-400 hover:text-brand-300 text-sm font-medium"
-        >
-          {t('home.tokenomics.learnMore')}
-          <ArrowRight size={16} />
-        </Link>
-      </div>
+      <Link
+        href="/info/cas-token"
+        className="link-arrow text-sm"
+      >
+        {t('home.tokenomics.learnMore')}
+        <ArrowRight size={16} />
+      </Link>
     </section>
   );
 }

@@ -37,7 +37,7 @@ function Stars({ rating }) {
         <Star
           key={n}
           size={14}
-          className={n <= Math.round(rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}
+          className={n <= Math.round(rating) ? 'fill-brand-400 text-brand-400' : 'text-slate-700'}
         />
       ))}
     </div>
@@ -52,11 +52,11 @@ export default function AgentRating({ publicId, variant = 'card' }) {
 
   if (variant === 'card') {
     return (
-      <div className="flex items-center gap-3 text-xs text-gray-500">
+      <div className="flex items-center gap-3 text-xs text-slate-500">
         <div className="flex items-center gap-1">
           <Stars rating={metrics.rating} />
-          <span className="font-medium text-gray-700">{metrics.rating}</span>
-          <span className="text-gray-400">({metrics.reviewCount})</span>
+          <span className="font-medium text-slate-300">{metrics.rating}</span>
+          <span className="text-slate-500">({metrics.reviewCount})</span>
         </div>
         <span className="flex items-center gap-1">
           <Activity size={12} /> {metrics.interactions} interações
@@ -67,25 +67,25 @@ export default function AgentRating({ publicId, variant = 'card' }) {
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div className="bg-gray-50 rounded-lg p-3 text-center">
+      <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-3 text-center">
         <Stars rating={metrics.rating} />
-        <p className="mt-1 text-lg font-bold text-gray-900">{metrics.rating}</p>
-        <p className="text-xs text-gray-500">{metrics.reviewCount} avaliações</p>
+        <p className="mt-1 text-lg font-bold text-white">{metrics.rating}</p>
+        <p className="font-mono text-xs text-slate-500">{metrics.reviewCount} avaliações</p>
       </div>
-      <div className="bg-gray-50 rounded-lg p-3 text-center">
-        <Activity className="mx-auto mb-1 text-blue-500" size={20} />
-        <p className="text-lg font-bold text-gray-900">{metrics.interactions}</p>
-        <p className="text-xs text-gray-500">Interações</p>
+      <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-3 text-center">
+        <Activity className="mx-auto mb-1 text-brand-400" size={20} />
+        <p className="text-lg font-bold text-white">{metrics.interactions}</p>
+        <p className="font-mono text-xs text-slate-500">Interações</p>
       </div>
-      <div className="bg-gray-50 rounded-lg p-3 text-center">
-        <TrendingUp className="mx-auto mb-1 text-green-500" size={20} />
-        <p className="text-lg font-bold text-gray-900">{metrics.successRate}%</p>
-        <p className="text-xs text-gray-500">Taxa de sucesso</p>
+      <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-3 text-center">
+        <TrendingUp className="mx-auto mb-1 text-green-400" size={20} />
+        <p className="text-lg font-bold text-white">{metrics.successRate}%</p>
+        <p className="font-mono text-xs text-slate-500">Taxa de sucesso</p>
       </div>
-      <div className="bg-gray-50 rounded-lg p-3 text-center">
-        <Clock className="mx-auto mb-1 text-purple-500" size={20} />
-        <p className="text-lg font-bold text-gray-900">{metrics.responseTime}s</p>
-        <p className="text-xs text-gray-500">Tempo de resposta</p>
+      <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-3 text-center">
+        <Clock className="mx-auto mb-1 text-brand-300" size={20} />
+        <p className="text-lg font-bold text-white">{metrics.responseTime}s</p>
+        <p className="font-mono text-xs text-slate-500">Tempo de resposta</p>
       </div>
     </div>
   );

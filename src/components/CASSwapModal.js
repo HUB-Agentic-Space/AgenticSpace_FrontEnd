@@ -17,11 +17,27 @@ import {
   CheckCircle,
   ArrowUpDown,
   Network,
+  LogOut,
 } from 'lucide-react';
 import Spinner from '@/components/Spinner';
 import { useWallet } from '@/lib/wallet/useWallet';
 
 const MIN_PRIORITY_FEE = BigInt('25000000000');
+
+// Provider somente-leitura (RPC público) cacheado por chainId. Chamadas
+// `view` não dependem da rede selecionada na carteira.
+const readProviderCache = new Map();
+
+function getReadProvider(targetChainId) {
+  const key = targetChainId || 137;
+  let provider = readProviderCache.get(key);
+  if (!provider) {
+    const url = process.env.NEXT_PUBLIC_RPC_URL || 'https://polygon.drpc.org';
+    provider = new ethers.JsonRpcProvider(url, key, { staticNetwork: true });
+    readProviderCache.set(key, provider);
+  }
+  return provider;
+}
 
 async function getGasOverrides(provider) {
   const feeData = await provider.getFeeData();
@@ -58,6 +74,8 @@ const CAS_TOKEN_ABI = [
 ];
 
 const BPS_DENOMINATOR = 10000;
+// Fallback da taxa de swap (0,5%) exibida até swapFeeBps() resolver on-chain.
+const DEFAULT_SWAP_FEE_BPS = 50;
 
 const DEFAULT_I18N = {
   title: 'CAS Swap',
@@ -71,6 +89,7 @@ const DEFAULT_I18N = {
   swapFee: 'Swap Fee',
   youReceive: 'You receive',
   connect: 'Connect MetaMask',
+  disconnect: 'Disconnect',
   connected: 'Connected',
   casBalance: 'CAS',
   swapping: 'Swapping...',
@@ -92,7 +111,7 @@ export default function CASSwapModal({
   const [mode, setMode] = useState('buy');
   const [amount, setAmount] = useState('');
   const [ratio, setRatio] = useState({ numerator: '1', denominator: '1' });
-  const [swapFeeBps, setSwapFeeBps] = useState(0);
+  const [swapFeeBps, setSwapFeeBps] = useState(DEFAULT_SWAP_FEE_BPS);
   const [loading, setLoading] = useState(false);
   const [txHash, setTxHash] = useState(null);
   const [error, setError] = useState('');
@@ -100,7 +119,7 @@ export default function CASSwapModal({
   const [casBalance, setCasBalance] = useState(null);
   const [mounted, setMounted] = useState(false);
   const [networkName, setNetworkName] = useState('');
-  const { connect: walletConnect, ethersProvider: walletEthersProvider, getProvider } = useWallet();
+  const { connect: walletConnect, disconnect: walletDisconnect, ethersProvider: walletEthersProvider, getProvider } = useWallet();
 
   useEffect(() => {
     setMounted(true);
@@ -132,11 +151,23 @@ export default function CASSwapModal({
     }
   }, [walletConnect, getProvider, chainId]);
 
-  const loadSwapInfo = useCallback(async () => {
-    const provider = getProvider();
-    if (!casSwapAddress || !provider) return;
+  const disconnectWallet = useCallback(async () => {
     try {
-      const ep = new ethers.BrowserProvider(provider);
+      await walletDisconnect();
+    } catch (err) {
+      console.error('[CASSwapModal] disconnect error:', err.message);
+    }
+    setAccount(null);
+    setCasBalance(null);
+    setNetworkName('');
+    setTxHash(null);
+    setError('');
+  }, [walletDisconnect]);
+
+  const loadSwapInfo = useCallback(async () => {
+    if (!casSwapAddress) return;
+    try {
+      const ep = getReadProvider(chainId);
       const swap = new ethers.Contract(casSwapAddress, CASSWAP_ABI, ep);
       const [num, den] = await swap.getRatio();
       setRatio({ numerator: num.toString(), denominator: den.toString() });
@@ -145,20 +176,19 @@ export default function CASSwapModal({
     } catch (err) {
       console.error('[CASSwapModal] loadSwapInfo:', err.message);
     }
-  }, [casSwapAddress, getProvider]);
+  }, [casSwapAddress, chainId]);
 
   const loadCasBalance = useCallback(async () => {
-    const provider = getProvider();
-    if (!casTokenAddress || !account || !provider) return;
+    if (!casTokenAddress || !account) return;
     try {
-      const ep = new ethers.BrowserProvider(provider);
+      const ep = getReadProvider(chainId);
       const cas = new ethers.Contract(casTokenAddress, CAS_TOKEN_ABI, ep);
       const bal = await cas.balanceOf(account);
       setCasBalance(bal.toString());
     } catch (err) {
       console.error('[CASSwapModal] loadCasBalance:', err.message);
     }
-  }, [casTokenAddress, account, getProvider]);
+  }, [casTokenAddress, account, chainId]);
 
   useEffect(() => {
     if (open && casSwapAddress) {
@@ -329,14 +359,24 @@ export default function CASSwapModal({
 
         {account && (
           <div className="space-y-1">
-            <p className="text-xs text-slate-500">
-              {t.connected}: {account.slice(0, 6)}...{account.slice(-4)}
-              {casBalance && (
-                <span className="ml-2 text-slate-400">
-                  {t.casBalance}: {(Number(casBalance) / 1e18).toFixed(4)}
-                </span>
-              )}
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-slate-500">
+                {t.connected}: {account.slice(0, 6)}...{account.slice(-4)}
+                {casBalance && (
+                  <span className="ml-2 text-slate-400">
+                    {t.casBalance}: {(Number(casBalance) / 1e18).toFixed(4)}
+                  </span>
+                )}
+              </p>
+              <button
+                type="button"
+                onClick={disconnectWallet}
+                className="btn-secondary px-2 py-1 text-xs"
+                aria-label="Disconnect wallet"
+              >
+                <LogOut size={12} /> {t.disconnect}
+              </button>
+            </div>
             {networkName && (
               <p className="flex items-center gap-1 text-xs text-slate-500">
                 <Network size={12} /> {networkName}

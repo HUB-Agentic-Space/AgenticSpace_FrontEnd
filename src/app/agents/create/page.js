@@ -92,6 +92,42 @@ function describeTemperature(value) {
   };
 }
 
+/**
+ * Monta uma mensagem de erro legível a partir do contrato de erro da API
+ * ({ error, code, details, next_step }).
+ *
+ * Prioriza `error` (mensagem principal), anexa `details.reason` quando traz
+ * contexto adicional e o `next_step.action` para orientar o usuário sobre
+ * o que fazer em seguida.
+ *
+ * @param {Object} data Corpo JSON da resposta de erro da API.
+ * @param {string} fallback Mensagem padrão quando o corpo não traz detalhes.
+ * @returns {string} Mensagem pronta para exibição.
+ */
+function describeApiError(data, fallback) {
+  if (!data || typeof data !== 'object') return fallback;
+  const parts = [];
+  if (typeof data.error === 'string' && data.error.trim()) parts.push(data.error.trim());
+  const reason = data.details?.reason;
+  if (typeof reason === 'string' && reason.trim() && reason !== data.error) parts.push(reason.trim());
+  const action = data.next_step?.action;
+  if (typeof action === 'string' && action.trim()) parts.push(action.trim());
+  return parts.length > 0 ? parts.join(' ') : fallback;
+}
+
+/**
+ * Traduz erros lançados pelo cliente HTTP (ex.: falha de rede) para uma
+ * mensagem amigável; demais erros já carregam a mensagem final.
+ *
+ * @param {Error} err Erro capturado no catch.
+ * @param {Function} t Função de tradução.
+ * @returns {string} Mensagem pronta para exibição.
+ */
+function statusMessageForError(err, t) {
+  if (err?.code === 'NETWORK_ERROR') return t('agentsCreate.errorMessages.network');
+  return err.message;
+}
+
 function CreateAgentContent() {
   const { session } = useAuth();
   const t = useTranslations();
@@ -162,12 +198,16 @@ function CreateAgentContent() {
     try {
       const { status: code, data } = await generateAgentName(form.description.trim(), session.jwt);
       if (code !== 200) {
-        throw new Error(data.error || t('agentsCreate.errorMessages.generateName'));
+        throw new Error(
+          data.code === 'LLM_UNAVAILABLE'
+            ? t('agentsCreate.errorMessages.llmUnavailable')
+            : describeApiError(data, t('agentsCreate.errorMessages.generateName'))
+        );
       }
       setForm((f) => ({ ...f, name: data.name, id: data.suggestedId }));
       setStatus({ type: 'success', message: t('agentsCreate.success.nameGenerated') });
     } catch (err) {
-      setStatus({ type: 'error', message: err.message });
+      setStatus({ type: 'error', message: statusMessageForError(err, t) });
     } finally {
       setGeneratingName(false);
     }
@@ -299,7 +339,7 @@ function CreateAgentContent() {
 
       const { status: code, data } = await validateAgentCreation(payload, session.jwt);
       if (code !== 200) {
-        throw new Error(data.error || t('agentsCreate.errorMessages.checkId'));
+        throw new Error(describeApiError(data, t('agentsCreate.errorMessages.checkId')));
       }
 
       const allValid = data.nameAvailable && data.idAvailable && data.descriptionValidation?.valid;
@@ -335,7 +375,7 @@ function CreateAgentContent() {
       setStatus({ type: 'success', message: t('agentsCreate.success.allValid') });
       setStep('confirm');
     } catch (err) {
-      setStatus({ type: 'error', message: err.message });
+      setStatus({ type: 'error', message: statusMessageForError(err, t) });
     } finally {
       setLoading(false);
     }
@@ -363,13 +403,13 @@ function CreateAgentContent() {
       if (effectiveId) payload.id = effectiveId;
       const { status: code, data } = await createAgent(payload, session.jwt);
       if (code !== 201) {
-        throw new Error(data.error || t('agentsCreate.errorMessages.create'));
+        throw new Error(describeApiError(data, t('agentsCreate.errorMessages.create')));
       }
       saveAgent(session.subject?.id || '', data);
       setCreated(data);
       setStep('done');
     } catch (err) {
-      setStatus({ type: 'error', message: err.message });
+      setStatus({ type: 'error', message: statusMessageForError(err, t) });
       setStep('form');
     } finally {
       setLoading(false);
@@ -500,7 +540,7 @@ function CreateAgentContent() {
         )}
 
         <div className="mt-6 flex justify-center gap-3">
-          <Link href={`/agents/${encodeURIComponent(created.id)}`} className="btn-primary">
+          <Link href={`/agents/view?id=${encodeURIComponent(created.id)}`} className="btn-primary">
             Ver perfil do agente
           </Link>
           <Link href="/agents" className="btn-secondary">

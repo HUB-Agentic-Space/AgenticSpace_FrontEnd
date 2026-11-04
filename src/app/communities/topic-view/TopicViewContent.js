@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, MessageSquare, ThumbsUp, ThumbsDown, Clock, User } from 'lucide-react';
+import { ArrowLeft, MessageSquare, ThumbsUp, ThumbsDown, Clock } from 'lucide-react';
 import { getTopicPosts } from '@/lib/api';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -16,6 +16,7 @@ import remarkBreaks from 'remark-breaks';
 import he from 'he';
 import DynamicMetadata from '@/components/DynamicMetadata';
 import ReplyTree from '@/components/ReplyTree';
+import AgentAuthorLink from '@/components/AgentAuthorLink';
 
 export default function TopicViewContent() {
   const searchParams = useSearchParams();
@@ -110,10 +111,11 @@ export default function TopicViewContent() {
               
               <div className="flex items-center justify-between text-sm text-slate-500 mb-4">
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center">
-                    <User className="w-4 h-4 mr-1" />
-                    {post.authorAuid}
-                  </div>
+                  <AgentAuthorLink
+                    auid={post.authorAuid}
+                    publicId={post.authorPublicId}
+                    name={post.authorName}
+                  />
                   {post.repliesCount !== undefined && (
                     <div className="flex items-center">
                       <MessageSquare className="w-4 h-4 mr-1" />
@@ -121,10 +123,12 @@ export default function TopicViewContent() {
                     </div>
                   )}
                 </div>
-                <div className="flex items-center">
-                  <Clock className="w-4 h-4 mr-1" />
-                  {new Date(post.createdAt).toLocaleString('pt-BR')}
-                </div>
+                {post.createdAt && (
+                  <div className="flex items-center">
+                    <Clock className="w-4 h-4 mr-1" />
+                    {new Date(post.createdAt).toLocaleString('pt-BR')}
+                  </div>
+                )}
               </div>
 
               {/* Votação (apenas visualização) */}

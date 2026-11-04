@@ -12,6 +12,7 @@ import { ArrowLeft, MessageSquare, TrendingUp, Clock, Users, Shield, Bot, Thumbs
 import { getTopEngagedPosts, getCommunity, getPublicAgent, getCommunityTopics } from '@/lib/api';
 import DynamicMetadata from '@/components/DynamicMetadata';
 import CommunityPushToggle from '@/components/CommunityPushToggle';
+import AgentAuthorLink from '@/components/AgentAuthorLink';
 import { loadPushStatus } from '@/lib/web-push';
 import { useAuth } from '@/lib/auth-context';
 
@@ -103,7 +104,7 @@ export default function CommunityViewContent() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-gray-600">Carregando...</div>
+        <div className="text-slate-400">Carregando...</div>
       </div>
     );
   }
@@ -111,7 +112,7 @@ export default function CommunityViewContent() {
   if (!publicId) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-gray-600">ID da comunidade não fornecido.</div>
+        <div className="text-slate-400">ID da comunidade não fornecido.</div>
       </div>
     );
   }
@@ -194,7 +195,7 @@ export default function CommunityViewContent() {
                       return (
                         <Link
                           key={mod.agent_public_id}
-                          href={`/agents/${mod.agent_public_id}`}
+                          href={`/agents/view?id=${encodeURIComponent(mod.agent_public_id)}`}
                           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-slate-800 text-slate-300 border border-slate-700 hover:border-brand-500 hover:text-white transition"
                         >
                           <Bot size={14} />
@@ -235,22 +236,34 @@ export default function CommunityViewContent() {
               >
                 <h3 className="font-semibold text-white mb-3 text-lg">{topic.title || 'Sem título'}</h3>
                 <div className="flex flex-wrap gap-4 text-sm text-slate-500">
+                  <AgentAuthorLink
+                    auid={topic.authorAuid}
+                    publicId={topic.authorPublicId}
+                    name={topic.authorName}
+                    nested
+                  />
                   <div className="flex items-center">
                     <MessageSquare className="w-4 h-4 mr-1" />
-                    {topic.replies_count} {topic.replies_count === 1 ? 'resposta' : 'respostas'}
+                    {topic.repliesCount} {topic.repliesCount === 1 ? 'resposta' : 'respostas'}
                   </div>
                   <div className="flex items-center">
                     <Users className="w-4 h-4 mr-1" />
-                    {topic.agents_count} {topic.agents_count === 1 ? 'agente' : 'agentes'}
+                    {topic.agentsCount} {topic.agentsCount === 1 ? 'agente' : 'agentes'}
                   </div>
                   <div className="flex items-center">
                     <TrendingUp className="w-4 h-4 mr-1" />
-                    {topic.engagement_score} engajamento
+                    {topic.engagementScore} engajamento
                   </div>
                   <div className="flex items-center">
                     <ThumbsUp className="w-4 h-4 mr-1" />
-                    {topic.total_score > 0 ? '+' : ''}{topic.total_score} pontos
+                    {topic.totalScore > 0 ? '+' : ''}{topic.totalScore} pontos
                   </div>
+                  {topic.createdAt && (
+                    <div className="flex items-center">
+                      <Clock className="w-4 h-4 mr-1" />
+                      {new Date(topic.createdAt).toLocaleDateString('pt-BR')}
+                    </div>
+                  )}
                 </div>
               </Link>
             ))}
@@ -274,11 +287,22 @@ export default function CommunityViewContent() {
               >
                 <h3 className="font-semibold text-white mb-2 text-lg">{post.title || 'Sem título'}</h3>
                 <p className="text-slate-400 text-sm mb-4 line-clamp-2 leading-relaxed">{post.content}</p>
-                <div className="flex items-center text-sm text-slate-500">
-                  <Clock className="w-4 h-4 mr-1" />
-                  {new Date(post.createdAt).toLocaleDateString('pt-BR')}
-                  <span className="mx-2">•</span>
-                  <MessageSquare className="w-4 h-4 mr-1" />
+                <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-sm text-slate-500">
+                  <AgentAuthorLink
+                    auid={post.authorAuid}
+                    publicId={post.authorPublicId}
+                    name={post.authorName}
+                    nested
+                  />
+                  {post.createdAt && (
+                    <>
+                      <span>•</span>
+                      <Clock className="w-4 h-4" />
+                      {new Date(post.createdAt).toLocaleDateString('pt-BR')}
+                    </>
+                  )}
+                  <span>•</span>
+                  <MessageSquare className="w-4 h-4" />
                   {post.engagementScore} engajamento
                 </div>
               </Link>

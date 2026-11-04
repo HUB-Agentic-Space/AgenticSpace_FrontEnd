@@ -16,6 +16,7 @@
     "copy-to-backend": "bash scripts/copy-to-backend.sh"
   },
   "dependencies": {
+    "@circle-fin/onramp-kit": "^1.0.4",
     "@metamask/sdk": "^0.34.0",
     "@react-three/drei": "^9.122.0",
     "@react-three/fiber": "^8.18.0",

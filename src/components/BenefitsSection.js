@@ -42,27 +42,28 @@ const BENEFITS = [
   },
 ];
 
-export default function BenefitsSection() {
+export default function BenefitsSection({ index }) {
   const t = useTranslations();
 
   return (
     <section className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-white">
+      <div className="max-w-2xl">
+        <p className="eyebrow">
+          {index ? `${index} / ` : ''}
           {t('home.benefits.title')}
-        </h2>
-        <p className="mt-2 text-slate-400">
-          {t('home.benefits.subtitle')}
         </p>
+        <h2 className="section-title mt-2">
+          {t('home.benefits.subtitle')}
+        </h2>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
         {BENEFITS.map((b, i) => {
           const Icon = b.icon;
           return (
-            <div key={i} className="card transition hover:border-brand-500/50">
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600/20">
-                <Icon className="text-brand-400" size={22} />
+            <div key={i} className="card card-hover hover:border-brand-500/50">
+              <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-md border border-brand-500/30 bg-brand-500/10">
+                <Icon className="text-brand-400" size={20} />
               </div>
               <h3 className="mb-1 font-semibold text-white">
                 {t(b.titleKey)}

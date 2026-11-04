@@ -3,17 +3,18 @@
 /**
  * @file page.js (rota '/info/cas-token/swap')
  * @description Terminal de Operações do CAS Token. Exibe o swap nativo CASSwap
- *              (POL/CAS) inline, terminais de preço (GeckoTerminal, DEX Screener)
- *              e terminais de swap em DEXs parceiras onde o CAS pode ser
- *              comprado/trocado na Polygon PoS.
+ *              (POL/CAS) inline, terminais de preço (GeckoTerminal, DexPaprika,
+ *              DEX Screener) e terminais de swap em DEXs parceiras onde o CAS
+ *              pode ser comprado/trocado na Polygon PoS.
  */
 
-import { ExternalLink, ArrowUpDown, Info, BarChart3, Terminal } from 'lucide-react';
+import { ExternalLink, ArrowUpDown, Info, BarChart3, Terminal, CreditCard } from 'lucide-react';
 import Link from 'next/link';
 import CASSwapInline from '@/components/CASSwapInline';
+import OnrampPanel from '@/components/OnrampPanel';
 import { useLocaleContext, useTranslations } from '@/lib/LocaleProvider';
 import {
-  CAS_TOKEN_ADDRESS, DIAMOND_ADDRESS, USDC_ADDRESS,
+  CAS_TOKEN_ADDRESS, DIAMOND_ADDRESS, USDC_ADDRESS, BRLA_ADDRESS,
   EXPLORER_BASE, POLYGON_CHAIN_ID,
 } from '@/lib/cas-token-config';
 
@@ -51,6 +52,24 @@ const PRICE_TERMINALS = [
     color: '#6F5DE0',
   },
   {
+    name: 'DexPaprika — SushiSwap',
+    url: 'https://dexpaprika.com/polygon/pool/0x265d86d4d43c32037b032097e8bfb6893e1c3964?utm_source=hubagentic.space',
+    description: 'Analytics e liquidez da pool CAS/WPOL na SushiSwap',
+    color: '#E87722',
+  },
+  {
+    name: 'DexPaprika — Uniswap V3',
+    url: 'https://dexpaprika.com/polygon/pool/0x2a37bca556c39418b779901f9b2988414ee550dc?utm_source=hubagentic.space',
+    description: 'Analytics e liquidez da pool CAS/WPOL na Uniswap V3',
+    color: '#FF007A',
+  },
+  {
+    name: 'DexPaprika — QuickSwap V2',
+    url: 'https://dexpaprika.com/polygon/pool/0xf77bd26fe17adb1bc99be6cd63414b2a7819690e?utm_source=hubagentic.space',
+    description: 'Analytics e liquidez da pool CAS/WPOL na QuickSwap V2',
+    color: '#4181E0',
+  },
+  {
     name: 'DEX Screener — SushiSwap',
     url: 'https://dexscreener.com/polygon/0x265d86d4d43c32037b032097e8bfb6893e1c3964',
     description: 'Gráfico e liquidez CAS/WPOL na SushiSwap',
@@ -82,6 +101,30 @@ const SWAP_TERMINALS = [
     url: 'https://web3.okx.com/pt-br/token/polygon_pos/0x5151a34eac7ba08cd6b540b32cd30316218a2287?ref=COINGECKOREF',
     description: 'Compre e negocie CAS na OKX DEX (Polygon)',
     color: '#000000',
+  },
+  {
+    name: 'ApeSwap',
+    url: 'https://apeswap.finance/swap?outputCurrency=0x5151a34eac7ba08cd6b540b32cd30316218a2287&chainId=137',
+    description: 'Troque POL por CAS na ApeSwap (Polygon)',
+    color: '#FFB300',
+  },
+  {
+    name: 'QuickSwap',
+    url: 'https://quickswap.exchange/#/swap?currency0=ETH&currency1=0x5151a34eac7ba08cd6b540b32cd30316218a2287',
+    description: 'Swap rápido POL/CAS na QuickSwap (Polygon)',
+    color: '#4181E0',
+  },
+  {
+    name: '1inch',
+    url: 'https://1inch.com/swap?chain=137&from=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&to=0x5151a34eac7ba08cd6b540b32cd30316218a2287',
+    description: 'Melhor rota agregada via 1inch (Polygon)',
+    color: '#1A6BCA',
+  },
+  {
+    name: 'Velora',
+    url: 'https://app.velora.xyz/app/swap?network=polygon&srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&destToken=0x5151a34eac7ba08cd6b540b32cd30316218a2287',
+    description: 'Agregador de liquidez Velora para CAS (Polygon)',
+    color: '#FF6B35',
   },
 ];
 
@@ -123,9 +166,10 @@ export default function CASTokenSwapPage() {
           <h1 className="text-5xl font-bold text-white">Terminal de Operações</h1>
         </div>
         <p className="text-xl text-slate-400 max-w-3xl mx-auto">
-          Compre, venda e acompanhe o CAS na Polygon PoS. Use o swap nativo
-          CASSwap (POL/USDC), consulte terminais de preço ou escolha uma DEX
-          parceira abaixo.
+          Compre, venda e acompanhe o CAS na Polygon PoS. Adicione fundos com
+          moeda fiduciária via onramp (USDC/EURC), use o swap nativo CASSwap
+          (CAS, POL, USDC e BRLA), consulte terminais de preço ou escolha uma
+          DEX parceira abaixo.
         </p>
         <div className="flex flex-wrap gap-3 justify-center">
           <Link
@@ -137,6 +181,23 @@ export default function CASTokenSwapPage() {
         </div>
       </section>
 
+      {/* Onramp fiat → cripto (Circle Onramp Kit) */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3">
+          <CreditCard className="text-brand-400" size={28} />
+          <h2 className="text-3xl font-bold text-white">Adicione Fundos (Fiat)</h2>
+        </div>
+        <p className="text-slate-400 max-w-2xl">
+          Converta moeda fiduciária em <strong className="text-slate-300">USDC</strong>{' '}
+          ou <strong className="text-slate-300">EURC</strong> sem sair do site:
+          o widget hospedado pela Circle (Onramp Kit) cuida de KYC, pagamento e
+          entrega na rede escolhida — Polygon, Arc e demais redes suportadas
+          pelo provedor. Para BRLA, compre USDC e faça o swap no CASSwap logo
+          abaixo.
+        </p>
+        <OnrampPanel />
+      </section>
+
       {/* CASSwap nativo */}
       <section className="space-y-6">
         <div className="flex items-center gap-3">
@@ -145,16 +206,50 @@ export default function CASTokenSwapPage() {
         </div>
         <p className="text-slate-400 max-w-2xl">
           Swap direto via CASSwapUSDCPOLFacet no Diamond da Agentic Space.
-          Compre CAS com POL ou USDC, ou venda CAS por POL ou USDC
-          instantaneamente. Taxa e ratio definidos on-chain.
+          Troque entre CAS, POL, USDC e BRLA em qualquer direção — rotas sem
+          CAS nas pontas (ex.: BRLA → USDC) são compostas internamente via CAS
+          como unidade de conta. Taxa e ratios definidos on-chain.
         </p>
         <CASSwapInline
           diamondAddress={DIAMOND_ADDRESS}
           casTokenAddress={CAS_TOKEN_ADDRESS}
           usdcAddress={USDC_ADDRESS}
+          brlaAddress={BRLA_ADDRESS}
           explorerUrl={EXPLORER_BASE}
           chainId={POLYGON_CHAIN_ID}
         />
+
+        {/* Como funciona o spread */}
+        <div className="card max-w-2xl mx-auto space-y-3">
+          <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            <Info size={18} className="text-brand-400" /> Como funciona o spread
+          </h3>
+          <p className="text-sm text-slate-400">
+            O CASSwap mantém reservas próprias de CAS, POL, USDC e BRLA e opera
+            com <strong className="text-slate-300">preços distintos de compra e
+            venda</strong> (spread), atualizados a cada minuto a partir das pools
+            de mercado da Polygon:
+          </p>
+          <ul className="list-disc list-inside space-y-1 text-sm text-slate-400">
+            <li>
+              <strong className="text-slate-300">Compra:</strong> ao adquirir
+              CAS, você paga o maior preço observado entre as pools válidas.
+            </li>
+            <li>
+              <strong className="text-slate-300">Venda:</strong> ao vender CAS,
+              você recebe o menor preço observado.
+            </li>
+            <li>
+              A diferença entre os dois preços, somada à taxa de swap, fica nas
+              reservas do contrato — é o que sustenta a liquidez e a
+              continuidade do próprio swap.
+            </li>
+            <li>
+              Em rotas compostas (ex.: BRLA → USDC) o CAS é apenas a unidade de
+              conta interna e os spreads das duas pernas se somam à taxa única.
+            </li>
+          </ul>
+        </div>
       </section>
 
       {/* Terminais de Preço */}

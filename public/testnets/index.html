@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Catálogo de testnets EVM com configurações de rede e tokens oficiais para carteiras compatíveis.">
+  <meta name="robots" content="index,follow">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://chainid.network; img-src 'self' https: data:; style-src 'self'; script-src 'self'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'">
+  <link rel="canonical" href="https://hubagentic.space/testnets/">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <title>Testnets EVM | Agentic Space</title>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Voltar ao Agentic Space">
+      <span class="brand-mark" aria-hidden="true">AS</span>
+      <span>Agentic Space</span>
+    </a>
+    <a class="back-link" href="/">Página inicial</a>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="page-title">
+      <p class="eyebrow">Referência para desenvolvimento Web3</p>
+      <h1 id="page-title">Testnets EVM</h1>
+      <p class="hero-copy">Consulte configurações de redes de teste, copie os dados e cadastre redes ou tokens oficiais em uma carteira compatível com EIP-1193.</p>
+      <div class="notice" role="note">
+        <strong>Atenção:</strong> ativos de testnet não possuem valor financeiro. Confirme sempre a rede e a fonte oficial antes de interagir com um contrato.
+      </div>
+    </section>
+
+    <section class="toolbar" aria-label="Filtros do catálogo">
+      <label class="search-field">
+        <span>Buscar rede, chain ID ou símbolo</span>
+        <input id="search" type="search" placeholder="Ex.: Sepolia, 11155111, ETH" autocomplete="off">
+      </label>
+      <label>
+        <span>Status</span>
+        <select id="status-filter">
+          <option value="all">Todas</option>
+          <option value="active">Ativas</option>
+          <option value="deprecated">Depreciadas</option>
+        </select>
+      </label>
+      <label class="checkbox-field">
+        <input id="tokens-filter" type="checkbox">
+        <span>Somente com tokens oficiais</span>
+      </label>
+    </section>
+
+    <section class="catalog-summary" aria-live="polite">
+      <div>
+        <strong id="result-count">Carregando catálogo…</strong>
+        <span id="snapshot-info"></span>
+      </div>
+      <button id="retry-button" class="button secondary hidden" type="button">Tentar novamente</button>
+    </section>
+
+    <div id="status-message" class="status-message" role="status" aria-live="polite"></div>
+    <section id="network-list" class="network-list" aria-label="Redes de teste EVM" aria-busy="true"></section>
+  </main>
+
+  <dialog id="token-dialog" aria-labelledby="dialog-title" aria-describedby="dialog-description">
+    <form method="dialog" class="dialog-card">
+      <div class="dialog-heading">
+        <div>
+          <p class="eyebrow">Token de teste</p>
+          <h2 id="dialog-title">Escolha uma ação</h2>
+        </div>
+        <button class="icon-button" value="cancel" aria-label="Fechar diálogo" type="submit">×</button>
+      </div>
+      <p id="dialog-description"></p>
+      <code id="dialog-address"></code>
+      <div class="dialog-actions">
+        <button id="copy-token" class="button secondary" value="copy" type="button">Copiar endereço</button>
+        <button id="add-token" class="button primary" value="add" type="button">Cadastrar na carteira</button>
+      </div>
+      <p id="dialog-status" class="dialog-status" aria-live="polite"></p>
+    </form>
+  </dialog>
+
+  <footer>
+    <p>Dados de redes: <a href="https://github.com/ethereum-lists/chains" target="_blank" rel="noopener noreferrer">ethereum-lists/chains</a>. Tokens exibidos somente com referência oficial registrada.</p>
+  </footer>
+
+  <script src="./app.js" defer></script>
+</body>
+</html>

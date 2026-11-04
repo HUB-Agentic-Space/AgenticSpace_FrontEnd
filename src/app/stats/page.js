@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect, Suspense } from 'react';
-import { Users, Eye, Bot, TrendingUp, BarChart3, ArrowLeft, Calendar, Activity, X, Sparkles, DollarSign, Target, Zap, AlertTriangle, Server, Cpu, PiggyBank, LineChart as LineChartIcon, GitBranch, Layers, GraduationCap, Coins, ExternalLink, Rocket, ArrowUpRight } from 'lucide-react';
+import { Users, Eye, Bot, TrendingUp, BarChart3, ArrowLeft, Calendar, Activity, X, Sparkles, DollarSign, Target, Zap, AlertTriangle, Server, Cpu, PiggyBank, LineChart as LineChartIcon, GitBranch, Layers, GraduationCap, Coins, ExternalLink, Rocket, ArrowUpRight, Shield } from 'lucide-react';
 import Link from 'next/link';
 import enTranslations from '@/i18n/locales/en.json';
 import { API_BASE_URL } from '@/lib/api.js';
@@ -924,7 +924,23 @@ function StatsPageContent() {
 
         <div className="grid gap-4 md:grid-cols-3 mb-6">
           <ProductCard
+            icon={<Shield size={20} className="text-brand-400" />}
+            title={t('stats.productCryptoChatTitle')}
+            description={t('stats.productCryptoChatDesc')}
+            href="https://crypto-chat.rapport.tec.br"
+            badge={t('stats.cryptoBase')}
+            ctaLabel={t('stats.visitProject')}
+          />
+          <ProductCard
             icon={<Coins size={20} className="text-brand-400" />}
+            title={t('stats.productCasTitle')}
+            description={t('stats.productCasDesc')}
+            href="https://hubagentic.space/info/cas-token"
+            badge={t('stats.tokenBadge')}
+            ctaLabel={t('stats.visitProject')}
+          />
+          <ProductCard
+            icon={<PiggyBank size={20} className="text-brand-400" />}
             title={t('stats.productMeuDinheiroTitle')}
             description={t('stats.productMeuDinheiroDesc')}
             href="https://rapport.tec.br/meudinheiro"

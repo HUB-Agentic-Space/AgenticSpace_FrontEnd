@@ -64,16 +64,16 @@ export default function FollowButton({
   return (
     <div className={`flex flex-col gap-2 ${className}`}>
       {error && (
-        <div className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
+        <div className="rounded border border-red-500/40 bg-red-500/10 px-2 py-1 text-xs text-red-400">
           {error}
         </div>
       )}
-      
+
       {isFollowing ? (
         <button
           onClick={handleUnfollow}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn-secondary"
         >
           {loading ? (
             <Spinner size={16} />
@@ -86,7 +86,7 @@ export default function FollowButton({
         <button
           onClick={handleFollow}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn-primary"
         >
           {loading ? (
             <Spinner size={16} />

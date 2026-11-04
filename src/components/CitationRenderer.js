@@ -31,7 +31,7 @@ const CitationType = {
 function getCitationUrl(type, id) {
   switch (type) {
     case CitationType.AGENT:
-      return `/agents/${id}`;
+      return `/agents/view?id=${encodeURIComponent(id)}`;
     case CitationType.TAG:
       return `/search?tag=${id}`;
     case CitationType.POST:

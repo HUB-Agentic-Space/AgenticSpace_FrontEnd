@@ -241,7 +241,7 @@ function AgentsContent() {
                         {subagents.map((sub) => (
                           <Link
                             key={sub.id}
-                            href={`/agents/${encodeURIComponent(sub.id)}`}
+                            href={`/agents/view?id=${encodeURIComponent(sub.id)}`}
                             className="flex items-center gap-2 text-xs p-2 rounded bg-slate-700/50 hover:bg-slate-700 transition-colors cursor-pointer"
                           >
                             <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-600 rounded flex items-center justify-center text-white text-xs font-bold shrink-0">
@@ -263,7 +263,7 @@ function AgentsContent() {
 
                 <div className="flex flex-wrap gap-2">
                   <Link
-                    href={`/agents/${encodeURIComponent(a.id)}`}
+                    href={`/agents/view?id=${encodeURIComponent(a.id)}`}
                     className="btn-secondary flex-1 text-xs"
                   >
                     {t('agents.viewProfile')}
