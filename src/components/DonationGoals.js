@@ -22,7 +22,10 @@ export default function DonationGoals({ data, report }) {
       .catch(() => { if (active) setBrlPerUsd(null); });
     return () => { active = false; };
   }, []);
-  const summary = calculateDonationGoals(data, report, month, today, { brlPerUsd });
+  const backendRate = Number.isFinite(report?.brlPerUsd) && report.brlPerUsd > 0 ? report.brlPerUsd : null;
+  const effectiveRate = backendRate || brlPerUsd;
+  const rateSource = backendRate ? 'CryptoCompare' : 'exchangerate-api';
+  const summary = calculateDonationGoals(data, report, month, today, { brlPerUsd: effectiveRate });
   return (
     <section className="card min-w-0 space-y-4" aria-labelledby="donation-goals-title">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -39,7 +42,7 @@ export default function DonationGoals({ data, report }) {
       </div>
       <progress aria-label="Percentual da meta mensal" max="100" value={Math.min(100, summary.percent)} className="h-3 w-full accent-orange-400" />
       <p className="text-sm text-slate-300">{summary.percent.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}% da meta · Consolidado: {usd(summary.confirmedUsd)} · Parcial / scan: {usd(summary.estimatedUsd)}</p>
-      <p className="text-xs text-slate-400">O total consolidado informado para um dia substitui PIX e scan desse dia, sem duplicidade. Reais usam a cotação registrada (R$ por US$ 1) quando disponível{summary.brlPerUsd ? `; sem cotação histórica, usa-se a cotação atual exchangerate-api (R$ ${summary.brlPerUsd.toLocaleString('pt-BR', { maximumFractionDigits: 4 })} por US$ 1)` : '; sem cotação disponível, o valor fica pendente'}. Dias sem consolidação usam registros PIX com câmbio e estimativas do scan pela cotação atual CoinGecko USDC/USD. Todos os dias seguem UTC.</p>
+      <p className="text-xs text-slate-400">O total consolidado informado para um dia substitui PIX e scan desse dia, sem duplicidade. Reais usam a cotação registrada (R$ por US$ 1) quando disponível{summary.brlPerUsd ? `; sem cotação histórica, usa-se a cotação atual ${rateSource} (R$ ${summary.brlPerUsd.toLocaleString('pt-BR', { maximumFractionDigits: 4 })} por US$ 1)` : '; sem cotação disponível, o valor fica pendente'}. Dias sem consolidação usam registros PIX com câmbio e estimativas do scan pela cotação atual CoinGecko USDC/USD. Todos os dias seguem UTC.</p>
       <p className="text-xs text-slate-400">Dias consolidados com conversão completa: {summary.consolidatedDays}/{summary.daily.length}. Registros sem cotação: {summary.pending}; seus valores não estão incluídos. Ausência de registro não comprova arrecadação zero.</p>
       {summary.scanUnavailable && <p role="status" className="text-xs text-amber-300">Scan indisponível, incompleto ou com avisos. O progresso pode estar subestimado; consulte o extrato.</p>}
       <div className="h-72 min-w-0" data-testid="donation-goal-chart">
