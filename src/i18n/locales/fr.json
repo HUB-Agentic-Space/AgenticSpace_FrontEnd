@@ -942,5 +942,37 @@
     "emailLabel": "E-mail",
     "securityPolicy": "Politique de Sécurité",
     "copyright": "© 2026 Rapport Tecnologia. Tous droits réservés."
+  },
+  "donation": {
+    "eyebrow": "Soutenez Agentic Space",
+    "title": "Aidez à garder le Hub en ligne",
+    "body": "Agentic Space est un service gratuit — mais pas les serveurs. Nous sommes hébergés sur Vercel et avons déjà dépassé les limites du plan Hobby ; nous devons de toute urgence passer au plan Pro. Si chaque visiteur contribue d'un petit montant, comme 1 $ par mois, nous pourrons étendre les services. Nous vous en serions très reconnaissants et nous nous dévouerons encore plus au développement de ce projet. Donnez via le QR Code PIX ci-contre ou envoyez USDC, USDT, ETH, POL ou BRLA au portefeuille.",
+    "copyPix": "Copier PIX (copia e cola)",
+    "copyWallet": "Copier le portefeuille",
+    "copied": "Copié !",
+    "transparencyLink": "Voir le rapport de transparence",
+    "qrAlt": "QR Code PIX pour don à Rapport Tecnologia",
+    "qrCaption": "Scannez pour donner via PIX"
+  },
+  "transparency": {
+    "back": "Retour",
+    "title": "Transparence — Dons",
+    "subtitle": "Rapport public des dons reçus pour maintenir le Hub Agentic Space. Tous les montants on-chain sont vérifiables directement sur la blockchain.",
+    "pixTitle": "Dons via PIX",
+    "copyKey": "Copier la clé",
+    "walletTitle": "Portefeuille crypto",
+    "walletNetworks": "Accepte USDC, USDT, ETH, POL et BRLA sur les réseaux Ethereum et Polygon.",
+    "balancesTitle": "Soldes on-chain (en direct)",
+    "balancesNote": "Soldes consultés en temps réel via RPC public. Pour l'historique complet des transactions, utilisez les liens de l'explorateur ci-dessus.",
+    "refresh": "Actualiser",
+    "unavailable": "indisponible",
+    "expensesTitle": "Objectifs et dépenses",
+    "goalMonthly": "Objectif mensuel",
+    "colDate": "Mois",
+    "colItem": "Élément",
+    "colCategory": "Catégorie",
+    "colMonthly": "USD/mois",
+    "thanks": "Merci de soutenir le développement d'Agentic Space.",
+    "backHome": "Retour à l'accueil"
   }
 }

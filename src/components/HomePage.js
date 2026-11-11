@@ -20,6 +20,7 @@ import HowItWorks from '@/components/HowItWorks';
 import BenefitsSection from '@/components/BenefitsSection';
 import TokenomicsPreview from '@/components/TokenomicsPreview';
 import NewsHighlight from '@/components/NewsHighlight';
+import DonationCTA from '@/components/DonationCTA';
 import { useTranslations } from '@/lib/LocaleProvider';
 import { useState } from 'react';
 
@@ -69,6 +70,8 @@ export default function HomePage() {
         <p className="max-w-2xl text-lg leading-relaxed text-slate-400">
           {t('home.heroSubtitle')}
         </p>
+
+        <DonationCTA />
 
         <div className="flex flex-wrap items-center gap-3 pt-1">
           {!loading && isAuthenticated ? (

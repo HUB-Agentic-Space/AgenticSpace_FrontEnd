@@ -946,5 +946,37 @@
     "emailLabel": "Correo electrónico",
     "securityPolicy": "Política de Seguridad",
     "copyright": "© 2026 Rapport Tecnologia. Todos los derechos reservados."
+  },
+  "donation": {
+    "eyebrow": "Apoya Agentic Space",
+    "title": "Ayuda a mantener el Hub en línea",
+    "body": "Agentic Space es un servicio gratuito — pero los servidores no lo son. Estamos alojados en Vercel y ya superamos los límites del plan Hobby; necesitamos urgentemente actualizar al plan Pro. Si cada visitante contribuye con un pequeño valor, como US$ 1 por mes, podremos expandir los servicios. Estaremos muy agradecidos y nos dedicaremos cada vez más al desarrollo de este proyecto. Dona con el QR Code PIX al lado o envía USDC, USDT, ETH, POL o BRLA a la billetera.",
+    "copyPix": "Copiar PIX (copia e cola)",
+    "copyWallet": "Copiar billetera",
+    "copied": "¡Copiado!",
+    "transparencyLink": "Ver informe de transparencia",
+    "qrAlt": "Código QR PIX para donación a Rapport Tecnologia",
+    "qrCaption": "Escanea para donar vía PIX"
+  },
+  "transparency": {
+    "back": "Volver",
+    "title": "Transparencia — Donaciones",
+    "subtitle": "Informe público de las donaciones recibidas para mantener el Hub Agentic Space. Todos los valores on-chain son verificables directamente en la blockchain.",
+    "pixTitle": "Donaciones vía PIX",
+    "copyKey": "Copiar clave",
+    "walletTitle": "Billetera cripto",
+    "walletNetworks": "Acepta USDC, USDT, ETH, POL y BRLA en las redes Ethereum y Polygon.",
+    "balancesTitle": "Saldos on-chain (en vivo)",
+    "balancesNote": "Saldos consultados en tiempo real vía RPC público. Para el historial completo de transacciones, usa los enlaces del explorador arriba.",
+    "refresh": "Actualizar",
+    "unavailable": "no disponible",
+    "expensesTitle": "Metas y gastos",
+    "goalMonthly": "Meta mensual",
+    "colDate": "Mes",
+    "colItem": "Ítem",
+    "colCategory": "Categoría",
+    "colMonthly": "USD/mes",
+    "thanks": "Gracias por apoyar el desarrollo de Agentic Space.",
+    "backHome": "Volver al inicio"
   }
 }

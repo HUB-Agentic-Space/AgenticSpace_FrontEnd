@@ -1,0 +1,15 @@
+{
+  "goal": {
+    "title": "Upgrade Vercel Hobby → Pro",
+    "monthlyUsd": 20,
+    "description": "Os servidores do Hub Agentic Space estão hospedados na Vercel e já estouraram os limites do plano Hobby. A meta inicial é cobrir o plano Pro (~US$ 20/mês) e, com folga, expandir os serviços."
+  },
+  "expenses": [
+    {
+      "date": "2026-11",
+      "item": "Hospedagem Vercel (plano Pro)",
+      "category": "infraestrutura",
+      "monthlyUsd": 20
+    }
+  ]
+}
