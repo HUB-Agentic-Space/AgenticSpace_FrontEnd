@@ -58,5 +58,13 @@ export const DONATION_CHAINS = [
       { symbol: 'USDT', address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F', decimals: 6 },
       { symbol: 'BRLA', address: '0xE6A537a407488807F0bbeb0038B79004F19DDDFb', decimals: 18 }
     ]
+  },
+  {
+    id: 'arc',
+    label: 'ARC Mainnet',
+    chainId: 5042,
+    rpcs: ['https://rpc.mainnet.arc.io'],
+    explorer: (addr) => `https://explorer.arc.io/address/${addr}`,
+    assets: [{ symbol: 'USDC', native: true, decimals: 18 }]
   }
 ];

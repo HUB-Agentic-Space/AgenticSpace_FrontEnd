@@ -24,6 +24,7 @@ import { generateQrDataUrl } from '@/lib/qr-utils';
 import { generatePixPayload, PIX_KEY_DISPLAY } from '@/lib/pix-payload';
 import { DONATION_WALLET, DONATION_CHAINS, ERC20_ABI } from '@/lib/donations';
 import transparencyData from '@/data/transparency.json';
+import DonationHistory from '@/components/DonationHistory';
 
 /**
  * Consulta o saldo de um ativo na chain informada, tentando os RPCs em ordem.
@@ -197,7 +198,7 @@ export default function TransparencyPage() {
                 className="inline-flex items-center gap-1.5 rounded-md border border-slate-700 bg-slate-800 px-2.5 py-1 text-xs text-slate-200 transition hover:bg-slate-700"
               >
                 <ExternalLink size={13} />
-                {chain.id === 'ethereum' ? 'Etherscan' : 'Polygonscan'}
+                {chain.id === 'ethereum' ? 'Etherscan' : chain.id === 'polygon' ? 'Polygonscan' : 'ARC Explorer'}
               </a>
             ))}
           </div>
@@ -254,6 +255,33 @@ export default function TransparencyPage() {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      <DonationHistory />
+
+      <section className="card space-y-4" aria-labelledby="pix-donations-title">
+        <h2 id="pix-donations-title" className="font-semibold text-white">Doações via PIX</h2>
+        <p className="text-xs text-slate-400">Registros atualizados manualmente pela Rapport Tecnologia. Todos os doadores são apresentados como Anônimo; nenhum dado pessoal é publicado.</p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-slate-700 text-slate-300">
+                <th scope="col" className="p-2">Nome</th>
+                <th scope="col" className="p-2">Data</th>
+                <th scope="col" className="p-2 text-right">Valor (BRL)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transparencyData.pixDonations.map((donation, index) => (
+                <tr key={`${donation.date}-${index}`} className="border-b border-slate-800 text-slate-300">
+                  <td className="p-2">Anônimo</td>
+                  <td className="p-2">{donation.date.split('-').reverse().join('/')}</td>
+                  <td className="p-2 text-right font-mono">{(donation.amountCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
 
