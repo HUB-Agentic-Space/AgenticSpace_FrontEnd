@@ -1,8 +1,8 @@
 {
   "goal": {
-    "title": "Upgrade Vercel Hobby → Pro",
-    "monthlyUsd": 20,
-    "description": "Os servidores do Hub Agentic Space estão hospedados na Vercel e já estouraram os limites do plano Hobby. A meta inicial é cobrir o plano Pro (~US$ 20/mês) e, com folga, expandir os serviços."
+    "title": "Infraestrutura — Vercel Pro + Supabase Pro",
+    "monthlyUsd": 45,
+    "description": "Os servidores do Hub Agentic Space estão hospedados na Vercel e já estouraram os limites do plano Hobby. As metas são cobrir o upgrade para o Vercel Pro (~US$ 20/mês) e o primeiro plano pago do Supabase, o Supabase Pro (~US$ 25/mês) — e, com folga, expandir os serviços."
   },
   "expenses": [
     {
@@ -10,6 +10,12 @@
       "item": "Hospedagem Vercel (plano Pro)",
       "category": "infraestrutura",
       "monthlyUsd": 20
+    },
+    {
+      "date": "2026-11",
+      "item": "Banco de dados Supabase (plano Pro)",
+      "category": "infraestrutura",
+      "monthlyUsd": 25
     }
   ]
 }
