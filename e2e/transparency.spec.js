@@ -11,7 +11,7 @@ test('BRLA and crypto history render with mocked RPC and safe provider warnings'
     const url = new URL(request.url());
     if (url.pathname === '/api/v1/transparency/donations') {
       return route.fulfill({ json: {
-        updatedAt: '2026-11-11T12:00:00Z', usdcUsd: 1,
+        updatedAt: '2026-11-11T12:00:00Z', usdcUsd: 1, brlPerUsd: 5, priceSource: 'CryptoCompare',
         donations: [{ id: 'brla-1', chainId: 137, network: 'Polygon', from: `0x${'1'.repeat(40)}`, date: '2026-11-11T12:00:00Z', amount: '2.0', currency: 'BRLA', equivalentUsdc: '0.36' }],
         warnings: [{ code: 'EXPLORER_PLAN_REQUIRED', chainId: 5042, message: 'O plano do explorer não permite esta consulta nesta rede.' }]
       } });
@@ -37,7 +37,7 @@ test('BRLA and crypto history render with mocked RPC and safe provider warnings'
   const goals = page.getByRole('region', { name: 'Progresso da meta mensal' });
   await expect(goals.getByTestId('goal-total')).toHaveText(/0,76/);
   await expect(goals.getByText('Registros sem cotação:', { exact: false })).toContainText('Registros sem cotação: 0');
-  await expect(goals.getByText('exchangerate-api', { exact: false })).toBeVisible();
+  await expect(goals.getByText('CryptoCompare', { exact: false })).toBeVisible();
   await expect(goals.getByTestId('donation-goal-chart').getByRole('application')).toBeVisible();
   await goals.getByText('Ver valores diários do gráfico').click();
   await expect(goals.getByRole('row').filter({ hasText: '2026-11-11' })).toContainText('0,76');
