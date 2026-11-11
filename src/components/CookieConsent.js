@@ -7,10 +7,15 @@
 
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import Link from 'next/link';
+import { useLocaleContext } from '@/lib/LocaleProvider';
+import { legalContent } from '@/lib/legal-content';
 import { notifyConsentChange, getCookieConsent } from '@/lib/cookie-consent';
 
 export default function CookieConsent() {
   const [show, setShow] = useState(false);
+  const { locale } = useLocaleContext();
+  const legal = legalContent[locale] || legalContent.pt;
 
   useEffect(() => {
     // Check if user has already made a choice
@@ -48,8 +53,12 @@ export default function CookieConsent() {
         </button>
         <h3 className="font-semibold text-white mb-2">Este site usa cookies</h3>
         <p className="text-sm text-slate-400 mb-4">
-          Usamos cookies para salvar sua preferência de idioma e melhorar sua experiência.
+          Cookies armazenam preferências; aceitar também habilita o Google Analytics. Consulte os detalhes sobre análise e dados na política.
         </p>
+        <div className="mb-4 flex flex-wrap gap-3 text-sm">
+          <Link className="text-brand-300 underline" href="/privacy-policy">{legal.privacy}</Link>
+          <Link className="text-brand-300 underline" href="/terms-of-service">{legal.terms}</Link>
+        </div>
         <div className="flex gap-2">
           <button
             onClick={handleAccept}

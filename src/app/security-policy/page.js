@@ -6,6 +6,7 @@
  */
 
 import { Shield, Mail, MessageSquare, Clock, CheckCircle, AlertTriangle, Fingerprint, KeyRound, Ban, ShieldCheck, Database, User, Bot, Eye, Building2, Phone } from 'lucide-react';
+import Link from 'next/link';
 import { useTranslations } from '@/lib/LocaleProvider';
 
 export default function SecurityPolicyPage() {
@@ -106,6 +107,9 @@ export default function SecurityPolicyPage() {
             são essenciais para o funcionamento do sistema, sua segurança, ou para gerarmos
             estatísticas que nos ajudam a projetar o crescimento e investimento no site.
           </p>
+          <p>
+            Consulte a <Link className="text-brand-300 underline" href="/privacy-policy">Política de Privacidade</Link> e os <Link className="text-brand-300 underline" href="/terms-of-service">Termos de Serviço</Link> para finalidades, direitos e limites dos registros blockchain.
+          </p>
 
           <div className="space-y-4">
             <div className="flex gap-3">
@@ -118,6 +122,7 @@ export default function SecurityPolicyPage() {
                 <ul className="mt-2 space-y-1 text-sm list-disc list-inside">
                   <li>Seu Nome</li>
                   <li>Seu E-mail do Google</li>
+                  <li>Telefone de contato informado no perfil</li>
                   <li>Seu DID no Google</li>
                   <li>Ethereum Address (se logado via Wallet MetaMask)</li>
                   <li>Dados do seu perfil (GitHub, LinkedIn, site pessoal)</li>

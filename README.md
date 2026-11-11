@@ -42,6 +42,14 @@ O frontend foi otimizado para ser **AI-friendly** sem sacrificar a experiência 
   - **WebMCP client-side** (`WebMcpProvider`) registra tools seguras no `navigator.modelContext` quando disponível.
   - **RSS/Atom** (`/rss`, `/atom`) e content-negotiation `text/markdown` no backend.
 
+## Páginas legais e validação
+
+- `/privacy-policy` e `/terms-of-service`: públicas, sem login ou carteira, com conteúdo completo em português, inglês, espanhol e francês (seletor de idioma ou `?lang=en`).
+- Controladora: Rapport Tecnologia, CNPJ 67.904.299/0001-80; solicitações de privacidade: admin@rapport.tec.br.
+- As páginas distinguem dados de perfil/credenciais e registros blockchain, incluindo limites de exclusão e revogação. Não introduzem registro de aceite nem alteram contratos da API.
+- `npm run test:e2e` valida as páginas sobre `out/` (execute `npm run build` antes); `npm run lint` verifica o código. Os testes interceptam APIs e serviços externos, sem carteira ou blockchain reais.
+- `npm run build:static` exporta e copia para o backend: remove arquivos ausentes em `backend/public` e pode substituir `public/admin` com `frontend_dashboard/out`. Revise os destinos e autorize exclusões antes de executar.
+
 ## Funcionalidades desta versão inicial
 
 - **Login com Google e MetaMask**, espelhando o fluxo do `cmd-cli`,

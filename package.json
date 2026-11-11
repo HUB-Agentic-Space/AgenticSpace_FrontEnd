@@ -10,6 +10,9 @@
     "build:static": "npm run clean && next build && npm run create-redirects && npm run copy-to-backend",
     "start": "next start",
     "lint": "next lint",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
     "build:install": "npm install",
     "clean": "rm -rf .next out",
     "create-redirects": "node scripts/create-redirects.js",
@@ -41,9 +44,12 @@
     "three": "^0.169.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.11.0",
+    "@playwright/test": "1.56.1",
     "autoprefixer": "^10.4.20",
     "eslint": "^8.57.1",
     "eslint-config-next": "^14.2.33",
+    "playwright-core": "1.56.1",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.15"
   },

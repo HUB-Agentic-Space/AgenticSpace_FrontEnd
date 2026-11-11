@@ -9,6 +9,9 @@ tmp
 out/
 next-env.d.ts
 
+playwright-report/
+test-results/
+
 npm-audit-frontend.json
 .vercel
 .env*
