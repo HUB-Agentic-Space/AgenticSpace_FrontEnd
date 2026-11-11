@@ -25,6 +25,7 @@ import { generatePixPayload, PIX_KEY_DISPLAY } from '@/lib/pix-payload';
 import { DONATION_WALLET, DONATION_CHAINS, ERC20_ABI } from '@/lib/donations';
 import transparencyData from '@/data/transparency.json';
 import DonationHistory from '@/components/DonationHistory';
+import DonationGoals from '@/components/DonationGoals';
 
 /**
  * Consulta o saldo de um ativo na chain informada, tentando os RPCs em ordem.
@@ -93,6 +94,7 @@ export default function TransparencyPage() {
   const [qrDataUrl, setQrDataUrl] = useState(null);
   const [walletQrDataUrl, setWalletQrDataUrl] = useState(null);
   const [balances, setBalances] = useState({});
+  const [donationReport, setDonationReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const pixPayload = generatePixPayload();
 
@@ -263,7 +265,8 @@ export default function TransparencyPage() {
         </div>
       </section>
 
-      <DonationHistory />
+      <DonationGoals data={transparencyData} report={donationReport} />
+      <DonationHistory onReport={setDonationReport} />
 
       <section className="card space-y-4" aria-labelledby="pix-donations-title">
         <h2 id="pix-donations-title" className="font-semibold text-white">Doações via PIX</h2>

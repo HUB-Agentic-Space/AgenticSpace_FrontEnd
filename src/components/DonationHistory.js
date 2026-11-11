@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { API_BASE_URL } from '@/lib/api';
 import { DONATION_CHAINS } from '@/lib/donations';
 
-export default function DonationHistory() {
+export default function DonationHistory({ onReport }) {
   const [report, setReport] = useState(null);
   const [error, setError] = useState(false);
   useEffect(() => {
@@ -16,15 +16,15 @@ export default function DonationHistory() {
         if (!response.ok) throw new Error('HISTORY_UNAVAILABLE');
         const data = await response.json();
         if (!Array.isArray(data.donations)) throw new Error('INVALID_REPORT');
-        if (active) { setReport(data); setError(false); }
+        if (active) { setReport(data); setError(false); onReport?.(data); }
       } catch {
-        if (active) setError(true);
+        if (active) { setError(true); setReport(null); onReport?.(null); }
       }
     }
     load();
     const interval = setInterval(load, 300000);
     return () => { active = false; controller.abort(); clearInterval(interval); };
-  }, []);
+  }, [onReport]);
 
   return (
     <section className="card space-y-4" aria-labelledby="donation-history-title">
