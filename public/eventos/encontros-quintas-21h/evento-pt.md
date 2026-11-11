@@ -84,5 +84,5 @@ Se você participou de um encontro anterior e ainda não emitiu seu **certificad
 
 **Ficou com alguma dúvida?**
 
-- [WhatsApp: (85) 98520-5490](https://wa.me/5585985205490)
+- [WhatsApp: 🇧🇷 (+55 85) 98520-5490](https://wa.me/5585985205490)
 - [certificados@rapport.tec.br](mailto:certificados@rapport.tec.br)

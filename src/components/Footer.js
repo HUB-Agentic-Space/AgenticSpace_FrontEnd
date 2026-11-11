@@ -117,7 +117,7 @@ export default function Footer() {
                 {t('footer.whatsappPrincipal')}
               </p>
               <FooterLink href="https://wa.me/5585985205490" external>
-                85 98520-5490
+                🇧🇷 (+55 85) 98520-5490
               </FooterLink>
               <FooterLink href="mailto:admin@rapport.tec.br">
                 admin@rapport.tec.br

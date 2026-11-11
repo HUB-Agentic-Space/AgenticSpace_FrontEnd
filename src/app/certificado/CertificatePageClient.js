@@ -1829,7 +1829,7 @@ function CertificateContent() {
           <div className="rounded-2xl border border-blue-500/20 bg-blue-500/5 p-5 text-sm text-slate-300">
             <h3 className="flex items-center gap-2 font-semibold text-white"><FileCheck2 size={18} className="text-blue-400" /> Assinatura gov.br</h3>
             <p className="mt-2">
-              O diploma reserva o campo visual para assinatura. Baixe o PDF, e o envie para o número (85) 985205490 ou e-mail agenticspace@rapport.tec.br, com o assunto: Favor Assinar,  assim que for assinado digitalmente será retornado e o reembolso será realizado conforme a fase que o certificado pertencer. Preserve o arquivo digital original. Não use “imprimir como PDF” depois de assinar, pois isso remove a assinatura eletrônica.
+              O diploma reserva o campo visual para assinatura. Baixe o PDF, e o envie para o número 🇧🇷 (+55 85) 98520-5490 ou e-mail agenticspace@rapport.tec.br, com o assunto: Favor Assinar,  assim que for assinado digitalmente será retornado e o reembolso será realizado conforme a fase que o certificado pertencer. Preserve o arquivo digital original. Não use “imprimir como PDF” depois de assinar, pois isso remove a assinatura eletrônica.
             </p>
             <p className="mt-2">
               A assinatura PAdES precisa continuar sendo validada no VALIDAR do ITI. Esta aplicação comprova separadamente o vínculo do certificado e o hash do documento registrado on-chain; essa conferência não substitui a validação criptográfica da assinatura gov.br/ICP-Brasil.

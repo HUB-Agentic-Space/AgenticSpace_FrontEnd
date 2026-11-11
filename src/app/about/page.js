@@ -494,7 +494,7 @@ export default function AboutPage() {
                   rel="noopener noreferrer"
                   className="text-brand-400 hover:text-brand-300 hover:underline"
                 >
-                  85 98520-5490
+                  🇧🇷 (+55 85) 98520-5490
                 </a>
               </div>
             </div>

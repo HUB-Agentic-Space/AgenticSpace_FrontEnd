@@ -245,7 +245,7 @@ export default function SecurityPolicyPage() {
                   <div>
                     <p className="font-medium text-white">Vivo (WhatsApp principal)</p>
                     <a href="https://wa.me/5585985205490" className="text-brand-400 hover:underline">
-                      85 98520-5490
+                      🇧🇷 (+55 85) 98520-5490
                     </a>
                   </div>
                 </div>

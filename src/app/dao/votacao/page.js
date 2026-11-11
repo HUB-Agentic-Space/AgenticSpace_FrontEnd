@@ -200,7 +200,7 @@ function VotacaoPageContent() {
                       <Mail size={14} /> agenticspace@rapport.tec.br
                     </a>
                     <a href="https://wa.me/5585985205490" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-brand-400 hover:text-brand-300">
-                      <MessageCircle size={14} /> WhatsApp: +55 85 98520-5490
+                      <MessageCircle size={14} /> WhatsApp: 🇧🇷 (+55 85) 98520-5490
                     </a>
                   </div>
                 </div>
