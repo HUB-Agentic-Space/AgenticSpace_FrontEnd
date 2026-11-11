@@ -35,8 +35,10 @@ import DonationHistory from '@/components/DonationHistory';
 async function fetchAssetBalance(chain, asset) {
   let lastError;
   for (const rpc of chain.rpcs) {
+    const request = new ethers.FetchRequest(rpc);
+    request.timeout = 10000;
+    const provider = new ethers.JsonRpcProvider(request, chain.chainId, { staticNetwork: true });
     try {
-      const provider = new ethers.JsonRpcProvider(rpc, chain.chainId, { staticNetwork: true });
       if (asset.native) {
         const wei = await provider.getBalance(DONATION_WALLET);
         return ethers.formatUnits(wei, asset.decimals);
@@ -46,6 +48,8 @@ async function fetchAssetBalance(chain, asset) {
       return ethers.formatUnits(raw, asset.decimals);
     } catch (error) {
       lastError = error;
+    } finally {
+      provider.destroy();
     }
   }
   throw lastError;
@@ -229,6 +233,7 @@ export default function TransparencyPage() {
                 {(balances[chain.id] || chain.assets).map((asset) => (
                   <div
                     key={asset.symbol}
+                    data-testid={`${chain.id}-${asset.symbol}-balance`}
                     className="rounded-lg border border-slate-800 bg-slate-900/60 px-4 py-3"
                   >
                     <p className="text-xs font-semibold text-slate-400">{asset.symbol}</p>

@@ -9,7 +9,7 @@
 /* eslint-env serviceworker */
 /* global self, clients */
 
-const CACHE_NAME = 'agentic-space-v2';
+const CACHE_NAME = 'agentic-space-v3';
 const STATIC_ASSETS = ['/', '/favicon.ico'];
 
 self.addEventListener('install', (event) => {
@@ -75,15 +75,18 @@ self.addEventListener('notificationclick', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+  if (event.request.method !== 'GET' || url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return;
   // Estratégia network-first para navegação, fallback básico para assets estáticos.
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match('/'))
+      fetch(event.request).catch(async () => (await caches.match(event.request)) || (await caches.match('/')) || new Response('Offline', { status: 503 }))
     );
     return;
   }
 
+  if (!STATIC_ASSETS.includes(url.pathname)) return;
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    caches.match(event.request).then((cached) => cached || fetch(event.request).catch(() => new Response('Offline', { status: 503 })))
   );
 });

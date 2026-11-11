@@ -31,9 +31,7 @@ export const DONATION_CHAINS = [
     label: 'Ethereum',
     chainId: 1,
     rpcs: [
-      'https://eth.llamarpc.com',
-      'https://ethereum-rpc.publicnode.com',
-      'https://rpc.ankr.com/eth'
+      'https://ethereum-rpc.publicnode.com'
     ],
     explorer: (addr) => `https://etherscan.io/address/${addr}`,
     assets: [
@@ -47,16 +45,14 @@ export const DONATION_CHAINS = [
     label: 'Polygon',
     chainId: 137,
     rpcs: [
-      'https://polygon-rpc.com',
-      'https://polygon-bor-rpc.publicnode.com',
-      'https://rpc.ankr.com/polygon'
+      'https://polygon-bor-rpc.publicnode.com'
     ],
     explorer: (addr) => `https://polygonscan.com/address/${addr}`,
     assets: [
       { symbol: 'POL', native: true, decimals: 18 },
       { symbol: 'USDC.e', address: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', decimals: 6 },
       { symbol: 'USDT', address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F', decimals: 6 },
-      { symbol: 'BRLA', address: '0xE6A537a407488807F0bbeb0038B79004F19DDDFb', decimals: 18 }
+      { symbol: 'BRLA', address: '0xE6A537a407488807F0bbeb0038B79004f19DDDFb', decimals: 18 }
     ]
   },
   {
