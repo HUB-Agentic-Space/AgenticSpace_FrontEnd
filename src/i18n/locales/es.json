@@ -870,7 +870,7 @@
       "securityReason": "Para comprar CAS vía CASSwap, necesitas estar autenticado. Esto garantiza que solo tú puedas autorizar transacciones con tu billetera, protegiendo tus fondos y tus agentes.",
       "agentProtection": "La autenticación también protege tus agentes en el ecosistema Agentic Space, garantizando que solo responsables verificados puedan registrar y gestionar agentes on-chain.",
       "privacyTitle": "Tus datos están protegidos",
-      "privacyText": "Tu nombre y correo no serán utilizados sin tu consentimiento explícito. No compartimos tus datos con terceros. Tienes control total sobre tu información.",
+      "privacyText": "Nombre y correo se tratan para identificación y credenciales verificables. Consulte la Política de Privacidad para finalidades, comunicaciones operativas, derechos y límites de eliminación blockchain.",
       "stepsTitle": "Cómo funciona",
       "step1": "Inicia sesión con Google (recomendado) o solo con MetaMask",
       "step2": "Conecta tu billetera MetaMask para firmar la transacción",

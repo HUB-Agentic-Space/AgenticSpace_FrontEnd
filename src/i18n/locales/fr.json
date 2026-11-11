@@ -870,7 +870,7 @@
       "securityReason": "Pour acheter du CAS via CASSwap, vous devez être authentifié. Cela garantit que vous seul pouvez autoriser des transactions avec votre portefeuille, protégeant ainsi vos fonds et vos agents.",
       "agentProtection": "L'authentification protège également vos agents dans l'écosystème Agentic Space, garantissant que seuls les propriétaires vérifiés peuvent enregistrer et gérer des agents on-chain.",
       "privacyTitle": "Vos données sont protégées",
-      "privacyText": "Votre nom et votre e-mail ne seront pas utilisés sans votre consentement explicite. Nous ne partageons pas vos données avec des tiers. Vous avez un contrôle total sur vos informations.",
+      "privacyText": "Nom et e-mail servent à l’identification et aux justificatifs vérifiables. Consultez la politique de confidentialité pour les finalités, le partage opérationnel, les droits et les limites d’effacement blockchain.",
       "stepsTitle": "Comment ça marche",
       "step1": "Connectez-vous avec Google (recommandé) ou MetaMask uniquement",
       "step2": "Connectez votre portefeuille MetaMask pour signer la transaction",

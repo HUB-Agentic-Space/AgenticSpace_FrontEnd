@@ -11,7 +11,8 @@
 
 import Link from 'next/link';
 import { ExternalLink } from 'lucide-react';
-import { useTranslations } from '@/lib/LocaleProvider';
+import { useLocaleContext, useTranslations } from '@/lib/LocaleProvider';
+import { legalContent } from '@/lib/legal-content';
 
 /** Titulo de coluna do rodape no padrao mono do RTK. */
 function ColumnTitle({ children }) {
@@ -48,6 +49,8 @@ function FooterLink({ href, children, external = false }) {
 
 export default function Footer() {
   const t = useTranslations();
+  const { locale } = useLocaleContext();
+  const legal = legalContent[locale] || legalContent.pt;
 
   return (
     <footer className="border-t border-slate-800/80 bg-slate-950">
@@ -130,6 +133,8 @@ export default function Footer() {
               <FooterLink href="/security-policy">
                 {t('footer.securityPolicy')}
               </FooterLink>
+              <FooterLink href="/privacy-policy">{legal.privacy}</FooterLink>
+              <FooterLink href="/terms-of-service">{legal.terms}</FooterLink>
               <FooterLink href="/faq">FAQ</FooterLink>
               <FooterLink href="https://discord.gg/3RjvpaRFC" external>
                 Discord
