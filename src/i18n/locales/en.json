@@ -946,5 +946,37 @@
     "emailLabel": "Email",
     "securityPolicy": "Security Policy",
     "copyright": "© 2026 Rapport Tecnologia. All rights reserved."
+  },
+  "donation": {
+    "eyebrow": "Support Agentic Space",
+    "title": "Help keep the Hub online",
+    "body": "Agentic Space is a free service — but servers are not. We are hosted on Vercel and have already exceeded the Hobby plan limits; we urgently need to upgrade to the Pro plan. If every visitor contributes a small amount, like $1 per month, we can expand the services. We would be very grateful and will dedicate ourselves even more to developing this project. Donate via the PIX QR Code beside or send USDC, USDT, ETH, POL or BRLA to the wallet.",
+    "copyPix": "Copy PIX (copia e cola)",
+    "copyWallet": "Copy wallet",
+    "copied": "Copied!",
+    "transparencyLink": "View transparency report",
+    "qrAlt": "PIX QR Code for donation to Rapport Tecnologia",
+    "qrCaption": "Scan to donate via PIX"
+  },
+  "transparency": {
+    "back": "Back",
+    "title": "Transparency — Donations",
+    "subtitle": "Public report of donations received to keep the Agentic Space Hub running. All on-chain amounts are verifiable directly on the blockchain.",
+    "pixTitle": "Donations via PIX",
+    "copyKey": "Copy key",
+    "walletTitle": "Crypto wallet",
+    "walletNetworks": "Accepts USDC, USDT, ETH, POL and BRLA on Ethereum and Polygon networks.",
+    "balancesTitle": "On-chain balances (live)",
+    "balancesNote": "Balances queried in real time via public RPC. For the full transaction history, use the explorer links above.",
+    "refresh": "Refresh",
+    "unavailable": "unavailable",
+    "expensesTitle": "Goals and expenses",
+    "goalMonthly": "Monthly goal",
+    "colDate": "Month",
+    "colItem": "Item",
+    "colCategory": "Category",
+    "colMonthly": "USD/mo",
+    "thanks": "Thank you for supporting the development of Agentic Space.",
+    "backHome": "Back to home"
   }
 }

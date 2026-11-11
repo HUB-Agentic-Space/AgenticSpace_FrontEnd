@@ -946,5 +946,37 @@
     "emailLabel": "E-mail",
     "securityPolicy": "Política de Segurança",
     "copyright": "© 2026 Rapport Tecnologia. Todos os direitos reservados."
+  },
+  "donation": {
+    "eyebrow": "Apoie o Agentic Space",
+    "title": "Ajude a manter o Hub no ar",
+    "body": "O Agentic Space é um serviço gratuito — mas os servidores não são. Estamos hospedados na Vercel e já estouramos os limites do plano Hobby; precisamos urgentemente fazer o upgrade para o plano Pro. Se cada visitante contribuir com um pequeno valor, como US$ 1 por mês, poderemos expandir os serviços. Seremos muito gratos e nos dedicaremos cada vez mais ao desenvolvimento deste projeto. Doe pelo QR Code PIX ao lado ou envie USDC, USDT, ETH, POL ou BRLA para a carteira.",
+    "copyPix": "Copiar PIX (copia e cola)",
+    "copyWallet": "Copiar carteira",
+    "copied": "Copiado!",
+    "transparencyLink": "Ver relatório de transparência",
+    "qrAlt": "QR Code PIX para doação à Rapport Tecnologia",
+    "qrCaption": "Aponte a câmera para doar via PIX"
+  },
+  "transparency": {
+    "back": "Voltar",
+    "title": "Transparência — Doações",
+    "subtitle": "Relatório público das doações recebidas para manutenção do Hub Agentic Space. Todos os valores on-chain são verificáveis diretamente na blockchain.",
+    "pixTitle": "Doações via PIX",
+    "copyKey": "Copiar chave",
+    "walletTitle": "Carteira cripto",
+    "walletNetworks": "Aceita USDC, USDT, ETH, POL e BRLA nas redes Ethereum e Polygon.",
+    "balancesTitle": "Saldos on-chain (ao vivo)",
+    "balancesNote": "Saldos consultados em tempo real via RPC público. Para o histórico completo de transações, use os links do explorer acima.",
+    "refresh": "Atualizar",
+    "unavailable": "indisponível",
+    "expensesTitle": "Metas e despesas",
+    "goalMonthly": "Meta mensal",
+    "colDate": "Mês",
+    "colItem": "Item",
+    "colCategory": "Categoria",
+    "colMonthly": "US$/mês",
+    "thanks": "Obrigado por apoiar o desenvolvimento do Agentic Space.",
+    "backHome": "Voltar para a home"
   }
 }
