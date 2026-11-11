@@ -977,6 +977,8 @@
     "colCategory": "Categoria",
     "colMonthly": "US$/mês",
     "thanks": "Obrigado por apoiar o desenvolvimento do Agentic Space.",
-    "backHome": "Voltar para a home"
+    "backHome": "Voltar para a home",
+    "walletQrAlt": "QR Code do endereço da carteira de doações (leitura pelo MetaMask)",
+    "walletQrCaption": "Escaneie com o MetaMask ou outra wallet"
   }
 }

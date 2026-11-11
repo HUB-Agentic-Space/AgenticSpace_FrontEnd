@@ -86,6 +86,7 @@ function CopyInline({ text, label }) {
 export default function TransparencyPage() {
   const t = useTranslations();
   const [qrDataUrl, setQrDataUrl] = useState(null);
+  const [walletQrDataUrl, setWalletQrDataUrl] = useState(null);
   const [balances, setBalances] = useState({});
   const [loading, setLoading] = useState(true);
   const pixPayload = generatePixPayload();
@@ -121,6 +122,12 @@ export default function TransparencyPage() {
       .then((url) => { if (mounted) setQrDataUrl(url); })
       .catch((error) => {
         console.error(`[${new Date().toISOString()}] [TransparencyPage:useEffect] error qr_generation_failed`, error);
+      });
+    // URI ethereum: (EIP-681) para leitura direta pelo MetaMask e outras wallets.
+    generateQrDataUrl(`ethereum:${DONATION_WALLET}`, { width: 320, margin: 1 })
+      .then((url) => { if (mounted) setWalletQrDataUrl(url); })
+      .catch((error) => {
+        console.error(`[${new Date().toISOString()}] [TransparencyPage:useEffect] error wallet_qr_generation_failed`, error);
       });
     loadBalances();
     return () => { mounted = false; };
@@ -169,6 +176,15 @@ export default function TransparencyPage() {
             {t('transparency.walletTitle')}
           </h2>
           <p className="break-all font-mono text-xs text-slate-300">{DONATION_WALLET}</p>
+          {walletQrDataUrl && (
+            <div className="flex items-center gap-3">
+              <div className="inline-block rounded-lg bg-white p-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={walletQrDataUrl} alt={t('transparency.walletQrAlt')} width={112} height={112} className="h-28 w-28" />
+              </div>
+              <p className="text-xs text-slate-400">{t('transparency.walletQrCaption')}</p>
+            </div>
+          )}
           <p className="text-xs text-slate-400">{t('transparency.walletNetworks')}</p>
           <div className="flex flex-wrap items-center gap-2">
             <CopyInline text={DONATION_WALLET} label={t('donation.copyWallet')} />

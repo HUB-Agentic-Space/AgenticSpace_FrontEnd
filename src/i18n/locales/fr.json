@@ -973,6 +973,8 @@
     "colCategory": "Catégorie",
     "colMonthly": "USD/mois",
     "thanks": "Merci de soutenir le développement d'Agentic Space.",
-    "backHome": "Retour à l'accueil"
+    "backHome": "Retour à l'accueil",
+    "walletQrAlt": "QR Code de l'adresse du portefeuille de dons (lecture par MetaMask)",
+    "walletQrCaption": "Scannez avec MetaMask ou un autre portefeuille"
   }
 }

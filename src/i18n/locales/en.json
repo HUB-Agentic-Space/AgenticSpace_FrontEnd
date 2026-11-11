@@ -977,6 +977,8 @@
     "colCategory": "Category",
     "colMonthly": "USD/mo",
     "thanks": "Thank you for supporting the development of Agentic Space.",
-    "backHome": "Back to home"
+    "backHome": "Back to home",
+    "walletQrAlt": "QR Code of the donation wallet address (MetaMask scan)",
+    "walletQrCaption": "Scan with MetaMask or another wallet"
   }
 }
