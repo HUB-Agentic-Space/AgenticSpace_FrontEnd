@@ -1,8 +1,9 @@
 const validDate = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(`${value}T00:00:00Z`)) && new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value;
 const validCents = value => Number.isSafeInteger(value) && value >= 0;
 
-export function calculateDonationGoals(data, report, month, today = new Date().toISOString().slice(0, 10)) {
+export function calculateDonationGoals(data, report, month, today = new Date().toISOString().slice(0, 10), options = {}) {
   if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month) || !validDate(today)) throw new Error('INVALID_PERIOD');
+  const liveBrlPerUsd = Number.isFinite(options.brlPerUsd) && options.brlPerUsd > 0 ? options.brlPerUsd : null;
   const goalCents = Math.round(data.goal.monthlyUsd * 100);
   if (!validCents(goalCents) || goalCents === 0) throw new Error('INVALID_GOAL');
   const manual = new Map();
@@ -38,7 +39,8 @@ export function calculateDonationGoals(data, report, month, today = new Date().t
     if (entry) {
       cents = entry.amountUsdCents;
       if (entry.amountBrlCents > 0) {
-        if (entry.brlPerUsd) cents += Math.round(entry.amountBrlCents / entry.brlPerUsd);
+        const rate = entry.brlPerUsd || liveBrlPerUsd;
+        if (rate) cents += Math.round(entry.amountBrlCents / rate);
         else unconverted++;
       }
       confirmedCents += cents;
@@ -49,7 +51,8 @@ export function calculateDonationGoals(data, report, month, today = new Date().t
       unconverted = chainDay?.pending || 0;
       for (const pix of data.pixDonations || []) {
         if (pix.date !== date) continue;
-        if (validCents(pix.amountCents) && Number.isFinite(pix.brlPerUsd) && pix.brlPerUsd > 0) cents += Math.round(pix.amountCents / pix.brlPerUsd);
+        const rate = Number.isFinite(pix.brlPerUsd) && pix.brlPerUsd > 0 ? pix.brlPerUsd : liveBrlPerUsd;
+        if (validCents(pix.amountCents) && rate) cents += Math.round(pix.amountCents / rate);
         else unconverted++;
       }
       estimatedCents += cents;
@@ -58,5 +61,5 @@ export function calculateDonationGoals(data, report, month, today = new Date().t
     daily.push({ date, day, source: entry ? 'Consolidado manual' : 'Parcial / scan', pending: unconverted, amountUsd: cents / 100, confirmedUsd: confirmedCents / 100, totalUsd: (confirmedCents + estimatedCents) / 100, paceUsd: data.goal.monthlyUsd * day / daysInMonth });
   }
   const totalCents = confirmedCents + estimatedCents;
-  return { daily, confirmedUsd: confirmedCents / 100, estimatedUsd: estimatedCents / 100, totalUsd: totalCents / 100, remainingUsd: Math.max(0, goalCents - totalCents) / 100, percent: totalCents / goalCents * 100, reached: totalCents >= goalCents, pending, consolidatedDays, provisional: pending > 0 || consolidatedDays < daily.length || !daily.length, scanUnavailable: !report || Boolean(report.warnings?.length) };
+  return { daily, confirmedUsd: confirmedCents / 100, estimatedUsd: estimatedCents / 100, totalUsd: totalCents / 100, remainingUsd: Math.max(0, goalCents - totalCents) / 100, percent: totalCents / goalCents * 100, reached: totalCents >= goalCents, pending, consolidatedDays, brlPerUsd: liveBrlPerUsd, provisional: pending > 0 || consolidatedDays < daily.length || !daily.length, scanUnavailable: !report || Boolean(report.warnings?.length) };
 }

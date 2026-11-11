@@ -31,6 +31,21 @@ test('TRANS-GOAL-02: missing FX is pending, not zero or an assumed parity', () =
   assert.equal(calculate(data, { ...report, usdcUsd: null }).pending, 1);
 });
 
+test('TRANS-GOAL-06: live BRL rate converts records without historical FX, recorded FX wins', () => {
+  const pix = { ...data, pixDonations: [{ date: '2026-11-11', amountCents: 200 }] };
+  const withLive = calculateDonationGoals(pix, null, '2026-11', '2026-11-11', { brlPerUsd: 5 });
+  assert.equal(withLive.pending, 0);
+  assert.equal(withLive.totalUsd, 0.4);
+  assert.equal(withLive.brlPerUsd, 5);
+  const recorded = { ...data, pixDonations: [{ date: '2026-11-11', amountCents: 200, brlPerUsd: 4 }] };
+  assert.equal(calculateDonationGoals(recorded, null, '2026-11', '2026-11-11', { brlPerUsd: 5 }).totalUsd, 0.5);
+  const consolidated = { ...data, dailyTotals: [{ date: '2026-11-11', amountBrlCents: 1000, amountUsdCents: 100, brlPerUsd: null }] };
+  const consolidatedLive = calculateDonationGoals(consolidated, null, '2026-11', '2026-11-11', { brlPerUsd: 5 });
+  assert.equal(consolidatedLive.pending, 0);
+  assert.equal(consolidatedLive.confirmedUsd, 3);
+  for (const bad of [0, -1, NaN]) assert.equal(calculateDonationGoals(pix, null, '2026-11', '2026-11-11', { brlPerUsd: bad }).pending, 1);
+});
+
 test('TRANS-GOAL-03: actual USDC price, deduplication, period filtering and progress', () => {
   const result = calculate(data, { ...report, donations: [...report.donations, ...report.donations, { id: 'old', date: '2026-10-01', equivalentUsdc: '300' }, { id: 'future', date: '2026-11-12', equivalentUsdc: '300' }] });
   assert.equal(result.totalUsd, 99);
