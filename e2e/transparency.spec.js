@@ -16,6 +16,7 @@ test('BRLA and crypto history render with mocked RPC and safe provider warnings'
         warnings: [{ code: 'EXPLORER_PLAN_REQUIRED', chainId: 5042, message: 'O plano do explorer não permite esta consulta nesta rede.' }]
       } });
     }
+    if (url.origin === 'https://api.exchangerate-api.com') return route.fulfill({ json: { result: 'success', base: 'BRL', rates: { USD: 0.2 } } });
     if (url.pathname.startsWith('/api/')) return route.fulfill({ json: { authenticated: false, session: null, count: 0, total: 0 } });
     if (request.method() === 'POST' && url.origin !== 'http://127.0.0.1:4187') {
       const payload = request.postDataJSON();
@@ -34,11 +35,12 @@ test('BRLA and crypto history render with mocked RPC and safe provider warnings'
   await expect(balanceCard.getByRole('link')).toHaveAttribute('href', 'https://polygonscan.com/address/0xE6A537a407488807F0bbeb0038B79004f19DDDFb');
   await expect(balanceCard.getByText('2', { exact: true })).toBeVisible();
   const goals = page.getByRole('region', { name: 'Progresso da meta mensal' });
-  await expect(goals.getByTestId('goal-total')).toHaveText(/0,36/);
-  await expect(goals.getByText('Registros sem cotação:', { exact: false })).toContainText('Registros sem cotação: 1');
+  await expect(goals.getByTestId('goal-total')).toHaveText(/0,76/);
+  await expect(goals.getByText('Registros sem cotação:', { exact: false })).toContainText('Registros sem cotação: 0');
+  await expect(goals.getByText('exchangerate-api', { exact: false })).toBeVisible();
   await expect(goals.getByTestId('donation-goal-chart').getByRole('application')).toBeVisible();
   await goals.getByText('Ver valores diários do gráfico').click();
-  await expect(goals.getByRole('row').filter({ hasText: '2026-11-11' })).toContainText('0,36');
+  await expect(goals.getByRole('row').filter({ hasText: '2026-11-11' })).toContainText('0,76');
   const accessibility = await new AxeBuilder({ page }).include('[aria-labelledby="donation-goals-title"]').analyze();
   expect(accessibility.violations.filter(item => ['critical', 'serious'].includes(item.impact))).toEqual([]);
   await goals.getByLabel('Mês da arrecadação').fill('2026-10');
