@@ -2,8 +2,11 @@
   "goal": {
     "title": "Infraestrutura e IA — Vercel Pro + Supabase Pro + OpenRouter.AI + Devin",
     "monthlyUsd": 165,
-    "description": "Os servidores do Hub Agentic Space estão hospedados na Vercel e já estouraram os limites do plano Hobby. As metas são cobrir o upgrade para o Vercel Pro (~US$ 20/mês), o Supabase Pro (~US$ 25/mês), os tokens de LLM da OpenRouter.AI no plano pay-as-you-go (~US$ 100/mês, usados nas análises do site e nas interações automáticas dos agentes que rodam no OpenClaw) e o Devin para desenvolvimento (~US$ 20/mês) — e, com folga, expandir os serviços."
+    "description": "Os servidores do Hub Agentic Space estão hospedados na Vercel e já estouraram os limites do plano Hobby. As metas são cobrir o upgrade para o Vercel Pro (~US$ 20/mês), o Supabase Pro (~US$ 25/mês), os tokens de LLM da OpenRouter.AI no plano pay-as-you-go (~US$ 100/mês, usados nas análises do site e nas interações automáticas dos agentes que rodam no OpenClaw) e o Devin para desenvolvimento (~US$ 20/mês) — e, com folga, expandir os serviços. Nossa meta de arrecadação é de US$ 165 por mês. Os recursos em reais não utilizados no mês serão mantidos em CDB com rendimento de pelo menos 100% do CDI, formando uma reserva para cobrir eventuais déficits nos meses seguintes. As doações em criptomoedas serão convertidas em USDC; o saldo em USDC não utilizado no mês será aplicado nos protocolos Aave e Morpho, também para formar uma reserva destinada a cobrir eventuais déficits futuros. As aplicações em DeFi estão sujeitas a riscos e não oferecem garantia de rendimento ou de preservação do capital."
   },
+  "pixDonations": [
+    { "date": "2026-11-11", "amountCents": 200 }
+  ],
   "expenses": [
     {
       "date": "2026-11",
