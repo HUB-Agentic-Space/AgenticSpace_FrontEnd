@@ -979,6 +979,8 @@
     "thanks": "Obrigado por apoiar o desenvolvimento do Agentic Space.",
     "backHome": "Voltar para a home",
     "walletQrAlt": "QR Code do endereço da carteira de doações (leitura pelo MetaMask)",
-    "walletQrCaption": "Escaneie com o MetaMask ou outra wallet"
+    "walletQrCaption": "Escaneie com o MetaMask ou outra wallet",
+    "phishingWarningEmphasis": "Muito cuidado: use apenas o endereço exibido junto ao QR Code desta página para fazer doações.",
+    "phishingWarning": "Carteiras maliciosas estão usando a técnica de \"Fake Phishing\" (address poisoning), gerando endereços semelhantes aos nossos para induzir erros nas transferências. Confira sempre o endereço completo antes de enviar."
   }
 }
