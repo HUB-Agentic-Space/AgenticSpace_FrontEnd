@@ -25,15 +25,24 @@ export default function DonationHistory({ onReport }) {
   useEffect(() => {
     let active = true;
     const controller = new AbortController();
+    const reports = new Map();
+    let first = true;
     async function load() {
-      setChains(DONATION_CHAINS.map(chain => ({ chainId: chain.chainId, label: chain.label, status: 'loading', report: null })));
+      if (!first) {
+        reports.clear();
+        setChains(DONATION_CHAINS.map(chain => ({ chainId: chain.chainId, label: chain.label, status: 'loading', report: null })));
+      }
+      first = false;
       await Promise.all(DONATION_CHAINS.map(async chain => {
         try {
           const response = await fetch(`${API_BASE_URL}/api/v1/transparency/donations?chainId=${chain.chainId}`, { signal: controller.signal });
           if (!response.ok) throw new Error('HISTORY_UNAVAILABLE');
           const data = await response.json();
           if (!Array.isArray(data.donations)) throw new Error('INVALID_REPORT');
-          if (active) setChains(previous => previous.map(part => part.chainId === chain.chainId ? { ...part, status: 'ready', report: data } : part));
+          if (!active) return;
+          reports.set(chain.chainId, data);
+          setChains(previous => previous.map(part => part.chainId === chain.chainId ? { ...part, status: 'ready', report: data } : part));
+          onReport?.(mergeReports([...reports.values()].map(report => ({ status: 'ready', report }))));
         } catch {
           if (active) setChains(previous => previous.map(part => part.chainId === chain.chainId ? { ...part, status: 'error' } : part));
         }
@@ -42,10 +51,9 @@ export default function DonationHistory({ onReport }) {
     load();
     const interval = setInterval(load, 300000);
     return () => { active = false; controller.abort(); clearInterval(interval); };
-  }, []);
+  }, [onReport]);
 
   const report = useMemo(() => mergeReports(chains), [chains]);
-  useEffect(() => { onReport?.(report); }, [report, onReport]);
 
   return (
     <section className="card space-y-4" aria-labelledby="donation-history-title">
