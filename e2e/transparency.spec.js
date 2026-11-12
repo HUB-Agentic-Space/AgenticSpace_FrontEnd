@@ -18,7 +18,10 @@ test('BRLA and crypto history render with mocked RPC and safe provider warnings'
         return route.fulfill({ json: { updatedAt: '2026-11-11T12:00:00Z', usdcUsd: 1, brlPerUsd: 5, priceSource: 'CryptoCompare', donations: Array.from({ length: 12 }, (_, index) => ({ id: `eth-${index}`, chainId: 1, network: 'Ethereum', from: `0x${'2'.repeat(40)}`, date: `2026-09-${String(12 - index).padStart(2, '0')}T12:00:00Z`, amount: '1', currency: 'ETH', equivalentUsdc: '10' })), networks: [{ chainId: 1, name: 'Ethereum', available: true }], warnings: [] } });
       }
       const payload = {
-        137: { donations: [{ id: 'brla-1', chainId: 137, network: 'Polygon', from: `0x${'1'.repeat(40)}`, date: '2026-11-11T12:00:00Z', amount: '2.0', currency: 'BRLA', equivalentUsdc: '0.36' }], networks: [{ chainId: 137, name: 'Polygon', available: true }], warnings: [] },
+        137: { donations: [
+          { id: 'brla-1', chainId: 137, network: 'Polygon', from: `0x${'1'.repeat(40)}`, date: '2026-11-11T12:00:00Z', amount: '2.0', currency: 'BRLA', equivalentUsdc: '0.36' },
+          { id: 'phish-1', chainId: 137, network: 'Polygon', from: '0x6668b823f67035bc69453bfc22bd5f176506a888', date: '2026-11-10T12:00:00Z', amount: '0.001', currency: 'USDT', equivalentUsdc: '0.001' }
+        ], networks: [{ chainId: 137, name: 'Polygon', available: true }], warnings: [] },
         5042: { donations: [], networks: [{ chainId: 5042, name: 'ARC', available: false }], warnings: [{ code: 'EXPLORER_PLAN_REQUIRED', chainId: 5042, message: 'O plano do explorer não permite esta consulta nesta rede.' }] }
       }[chainId] || { donations: [], networks: [], warnings: [] };
       return route.fulfill({ json: { updatedAt: '2026-11-11T12:00:00Z', usdcUsd: 1, brlPerUsd: 5, priceSource: 'CryptoCompare', ...payload } });
@@ -59,9 +62,16 @@ test('BRLA and crypto history render with mocked RPC and safe provider warnings'
   await expect(history.getByTestId('history-status-1').getByRole('status', { name: 'Consultando Ethereum' })).toBeVisible();
   releaseEthereum();
   await expect(history.getByTestId('history-status-1')).toContainText('✓');
-  const months = history.locator('[data-testid^="history-month-"]');
-  await expect(months).toHaveCount(2);
-  await expect(months.first()).toHaveAttribute('data-testid', 'history-month-2026-11');
+  const picker = history.getByTestId('history-month-picker');
+  await expect(picker).toHaveValue('2026-11');
+  await expect(picker).toHaveAttribute('min', '2026-09');
+  await expect(picker).toHaveAttribute('max', '2026-11');
+  const monthRegions = history.locator('div[data-testid^="history-month-"]');
+  await expect(monthRegions).toHaveCount(1);
+  await expect(history.getByTestId('history-month-2026-11')).toBeVisible();
+  await expect(history.getByRole('link', { name: /6668b823f67035bc69453bfc22bd5f176506a888/i })).toHaveCount(0);
+  await expect(history.getByText('1 recebimento(s) de endereços sinalizados como phishing foram ocultados automaticamente.')).toBeVisible();
+  await picker.fill('2026-09');
   const september = history.getByTestId('history-month-2026-09');
   await expect(september.getByRole('row')).toHaveCount(13);
   expect(await september.evaluate(element => element.scrollHeight > element.clientHeight)).toBe(true);
