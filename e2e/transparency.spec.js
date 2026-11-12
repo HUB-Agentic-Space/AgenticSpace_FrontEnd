@@ -10,11 +10,13 @@ test('BRLA and crypto history render with mocked RPC and safe provider warnings'
     const request = route.request();
     const url = new URL(request.url());
     if (url.pathname === '/api/v1/transparency/donations') {
-      return route.fulfill({ json: {
-        updatedAt: '2026-11-11T12:00:00Z', usdcUsd: 1, brlPerUsd: 5, priceSource: 'CryptoCompare',
-        donations: [{ id: 'brla-1', chainId: 137, network: 'Polygon', from: `0x${'1'.repeat(40)}`, date: '2026-11-11T12:00:00Z', amount: '2.0', currency: 'BRLA', equivalentUsdc: '0.36' }],
-        warnings: [{ code: 'EXPLORER_PLAN_REQUIRED', chainId: 5042, message: 'O plano do explorer não permite esta consulta nesta rede.' }]
-      } });
+      const chainId = Number(url.searchParams.get('chainId'));
+      if (chainId === 1) return new Promise(resolve => setTimeout(resolve, 400)).then(() => route.fulfill({ json: { updatedAt: '2026-11-11T12:00:00Z', usdcUsd: 1, brlPerUsd: 5, priceSource: 'CryptoCompare', donations: [], networks: [{ chainId: 1, name: 'Ethereum', available: true }], warnings: [] } }));
+      const payload = {
+        137: { donations: [{ id: 'brla-1', chainId: 137, network: 'Polygon', from: `0x${'1'.repeat(40)}`, date: '2026-11-11T12:00:00Z', amount: '2.0', currency: 'BRLA', equivalentUsdc: '0.36' }], networks: [{ chainId: 137, name: 'Polygon', available: true }], warnings: [] },
+        5042: { donations: [], networks: [{ chainId: 5042, name: 'ARC', available: false }], warnings: [{ code: 'EXPLORER_PLAN_REQUIRED', chainId: 5042, message: 'O plano do explorer não permite esta consulta nesta rede.' }] }
+      }[chainId] || { donations: [], networks: [], warnings: [] };
+      return route.fulfill({ json: { updatedAt: '2026-11-11T12:00:00Z', usdcUsd: 1, brlPerUsd: 5, priceSource: 'CryptoCompare', ...payload } });
     }
     if (url.origin === 'https://api.exchangerate-api.com') return route.fulfill({ json: { result: 'success', base: 'BRL', rates: { USD: 0.2 } } });
     if (url.pathname.startsWith('/api/')) return route.fulfill({ json: { authenticated: false, session: null, count: 0, total: 0 } });
@@ -43,6 +45,10 @@ test('BRLA and crypto history render with mocked RPC and safe provider warnings'
   await expect(goals.getByRole('row').filter({ hasText: '2026-11-11' })).toContainText('0,76');
   const accessibility = await new AxeBuilder({ page }).include('[aria-labelledby="donation-goals-title"]').analyze();
   expect(accessibility.violations.filter(item => ['critical', 'serious'].includes(item.impact))).toEqual([]);
+  await expect(history.getByTestId('history-status-1')).toContainText('Ethereum');
+  await expect(history.getByTestId('history-status-137').getByText('✓')).toBeVisible();
+  await expect(history.getByTestId('history-status-1').getByRole('status')).toBeVisible();
+  await expect(history.getByTestId('history-status-1')).toContainText('✓');
   await goals.getByLabel('Mês da arrecadação').fill('2026-10');
   await expect(goals.getByTestId('goal-total')).toHaveText(/0,00/);
   expect(errors).toEqual([]);
