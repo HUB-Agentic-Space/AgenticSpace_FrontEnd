@@ -54,6 +54,15 @@ export default function DonationHistory({ onReport }) {
   }, [onReport]);
 
   const report = useMemo(() => mergeReports(chains), [chains]);
+  const months = useMemo(() => {
+    const groups = new Map();
+    for (const row of report?.donations || []) {
+      const month = row.date.slice(0, 7);
+      if (!groups.has(month)) groups.set(month, []);
+      groups.get(month).push(row);
+    }
+    return [...groups.entries()].sort(([a], [b]) => b.localeCompare(a));
+  }, [report]);
 
   return (
     <section className="card space-y-4" aria-labelledby="donation-history-title">
@@ -74,17 +83,24 @@ export default function DonationHistory({ onReport }) {
       {report && (
         <>
           <p className="text-xs text-slate-400">Consulta: {new Date(report.updatedAt).toLocaleString('pt-BR')}</p>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead><tr className="border-b border-slate-700"><th className="p-2">Rede</th><th className="p-2">Origem</th><th className="p-2">Dia (UTC)</th><th className="p-2">Valor</th><th className="p-2">Moeda</th><th className="p-2">Equivalente USDC</th></tr></thead>
-              <tbody>
-                {report.donations.map(row => {
-                  const chain = DONATION_CHAINS.find(item => item.chainId === row.chainId);
-                  return <tr key={row.id} className="border-b border-slate-800"><td className="p-2">{row.network}</td><td className="p-2"><a href={chain?.explorer(row.from)} target="_blank" rel="noopener noreferrer" className="break-all font-mono text-xs text-brand-400">{row.from}</a></td><td className="whitespace-nowrap p-2">{row.date.slice(0, 10)}</td><td className="p-2">{row.amount}</td><td className="p-2">{row.currency}</td><td className="p-2">{row.equivalentUsdc == null ? 'Cotação indisponível' : Number(row.equivalentUsdc).toLocaleString('pt-BR', { maximumFractionDigits: 6 })}</td></tr>;
-                })}
-              </tbody>
-            </table>
-          </div>
+          {months.map(([month, donations]) => (
+            <div key={month} className="space-y-2">
+              <h3 id={`history-month-${month}`} className="text-sm font-semibold text-slate-100">
+                {new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${month}-01T00:00:00Z`))} · {donations.length} recebimentos
+              </h3>
+              <div role="region" aria-labelledby={`history-month-${month}`} tabIndex={0} className="max-h-[27.5rem] overflow-auto rounded-lg border border-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500" data-testid={`history-month-${month}`}>
+                <table className="w-full table-fixed text-left text-sm min-w-[60rem]">
+                  <thead className="sticky top-0 z-10 bg-slate-900"><tr className="h-10 border-b border-slate-700"><th scope="col" className="p-2">Rede</th><th scope="col" className="p-2">Origem</th><th scope="col" className="p-2">Dia (UTC)</th><th scope="col" className="p-2">Valor</th><th scope="col" className="p-2">Moeda</th><th scope="col" className="p-2">Equivalente USDC</th></tr></thead>
+                  <tbody>
+                    {donations.map(row => {
+                      const chain = DONATION_CHAINS.find(item => item.chainId === row.chainId);
+                      return <tr key={row.id} className="h-10 border-b border-slate-800"><td className="truncate p-2" title={row.network}>{row.network}</td><td className="p-2"><a href={chain?.explorer(row.from)} title={row.from} target="_blank" rel="noopener noreferrer" className="block truncate font-mono text-xs text-brand-400">{row.from}</a></td><td className="whitespace-nowrap p-2">{row.date.slice(0, 10)}</td><td className="truncate p-2" title={row.amount}>{row.amount}</td><td className="truncate p-2">{row.currency}</td><td className="truncate p-2">{row.equivalentUsdc == null ? 'Cotação indisponível' : Number(row.equivalentUsdc).toLocaleString('pt-BR', { maximumFractionDigits: 6 })}</td></tr>;
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
           {report.donations.length === 0 && <p className="text-sm text-slate-400">Nenhum recebimento disponível nas consultas concluídas. Consulte os avisos de rede antes de interpretar este resultado.</p>}
         </>
       )}

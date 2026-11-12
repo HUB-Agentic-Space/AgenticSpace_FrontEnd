@@ -15,7 +15,7 @@ test('BRLA and crypto history render with mocked RPC and safe provider warnings'
       const chainId = Number(url.searchParams.get('chainId'));
       if (chainId === 1) {
         await ethereumGate;
-        return route.fulfill({ json: { updatedAt: '2026-11-11T12:00:00Z', usdcUsd: 1, brlPerUsd: 5, priceSource: 'CryptoCompare', donations: [], networks: [{ chainId: 1, name: 'Ethereum', available: true }], warnings: [] } });
+        return route.fulfill({ json: { updatedAt: '2026-11-11T12:00:00Z', usdcUsd: 1, brlPerUsd: 5, priceSource: 'CryptoCompare', donations: Array.from({ length: 12 }, (_, index) => ({ id: `eth-${index}`, chainId: 1, network: 'Ethereum', from: `0x${'2'.repeat(40)}`, date: `2026-09-${String(12 - index).padStart(2, '0')}T12:00:00Z`, amount: '1', currency: 'ETH', equivalentUsdc: '10' })), networks: [{ chainId: 1, name: 'Ethereum', available: true }], warnings: [] } });
       }
       const payload = {
         137: { donations: [{ id: 'brla-1', chainId: 137, network: 'Polygon', from: `0x${'1'.repeat(40)}`, date: '2026-11-11T12:00:00Z', amount: '2.0', currency: 'BRLA', equivalentUsdc: '0.36' }], networks: [{ chainId: 137, name: 'Polygon', available: true }], warnings: [] },
@@ -55,6 +55,16 @@ test('BRLA and crypto history render with mocked RPC and safe provider warnings'
   await expect(history.getByTestId('history-status-1').getByRole('status', { name: 'Consultando Ethereum' })).toBeVisible();
   releaseEthereum();
   await expect(history.getByTestId('history-status-1')).toContainText('✓');
+  const months = history.locator('[data-testid^="history-month-"]');
+  await expect(months).toHaveCount(2);
+  await expect(months.first()).toHaveAttribute('data-testid', 'history-month-2026-11');
+  const september = history.getByTestId('history-month-2026-09');
+  await expect(september.getByRole('row')).toHaveCount(13);
+  expect(await september.evaluate(element => element.scrollHeight > element.clientHeight)).toBe(true);
+  expect(await september.getByRole('row').nth(1).evaluate(element => element.getBoundingClientRect().height)).toBe(40);
+  await september.focus();
+  await page.keyboard.press('End');
+  await expect.poll(() => september.evaluate(element => element.scrollTop)).toBeGreaterThan(0);
   await goals.getByLabel('Mês da arrecadação').fill('2026-10');
   await expect(goals.getByTestId('goal-total')).toHaveText(/0,00/);
   expect(errors).toEqual([]);
