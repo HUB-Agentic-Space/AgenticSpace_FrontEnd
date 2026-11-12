@@ -34,6 +34,10 @@ test('BRLA and crypto history render with mocked RPC and safe provider warnings'
     return route.continue();
   });
   await page.goto('/transparencia?lang=pt');
+  const alert = page.getByRole('alert').filter({ hasText: 'Fake Phishing' });
+  await expect(alert).toBeVisible();
+  await expect(alert).toContainText('Fake Phishing');
+  await expect(alert.locator('strong')).toContainText('apenas o endereço exibido junto ao QR Code');
   await expect(page.getByText('EXPLORER_PLAN_REQUIRED — Rede 5042:', { exact: false })).toBeVisible();
   const history = page.getByRole('region', { name: 'Recebimentos on-chain' });
   await expect(history.getByRole('cell', { name: 'BRLA', exact: true })).toBeVisible();

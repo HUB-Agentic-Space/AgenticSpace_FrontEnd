@@ -975,6 +975,8 @@
     "thanks": "Merci de soutenir le développement d'Agentic Space.",
     "backHome": "Retour à l'accueil",
     "walletQrAlt": "QR Code de l'adresse du portefeuille de dons (lecture par MetaMask)",
-    "walletQrCaption": "Scannez avec MetaMask ou un autre portefeuille"
+    "walletQrCaption": "Scannez avec MetaMask ou un autre portefeuille",
+    "phishingWarningEmphasis": "Soyez très prudent : utilisez uniquement l'adresse affichée à côté du QR Code de cette page pour faire des dons.",
+    "phishingWarning": "Des portefeuilles malveillants utilisent la technique du « Fake Phishing » (address poisoning), générant des adresses semblables aux nôtres pour induire des erreurs dans les transferts. Vérifiez toujours l'adresse complète avant d'envoyer."
   }
 }

@@ -17,7 +17,7 @@ import Link from 'next/link';
 import { ethers } from 'ethers';
 import {
   ArrowLeft, ArrowRight, Copy, Check, ExternalLink,
-  HeartHandshake, RefreshCw, Wallet, Landmark
+  HeartHandshake, RefreshCw, Wallet, Landmark, ShieldAlert
 } from 'lucide-react';
 import { useTranslations } from '@/lib/LocaleProvider';
 import { generateQrDataUrl } from '@/lib/qr-utils';
@@ -153,6 +153,18 @@ export default function TransparencyPage() {
           {t('transparency.title')}
         </h1>
         <p className="mt-2 max-w-3xl text-slate-400">{t('transparency.subtitle')}</p>
+      </div>
+
+      {/* Alerta anti-phishing */}
+      <div
+        role="alert"
+        className="flex items-start gap-3 rounded-2xl border border-amber-500/60 bg-amber-500/10 p-4"
+      >
+        <ShieldAlert size={22} className="mt-0.5 shrink-0 text-amber-400" aria-hidden="true" />
+        <p className="text-sm text-amber-100">
+          <strong className="font-semibold text-amber-300">{t('transparency.phishingWarningEmphasis')}</strong>{' '}
+          {t('transparency.phishingWarning')}
+        </p>
       </div>
 
       {/* Recebíveis */}
