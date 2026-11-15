@@ -12,6 +12,7 @@ import { ExternalLink, ArrowUpDown, Info, BarChart3, Terminal, CreditCard } from
 import Link from 'next/link';
 import CASSwapInline from '@/components/CASSwapInline';
 import OnrampPanel from '@/components/OnrampPanel';
+import UniswapV4Pools from '@/components/UniswapV4Pools';
 import { useLocaleContext, useTranslations } from '@/lib/LocaleProvider';
 import {
   CAS_TOKEN_ADDRESS, DIAMOND_ADDRESS, USDC_ADDRESS, BRLA_ADDRESS,
@@ -251,6 +252,9 @@ export default function CASTokenSwapPage() {
           </ul>
         </div>
       </section>
+
+      {/* Acompanhamento de preço na Uniswap (pools V4) */}
+      <UniswapV4Pools />
 
       {/* Terminais de Preço */}
       <section className="space-y-6">
