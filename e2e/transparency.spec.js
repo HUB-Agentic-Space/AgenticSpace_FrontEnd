@@ -6,15 +6,25 @@ test('BRLA and crypto history render with mocked RPC and safe provider warnings'
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.addInitScript(() => sessionStorage.setItem('agentic_space_splash_played', '1'));
+  let releaseEthereum;
+  const ethereumGate = new Promise(resolve => { releaseEthereum = resolve; });
   await page.route('**/*', async route => {
     const request = route.request();
     const url = new URL(request.url());
     if (url.pathname === '/api/v1/transparency/donations') {
-      return route.fulfill({ json: {
-        updatedAt: '2026-11-11T12:00:00Z', usdcUsd: 1, brlPerUsd: 5, priceSource: 'CryptoCompare',
-        donations: [{ id: 'brla-1', chainId: 137, network: 'Polygon', from: `0x${'1'.repeat(40)}`, date: '2026-11-11T12:00:00Z', amount: '2.0', currency: 'BRLA', equivalentUsdc: '0.36' }],
-        warnings: [{ code: 'EXPLORER_PLAN_REQUIRED', chainId: 5042, message: 'O plano do explorer não permite esta consulta nesta rede.' }]
-      } });
+      const chainId = Number(url.searchParams.get('chainId'));
+      if (chainId === 1) {
+        await ethereumGate;
+        return route.fulfill({ json: { updatedAt: '2026-11-11T12:00:00Z', usdcUsd: 1, brlPerUsd: 5, priceSource: 'CryptoCompare', donations: Array.from({ length: 12 }, (_, index) => ({ id: `eth-${index}`, chainId: 1, network: 'Ethereum', from: `0x${'2'.repeat(40)}`, date: `2026-09-${String(12 - index).padStart(2, '0')}T12:00:00Z`, amount: '1', currency: 'ETH', equivalentUsdc: '10' })), networks: [{ chainId: 1, name: 'Ethereum', available: true }], warnings: [] } });
+      }
+      const payload = {
+        137: { donations: [
+          { id: 'brla-1', chainId: 137, network: 'Polygon', from: `0x${'1'.repeat(40)}`, date: '2026-11-11T12:00:00Z', amount: '2.0', currency: 'BRLA', equivalentUsdc: '0.36' },
+          { id: 'phish-1', chainId: 137, network: 'Polygon', from: '0x6668b823f67035bc69453bfc22bd5f176506a888', date: '2026-11-10T12:00:00Z', amount: '0.001', currency: 'USDT', equivalentUsdc: '0.001' }
+        ], networks: [{ chainId: 137, name: 'Polygon', available: true }], warnings: [] },
+        5042: { donations: [], networks: [{ chainId: 5042, name: 'ARC', available: false }], warnings: [{ code: 'EXPLORER_PLAN_REQUIRED', chainId: 5042, message: 'O plano do explorer não permite esta consulta nesta rede.' }] }
+      }[chainId] || { donations: [], networks: [], warnings: [] };
+      return route.fulfill({ json: { updatedAt: '2026-11-11T12:00:00Z', usdcUsd: 1, brlPerUsd: 5, priceSource: 'CryptoCompare', ...payload } });
     }
     if (url.origin === 'https://api.exchangerate-api.com') return route.fulfill({ json: { result: 'success', base: 'BRL', rates: { USD: 0.2 } } });
     if (url.pathname.startsWith('/api/')) return route.fulfill({ json: { authenticated: false, session: null, count: 0, total: 0 } });
@@ -27,6 +37,10 @@ test('BRLA and crypto history render with mocked RPC and safe provider warnings'
     return route.continue();
   });
   await page.goto('/transparencia?lang=pt');
+  const alert = page.getByRole('alert').filter({ hasText: 'Fake Phishing' });
+  await expect(alert).toBeVisible();
+  await expect(alert).toContainText('Fake Phishing');
+  await expect(alert.locator('strong')).toContainText('apenas o endereço exibido junto ao QR Code');
   await expect(page.getByText('EXPLORER_PLAN_REQUIRED — Rede 5042:', { exact: false })).toBeVisible();
   const history = page.getByRole('region', { name: 'Recebimentos on-chain' });
   await expect(history.getByRole('cell', { name: 'BRLA', exact: true })).toBeVisible();
@@ -43,6 +57,28 @@ test('BRLA and crypto history render with mocked RPC and safe provider warnings'
   await expect(goals.getByRole('row').filter({ hasText: '2026-11-11' })).toContainText('0,76');
   const accessibility = await new AxeBuilder({ page }).include('[aria-labelledby="donation-goals-title"]').analyze();
   expect(accessibility.violations.filter(item => ['critical', 'serious'].includes(item.impact))).toEqual([]);
+  await expect(history.getByTestId('history-status-1')).toContainText('Ethereum');
+  await expect(history.getByTestId('history-status-137').getByText('✓')).toBeVisible();
+  await expect(history.getByTestId('history-status-1').getByRole('status', { name: 'Consultando Ethereum' })).toBeVisible();
+  releaseEthereum();
+  await expect(history.getByTestId('history-status-1')).toContainText('✓');
+  const picker = history.getByTestId('history-month-picker');
+  await expect(picker).toHaveValue('2026-11');
+  await expect(picker).toHaveAttribute('min', '2026-09');
+  await expect(picker).toHaveAttribute('max', '2026-11');
+  const monthRegions = history.locator('div[data-testid^="history-month-"]');
+  await expect(monthRegions).toHaveCount(1);
+  await expect(history.getByTestId('history-month-2026-11')).toBeVisible();
+  await expect(history.getByRole('link', { name: /6668b823f67035bc69453bfc22bd5f176506a888/i })).toHaveCount(0);
+  await expect(history.getByText('1 recebimento(s) de endereços sinalizados como phishing foram ocultados automaticamente.')).toBeVisible();
+  await picker.fill('2026-09');
+  const september = history.getByTestId('history-month-2026-09');
+  await expect(september.getByRole('row')).toHaveCount(13);
+  expect(await september.evaluate(element => element.scrollHeight > element.clientHeight)).toBe(true);
+  expect(await september.getByRole('row').nth(1).evaluate(element => element.getBoundingClientRect().height)).toBe(40);
+  await september.focus();
+  await page.keyboard.press('End');
+  await expect.poll(() => september.evaluate(element => element.scrollTop)).toBeGreaterThan(0);
   await goals.getByLabel('Mês da arrecadação').fill('2026-10');
   await expect(goals.getByTestId('goal-total')).toHaveText(/0,00/);
   expect(errors).toEqual([]);
