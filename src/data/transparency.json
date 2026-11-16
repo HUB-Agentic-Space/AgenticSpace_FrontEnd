@@ -6,7 +6,9 @@
   },
   "dailyTotals": [],
   "pixDonations": [
-    { "date": "2026-11-11", "amountCents": 200, "brlPerUsd": null }
+    { "date": "2026-11-11", "amountCents": 200, "brlPerUsd": null },
+    { "date": "2026-11-13", "amountCents": 400, "brlPerUsd": null },
+    { "date": "2026-11-14", "amountCents": 295, "brlPerUsd": null }
   ],
   "expenses": [
     {
