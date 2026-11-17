@@ -354,7 +354,7 @@ export default function Navbar() {
                           {t('navbar.newsList')}
                         </Link>
                         <Link
-                          href="/news/view?slug=governanca-cas-2026-07-31"
+                          href="/news/view?slug=cas-opensea-2026-11-17"
                           className="flex items-center gap-2 px-4 py-2 text-sm text-slate-400 hover:bg-slate-800/70 hover:text-white rounded-b-lg"
                           onClick={() => {
                             setNewsOpen(false);
