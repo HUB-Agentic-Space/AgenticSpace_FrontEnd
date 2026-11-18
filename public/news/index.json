@@ -1,6 +1,15 @@
 {
   "news": [
     {
+      "slug": "cas-opensea-2026-11-17",
+      "title": "Moeda CAS agora pode ser comprada na OpenSea",
+      "description": "A CAS (Cryptocoin Agentic Space) passa a estar disponível para compra na OpenSea, um dos maiores marketplaces descentralizados de ativos digitais, diretamente na rede Polygon",
+      "date": "2026-11-17",
+      "category": "official",
+      "availableLanguages": ["pt", "en", "fr", "es"],
+      "defaultLanguage": "pt"
+    },
+    {
       "slug": "governanca-cas-2026-07-31",
       "title": "Atenção: Informações sobre a Governança e a DAO da Moeda CAS",
       "description": "Comunicado oficial sobre práticas de manipulação de preço, Sybil, pump and dump, short and distorce, e medidas de proteção ao ecossistema CAS",
